@@ -7,9 +7,9 @@ import shutil
 
 ROOT=Path(__file__).resolve().parents[1]
 DIRECTORIES=('studio','web','library','knowledge','skills','agents','tests')
-FILES=('run.py','desktop.py','desktop_core.py','desktop_publishing.py','desktop_updates.py','desktop_xhs.py','desktop_version.py','private_update_server.py','release_protocol.py','desktop-installer.iss','PaperPlaneStudio.spec','requirements.txt','requirements-cloud.txt','requirements-desktop.txt','requirements-test.txt','pytest.ini','.gitattributes','.dockerignore','.env.cloud.example','Dockerfile','Dockerfile.knowledge','Dockerfile.knowledge.dockerignore','Dockerfile.updates','Dockerfile.updates.dockerignore','compose.yaml','compose.knowledge.yaml','compose.updates.yaml','LICENSE','NOTICE.md')
+FILES=('package.json','package-lock.json','run.py','desktop.py','desktop_core.py','desktop_publishing.py','desktop_updates.py','desktop_xhs.py','desktop_version.py','private_update_server.py','release_protocol.py','desktop-installer.iss','PaperPlaneStudio.spec','requirements.txt','requirements-cloud.txt','requirements-desktop.txt','requirements-test.txt','pytest.ini','.gitattributes','.dockerignore','.env.cloud.example','Dockerfile','Dockerfile.knowledge','Dockerfile.knowledge.dockerignore','Dockerfile.updates','Dockerfile.updates.dockerignore','compose.yaml','compose.knowledge.yaml','compose.updates.yaml','LICENSE','NOTICE.md')
 TOOLS=('build_desktop.ps1','control_studio.py','control_library.py','restore_studio.py','make_desktop_icon.py','make_app_icons.py','upgrade_paths.cs','prepare_desktop_upgrade.ps1','publish_desktop_release.py','init_private_updates.py','export_open_source.py','verify_skill_phase4.py')
-DOCS=('USER_GUIDE.md','PROJECT_COMPARISON.md','DATA_AND_SECURITY.md','DEPLOYMENT.md')
+DOCS=('VERIFICATION.md','USER_GUIDE.md','PROJECT_COMPARISON.md','DATA_AND_SECURITY.md','DEPLOYMENT.md')
 IGNORED_PARTS={'__pycache__','.pytest_cache','node_modules','.git'}
 EXTENSIONS={'.py','.js','.css','.html','.json','.md','.txt','.yaml','.yml','.png','.svg','.webmanifest','.cjs'}
 
@@ -35,28 +35,10 @@ def export(destination):
         if source.is_file():copy(source)
     readme=(ROOT/'README.md').read_text(encoding='utf-8')
     (destination/'README.md').write_text(readme,encoding='utf-8')
-    (destination/'.gitignore').write_text('\n'.join(('.venv/','venv/','__pycache__/','*.py[cod]','.pytest_cache/','.coverage','htmlcov/','data/','data-*/','backups/','test-results/','build/','dist/','private-updates/','*.sqlite*','*.db','private.json','.env','.env.cloud','updates.env','.paperplane-paths.json','*.log','.DS_Store','web/icon.ico','')))
+    (destination/'.gitignore').write_text('\n'.join(('node_modules/','.venv/','venv/','__pycache__/','*.py[cod]','.pytest_cache/','.coverage','htmlcov/','data/','data-*/','backups/','test-results/','build/','dist/','private-updates/','*.sqlite*','*.db','private.json','.env','.env.cloud','updates.env','.paperplane-paths.json','*.log','.DS_Store','web/icon.ico','')))
     (destination/'AGENTS.md').write_text('# PaperPlane contribution notes\n\nRead README.md and docs/USER_GUIDE.md before changing behavior. Keep runtime data and credentials out of Git. Use synthetic tests and isolated data directories. AI-generated text must be reviewed before adoption. A platform draft is not a public publication. Unknown delivery outcomes require reconciliation before any resend. Preserve version checks and user edits. Never treat API menu/reply video uploads as article-native video.\n',encoding='utf-8')
     workflow=destination/'.github/workflows/tests.yml';workflow.parent.mkdir(parents=True)
-    workflow.write_text('''name: Tests
-on: [push, pull_request, workflow_dispatch]
-permissions:
-  contents: read
-jobs:
-  test:
-    runs-on: windows-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt
-      - run: python -m pytest -q -o faulthandler_timeout=90
-''',encoding='utf-8')
+    workflow.write_text("name: Tests\non: [push, pull_request, workflow_dispatch]\npermissions:\n  contents: read\nconcurrency:\n  group: tests-${{ github.ref }}\n  cancel-in-progress: true\njobs:\n  test:\n    runs-on: windows-latest\n    timeout-minutes: 40\n    env:\n      PYTHONUTF8: '1'\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: '3.13'\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '22'\n      - run: python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt\n      - run: npm ci\n      - run: npx playwright install chromium\n      - run: python -m pytest -q -o faulthandler_timeout=90 --junitxml=test-results/pytest.xml\n      - uses: actions/upload-artifact@v4\n        if: always()\n        with:\n          name: windows-test-results\n          path: test-results/\n",encoding='utf-8')
     return manifest
 
 if __name__=='__main__':

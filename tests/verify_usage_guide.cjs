@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
 const out=path.resolve(__dirname,'../../work/usage-guide-20261010'),fixture=JSON.parse(fs.readFileSync(path.join(out,'fixture.json'),'utf8'));
-(async()=>{const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+(async()=>{const browser=await chromium.launch({headless:true});
 const checks=[];try{
  const page=await browser.newPage({viewport:{width:1280,height:960}}),errors=[],writes=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>{if(r.method()==='POST')writes.push(new URL(r.url()).pathname);});

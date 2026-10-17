@@ -2,10 +2,15 @@ name: Tests
 on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   test:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
+    env:
+      PYTHONUTF8: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -15,4 +20,11 @@ jobs:
         with:
           node-version: '22'
       - run: python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt
-      - run: python -m pytest -q -o faulthandler_timeout=90
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: python -m pytest -q -o faulthandler_timeout=90 --junitxml=test-results/pytest.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-test-results
+          path: test-results/

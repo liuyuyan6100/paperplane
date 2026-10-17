@@ -2,11 +2,11 @@
   "style_id": "aiclaw-warm-engineering",
   "version": "1.0.0",
   "files": {
-    "easel-style.json": "9c81b30296db033b1f49fbc204d7e123807d0b0dcbe65f05cad73f0315ed5f12",
+    "easel-style.json": "5c67f1c0a7fed4a4afc9f91b52d2d8784e50a47e0362a14aade29bebd25821fb",
     "PROMPTS.md": "7e024846ba95101a9bdcf07bbd44dc073c9babe2d19d68c425c29f1070348e2e",
-    "README.md": "9d2b6ee812a16048a81d9dd27fd170e113a1f78a0a5702d080cd82c8e98982b0",
+    "README.md": "f8f8308d1896573eb56175aaf0baaf8c6298ab29fff6ae628d2f6c561ad672a1",
     "reference-cover.png": "a5dcf0f8209e014d3e164dbaf828a5a14075eec79624377e60bbc78a598bb7dc",
-    "style.json": "a61f9dea71e63f447c872add32d42a9304da183332ef8adf16075cd89b1f73f9",
+    "style.json": "797a1daab61cdef30d5b6a8d86dd333ee73fee0f964dfca5aa323228e722fe42",
     "STYLE.md": "59ca4c1503ebbb7660300c92149daac6298da31a6870e81d77bd3cd2508efc35"
   }
 }

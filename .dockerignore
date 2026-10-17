@@ -8,3 +8,11 @@
 !web/*
 !tools/
 !tools/restore_studio.py
+!docs/
+!docs/visual-styles/
+!docs/visual-styles/aiclaw-warm-engineering-v1/
+!docs/visual-styles/aiclaw-warm-engineering-v1/*
+!skills/
+!skills/**
+!agents/
+!agents/**

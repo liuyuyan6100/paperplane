@@ -3,3 +3,6 @@ docs/requirements-alignment/** -text
 docs/requirements-alignment/index.html -diff
 docs/requirements-alignment/diagrams/*.html -diff
 docs/requirements-alignment/versions/**/index.html -diff
+
+# Portable style manifest hashes exact resource bytes.
+docs/visual-styles/aiclaw-warm-engineering-v1/** -text

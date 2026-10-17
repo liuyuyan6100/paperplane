@@ -1,26 +1,27 @@
-# 测试入口
+# 开发测试
 
-2026-10-15：原文档使用过不存在的API与模拟数据库方法。现在以真实临时Studio和外部模型边界模拟为集成验证。
-当前验收见 [技能改造记录](../docs/skill-system/acceptance-20261015.md)。
+普通使用不需要 Node.js。以下开发回归在仓库根目录运行；建议先按根 README 建立独立虚拟环境，下面的 python 必须指向该环境。需要 Python 3.13、Node.js 22 和可下载 Chromium 的网络。
 
-在source目录，向隔离Python环境安装requirements-desktop.txt和requirements-test.txt。
-运行 `python -m pytest -q` 执行默认完整测试；`python -m pytest tests/verify_f10.py` 运行额外契约检查。
-默认不输出局部变量或强制生成覆盖率文件。覆盖率按需要显式指定，避免将部分模块覆盖率冒充整个项目。
+```sh
+python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt
+npm ci
+npx playwright install chromium
+python -m pytest -q
+python -m pytest tests/verify_f10.py -q
+```
 
-关键用例：
+Windows 未激活虚拟环境时，将 python 替换为 .\.venv\Scripts\python.exe；PowerShell 调用 npm、npx 若遇脚本执行策略限制，可用 npm.cmd、npx.cmd。
 
-- test_skill_pipeline.py：真实Studio、提纲确认、正文采用、审稿、风险与无效输出阻断、模型连接变化、Windows目录联接越界。
-- test_skills_acceptance.py：根据第三轮独立审核迁入的验收探针，适配当前model_route必填契约；历史探针保留在原证据目录。
-- test_f08_review_skill.py：真实临时Database验证时间函数，避免MagicMock人为创造不存在的db.now()。
-- test_workflows.py、test_outlines.py、test_reviews.py：持久化、并发、版本冲突、人工确认与采用。
-- test_chat_flow.py、test_memories.py、test_profiles.py、test_model_routing.py：对话、画像记忆、冻结模型与既有集成回归。
+pytest 会自动建立隔离 Studio 并运行两个浏览器集成场景，覆盖文章准备/送稿意图与插图位置，不需要私人素材、平台登录或开发者本机浏览器路径。单独运行 test_article_flow_browser.cjs、test_illustration_positions_browser.cjs 需要其 Python 测试创建的 fixture，通常直接运行 pytest 即可。
 
-专项覆盖率示例：
+verify_usage_guide.cjs、verify_model_wizard.cjs、verify_model_setup.cjs 是历史手动探针，需要专用合成服务 fixture，不包含在上述完整回归中；没有 fixture 时不要照抄单独运行。它们不作为公开安装成功的证明。
 
-```powershell
+专项覆盖率命令（只统计指定模块）：
+
+```sh
 python -m pytest tests/test_skill_pipeline.py tests/test_skills.py tests/test_prompt_loader.py --cov=studio.skills --cov=studio.skill_executors --cov=studio.prompt_loader --cov=studio.sanitize --cov-report=term
 ```
 
-该示例不是完整专项集合；实际本轮完整命令、JUnit和coverage JSON保存在项目work/test-results/skills-completion-20261015。
-一个文件符号链接用例可能因Windows权限跳过；目录联接越界另有实际验证，不能把跳过写成通过。
-模型响应均为合成或本机测试服务；这些测试不代表真实模型质量或外部平台公开发表验通。
+test_public_documentation.py 会实际执行两个开发文档中的完整 Python 示例，检查公开 Markdown 的相对链接和风格包校验和。Windows 目录联接、文件符号链接会受权限影响；报告中跳过必须与通过分开说明。
+
+所有模型响应和平台回执均使用合成测试边界；通过不代表真实模型质量、公众号权限或其他平台发表已验通。最近核验范围和未实测项目见 [公开文档核验表](../docs/VERIFICATION.md)。GitHub Actions 的每次运行单独记录结果。

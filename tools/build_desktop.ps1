@@ -23,10 +23,18 @@ foreach ($directory in @($distRoot,$buildRoot)) {
 }
 $python = Join-Path $projectRoot '.venv\Scripts\python.exe'
 if (-not (Test-Path $python)) {
-    py -3 -m venv (Join-Path $projectRoot '.venv')
+    $bootstrapPython = Get-Command python -ErrorAction SilentlyContinue
+    if ($bootstrapPython) {
+        & $bootstrapPython.Source -m venv (Join-Path $projectRoot '.venv')
+    } else {
+        py -3 -m venv (Join-Path $projectRoot '.venv')
+    }
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $python)) { throw 'Could not create .venv; install Python 3.13 x64 first.' }
 }
 if (-not $SkipDependencies) {
-    & $python -c "import importlib.metadata,pathlib; lines=pathlib.Path(r'$projectRoot\requirements-desktop.txt').read_text().splitlines(); assert all(importlib.metadata.version(name.strip()) == number.strip() for name,number in (line.split('==') for line in lines if line.strip() and not line.lstrip().startswith('#')))" 2>$null
+    # Missing packages are expected in a fresh venv. Avoid a traceback on stderr:
+    # Windows PowerShell 5 treats it as a terminating NativeCommandError.
+    & $python -c "import importlib.metadata,pathlib,sys; versions={d.metadata['Name'].lower():d.version for d in importlib.metadata.distributions()}; lines=pathlib.Path(r'$projectRoot\requirements-desktop.txt').read_text().splitlines(); sys.exit(0 if all(versions.get(name.strip().lower()) == number.strip() for name,number in (line.split('==') for line in lines if line.strip() and not line.lstrip().startswith('#'))) else 1)"
     if ($LASTEXITCODE -ne 0) {
         & $python -m pip install -r (Join-Path $projectRoot 'requirements-desktop.txt')
         if ($LASTEXITCODE -ne 0) { throw 'Desktop dependencies could not be installed.' }

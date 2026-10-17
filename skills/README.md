@@ -1,6 +1,6 @@
 # 纸飞机内置技能
 
-当前实现和验证入口：[技能改造说明](../docs/skill-system/README.md)。
+当前实现和验证入口：[测试说明](../tests/README.md)。
 
 七个内置技能：generate-outline、expand-section、review-draft、extract-materials、plan-topics、extract-memories、review-performance。
 执行器全部位于 studio/skill_executors.py，元数据由 studio/skills.py 扫描。

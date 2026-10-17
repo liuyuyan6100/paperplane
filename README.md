@@ -2,7 +2,7 @@
 
 一个面向个人创作者的 AI 内容工作台，把素材、账号画像、提纲、正文修改、配图、平台改编和送稿记录放在同一处。
 
-当前开源快照：**0.1.75，早期版本，持续改进中**。适合希望在自己的电脑上管理文章，并接入自己的模型 API 的创作者与开发者。
+当前开源快照：**0.1.76，早期版本，持续改进中**。适合希望在自己的电脑上管理文章，并接入自己的模型 API 的创作者与开发者。
 
 ## 可以用来做什么
 
@@ -18,7 +18,7 @@
 
 ## 从源码运行
 
-建议使用 Python 3.13。本地 Web 服务需要 Pillow 与 PyYAML；Windows 桌面和云端访问另有依赖。
+需要 Git 和 Python 3.13（建议 64 位），并能访问 GitHub 与 Python 包仓库。本地 Web 服务需要 Pillow 与 PyYAML；Windows 桌面和云端访问另有依赖。
 
 ```sh
 git clone https://github.com/liuyuyan6100/paperplane.git
@@ -29,6 +29,8 @@ python run.py --data-dir ./data --open
 
 访问 `http://127.0.0.1:8787`。服务默认仅监听本机；关闭浏览器不等于停止服务，在终端按 Ctrl+C 停止。首次使用无需导入任何开发者的配置或数据。
 
+以上四步已用公开仓库的独立环境验证。推荐先创建虚拟环境，避免影响其他项目：Windows 用 `python -m venv .venv`，后续将 python 换为 `.\.venv\Scripts\python.exe`；macOS/Linux 用 `python3 -m venv .venv` 和 `.venv/bin/python`（原生 macOS/Linux 安装本轮未实测）。端口占用时可追加 `--port 8788`，并访问对应端口。clone 提示目录已存在时，请先切到空目录，不要覆盖已有数据。
+
 打开「使用引导」，或阅读 [使用指南](docs/USER_GUIDE.md)：配置模型 → 连接公众号 → 确认提纲与正文 → 准备图文 → 检查并送草稿 → 微信后台确认发表。
 
 ## Windows 客户端
@@ -36,7 +38,7 @@ python run.py --data-dir ./data --open
 在 Windows PowerShell 中从源码构建；安装向导由使用者确认：
 
 ```powershell
-.\tools\build_desktop.ps1 -OpenInstaller
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\build_desktop.ps1 -OpenInstaller
 ```
 
 需要 Python 和 Inno Setup 6。脚本会在 `.venv` 安装桌面构建依赖，产物默认写入 `dist/`。没有 Inno Setup 时可用 `-SkipInstaller` 仅生成可运行目录。
@@ -57,8 +59,12 @@ python run.py --data-dir ./data --open
 
 ```sh
 python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt
+npm ci
+npx playwright install chromium
 python -m pytest -q
 ```
+
+完整回归还需要 Node.js 22 和 Chromium；具体说明见 [开发测试](tests/README.md)。所有公开文档步骤的核验范围、已修复问题和未实测项目见 [核验表](docs/VERIFICATION.md)，请先阅读与你运行方式对应的一行。
 
 目录：`studio/` 后端，`web/` 前端，`library/` 共享资料库服务，`skills/` 内容技能，`agents/` 助手提示词，`tests/` 合成测试，`tools/` 通用构建与维护工具。
 

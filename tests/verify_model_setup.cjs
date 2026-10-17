@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
 const out=path.resolve(__dirname,'../../work/model-setup-20261009'),fixture=JSON.parse(fs.readFileSync(path.join(out,'fixture.json'),'utf8'));
-(async()=>{const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});try{
+(async()=>{const browser=await chromium.launch({headless:true});try{
 const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.goto(fixture.url);await page.locator('#model-setup-dialog[open]').waitFor();
 await page.locator('[data-setup="later"]').click();await page.waitForFunction(()=>!document.querySelector('#model-setup-dialog').open);

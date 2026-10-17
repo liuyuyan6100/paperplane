@@ -1,0 +1,9 @@
+{
+  "name": "paperplane-development-tests",
+  "version": "0.1.76",
+  "private": true,
+  "description": "Browser regression dependencies; not needed for normal PaperPlane use",
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
+}

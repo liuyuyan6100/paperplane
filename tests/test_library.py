@@ -27,7 +27,7 @@ class LibraryTests(unittest.TestCase):
         note = source / 'note.md'
         note.write_text('初始资料', encoding='utf-8')
         (source / '_inbox').mkdir()
-        (source / '_inbox' / 'private.md').write_text('会话资料')
+        (source / '_inbox' / 'private.md').write_text('会话资料', encoding='utf-8')
         (source / '.env').write_text('secret')
         self.lib.register('Wiki', source)
         self.assertEqual(self.lib.scan()['updated'], 1)

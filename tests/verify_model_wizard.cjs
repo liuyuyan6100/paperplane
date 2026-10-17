@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
 const out=path.resolve(__dirname,'../../work/model-wizard-20261009'),fixture=JSON.parse(fs.readFileSync(path.join(out,'fixture.json'),'utf8'));
-(async()=>{const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+(async()=>{const browser=await chromium.launch({headless:true});
 try {
  const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  let tests=0;page.on('request',r=>{if(r.url().includes('/model-settings/test'))tests++;});

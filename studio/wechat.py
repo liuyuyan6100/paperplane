@@ -124,8 +124,9 @@ def _api_error(code, creating=False):
 
 
 class WeChatClient:
-    def __init__(self, config, *, timeout=40, allow_draft_update=False):
+    def __init__(self, config, *, timeout=40, allow_draft_update=False, allow_metrics=False):
         self.allow_draft_update = allow_draft_update is True
+        self.allow_metrics = allow_metrics is True
         self.config = config
         self.app_id = config.get("WECHAT_APP_ID", "")
         self.secret = config.get("WECHAT_APP_SECRET", "")
@@ -140,7 +141,7 @@ class WeChatClient:
         self.cache_key = hashlib.sha256(json.dumps(identity, ensure_ascii=False).encode("utf-8")).hexdigest()
 
     def _request(self, endpoint, payload=None, *, token=None, image=None, description=None, creating=False, query=None):
-        if endpoint not in _ENDPOINTS and not (self.allow_draft_update and endpoint == '/cgi-bin/draft/update'):
+        if endpoint not in _ENDPOINTS and not (self.allow_draft_update and endpoint == '/cgi-bin/draft/update') and not (self.allow_metrics and endpoint == '/datacube/getarticletotal'):
             raise DeliveryError("不支持的公众号接口")
         params = dict(query or {})
         if token is not None:
@@ -260,7 +261,11 @@ def _local_image(src, data_dir, *, cover=False):
         raise DeliveryError("公众号图片必须来自本工作台 data/media，请使用素材库图片路径")
     # Reject an unrelated absolute/UNC path before resolving it: even a failed
     # resolve against a network share would be an unintended external access.
-    if not candidate.is_relative_to(root):
+    # The trusted data directory can itself use a Windows 8.3 alias or a local
+    # junction. Admit its lexical spelling before resolving the candidate;
+    # unrelated absolute/UNC paths still never reach resolve().
+    trusted_spelling = Path(data_dir).absolute() / "media"
+    if not any(candidate.is_relative_to(base) for base in (root, trusted_spelling)):
         raise DeliveryError("公众号图片路径必须位于工作台 data/media 内")
     try:
         resolved = candidate.resolve(strict=True)

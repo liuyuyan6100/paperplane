@@ -11,6 +11,7 @@ COPY studio/ ./studio/
 COPY web/ ./web/
 COPY skills/ ./skills/
 COPY agents/ ./agents/
+COPY docs/visual-styles/aiclaw-warm-engineering-v1/ ./docs/visual-styles/aiclaw-warm-engineering-v1/
 COPY tools/restore_studio.py ./tools/restore_studio.py
 USER 10001:10001
 EXPOSE 8787

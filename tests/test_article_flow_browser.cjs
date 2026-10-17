@@ -2,7 +2,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
 const {chromium}=require('playwright');
 const f=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
 (async()=>{
- const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+ const browser=await chromium.launch({headless:true});
  const checks=[],errors=[];const check=(ok,name)=>{assert(ok,name);checks.push(name)};
  try {
   const page=await browser.newPage({viewport:{width:1480,height:1100}});page.on('pageerror',e=>errors.push(e.message));

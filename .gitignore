@@ -22,3 +22,5 @@ updates.env
 *.log
 .DS_Store
 web/icon.ico
+
+node_modules/
