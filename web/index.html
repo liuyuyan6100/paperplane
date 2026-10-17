@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="纸飞机：独立运行的内容创作与发布工作台。选题、写作、排期、分发和复盘。"
+    />
+    <title>纸飞机 · 内容工作台</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+    <meta name="theme-color" content="#2559f6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="纸飞机" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <script defer src="/model-provenance.js"></script>
+    <script defer src="/article-flow.js"></script>
+    <script defer src="/xhs.js"></script>
+    <script defer src="/assets.js"></script>
+    <link rel="stylesheet" href="/workflows.css" />
+    <script defer src="/workflows.js"></script>
+    <script defer src="/profiles.js"></script>
+    <script defer src="/memories.js"></script>
+    <script defer src="/profile-learning.js"></script>
+    <script defer src="/performance.js"></script>
+    <script defer src="/profile-sync.js"></script>
+    <script defer src="/topics.js"></script>
+    <script defer src="/platforms.js"></script>
+    <script defer src="/xhs-drafts.js"></script>
+    <script defer src="/repurpose.js"></script>
+    <script defer src="/illustrations.js"></script>
+    <script defer src="/reviews.js"></script>
+    <script defer src="/shared-library.js"></script>
+    <script defer src="/wechat-settings.js"></script>
+    <script defer src="/desktop-updates.js"></script>
+    <script defer src="/model-settings.js"></script>
+    <script defer src="/model-wizard.js"></script>
+    <script defer src="/usage-guide.js"></script>
+    <script defer src="/chat.js"></script>
+    <script defer src="/editor-assistant.js"></script>
+    <script defer src="/videos.js"></script>
+    <script defer src="/app.js"></script>
+    <link rel="stylesheet" href="/mobile.css" />
+    <script defer src="/pwa.js"></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+    <aside class="sidebar">
+      <a href="#home" class="brand"
+        ><img src="/favicon.svg" alt="" width="38" height="38" /><span
+          >纸飞机<small>PAPERPLANE</small></span
+        ></a
+      >
+      <button class="button primary compose" data-action="new">
+        ＋ 开始创作
+      </button>
+      <div class="nav-label">内容工作台</div>
+      <nav id="nav" aria-label="主导航"></nav>
+      <div class="sidebar-bottom">
+        <a class="nav-item" href="/feed" target="_blank" rel="noopener"
+          ><span class="nav-icon">↗</span>本地专栏</a
+        ><a href="#settings" class="nav-item"
+          ><span class="nav-icon">⚙</span>设置</a
+        >
+        <div class="service-state" id="service-state">
+          <span class="status-dot"></span>正在连接工作台
+        </div>
+      </div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar">
+        <div id="breadcrumb">工作台 / 今日概览</div>
+        <div class="topbar-right">
+          <button class="button small" data-guide="open">使用引导</button>
+          <button class="button small" data-wizard="open">模型配置向导</button>
+          <span id="app-version" class="tag" aria-label="当前软件版本" hidden></span>
+          <button class="button small" data-action="refresh-status" title="更新稿件与任务状态，保留未保存的输入">↻ 刷新状态</button>
+          <button class="button small" id="install-app" hidden>安装到桌面</button>
+          <span id="local-date"></span><span class="avatar">我</span>
+        </div>
+      </header>
+      <div id="connection-notice" role="status" hidden>网络已断开。请保留编辑页面，联网后再保存；服务器上的任务仍会继续执行。</div>
+      <main id="main" tabindex="-1">
+        <div class="empty">正在打开工作台…</div>
+      </main>
+    </div>
+    <dialog id="modal"><div id="modal-content"></div></dialog>
+    <dialog id="install-guide" aria-labelledby="install-title">
+      <h2 id="install-title">把纸飞机放到手机桌面</h2>
+      <p>iPhone：用 Safari 打开工作台，点「分享 → 添加到主屏幕」，按提示添加。</p>
+      <p>Android：用 Chrome 打开工作台，点浏览器菜单中的「安装应用」或「添加到主屏幕」。</p>
+      <p>电脑和手机登录同一云端地址，共用稿件、图片与发布进度。使用时需要网络。</p>
+      <button class="button primary" id="close-install-guide">知道了</button>
+    </dialog>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

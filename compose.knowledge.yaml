@@ -1,0 +1,41 @@
+name: knowledge-archive
+services:
+  archive:
+    build:
+      context: .
+      dockerfile: Dockerfile.knowledge
+    image: knowledge-archive:${ARCHIVE_RELEASE:-local}
+    restart: unless-stopped
+    init: true
+    ports:
+      # Explicit Tailscale IP in production, never a public wildcard bind.
+      - "${ARCHIVE_BIND_IP:-127.0.0.1}:${ARCHIVE_PORT:-8797}:8797"
+    volumes:
+      - ${ARCHIVE_DATA_DIR:-./data/archive-service}:/data
+      - ${ARCHIVE_CONFIG_FILE:-./data/archive-service-config.json}:/run/archive/config.json:ro
+      # Existing VPS user authorization. OAuth refresh requires writes; not accessible to HTTP clients.
+      - ${ARCHIVE_LARK_DIR:?Set the existing VPS Feishu authorization directory}:/home/archive/.lark-cli
+      - ${ARCHIVE_LARK_STATE_DIR:?Set the existing VPS Feishu credential-store directory}:/home/archive/.local/share/lark-cli
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 384m
+    cpus: 1.0
+    stop_grace_period: 150s
+    healthcheck:
+      test: [CMD, python, -c, "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8797/healthz',timeout=5))['ok']"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options: {max-size: 5m, max-file: "2"}
+    labels:
+      website.aiclawonline.service.id: knowledge-archive
+      website.aiclawonline.service.name: 资料归档服务
+      website.aiclawonline.service.category: knowledge
+      website.aiclawonline.service.access: tailscale-and-project-token

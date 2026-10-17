@@ -1,0 +1,50 @@
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+const f=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));
+(async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+ const checks=[],errors=[];const check=(ok,name)=>{assert(ok,name);checks.push(name)};
+ try {
+  const page=await browser.newPage({viewport:{width:1480,height:1100}});page.on('pageerror',e=>errors.push(e.message));
+  await page.goto(f.url+'/#edit/'+f.missing_id);await page.locator('.editor-context > summary').click();
+  try{await page.locator('#article-flow .flow-title').waitFor({timeout:5000});}catch(e){fs.writeFileSync(path.join(f.output,'preparation-flow-failure.json'),JSON.stringify({errors,context:await page.locator('.editor-context').getAttribute('open'),text:await page.locator('#article-flow').textContent()},null,2));await page.screenshot({path:path.join(f.output,'preparation-flow-failure.png')});throw e;}
+  check(await page.locator('#article-flow .flow-title').textContent().then(s=>s.includes('补充封面与插图')),'missing cover points to illustration workbench');
+  await page.locator('#article-flow .flow-title [data-action="illustration-open"]').click();
+  await page.waitForFunction(()=>location.hash.startsWith('#illustrations/'),null,{timeout:5000}).catch(async e=>{await page.screenshot({path:path.join(f.output,'failure.png'),fullPage:true});console.error(await page.locator('body').innerText());throw e;});
+  check((await page.evaluate(()=>api('/state'))).jobs.length===0,'opening image plan never sends');
+  await page.goto(f.url+'/#edit/'+f.post_id);await page.locator('.editor-context > summary').click();await page.locator('#article-flow .flow-title').waitFor();
+  check(await page.locator('#article-flow .flow-title').textContent().then(s=>s.includes('补齐摘要')),'next step identifies missing metadata');
+  await page.locator('[data-action="wechat-draft"]').first().click();
+  await page.locator('[data-action="wechat-draft-cancel"]').waitFor();
+  check((await page.evaluate(()=>api('/state'))).jobs.length===0,'failed checks pause without enqueue');
+  check(await page.locator('#article-flow').textContent().then(s=>s.includes('自动补齐')),'pause explains automatic preparation before confirmation');
+  await page.locator('#edit-summary').fill('还未保存的补充摘要');
+  await page.locator('[data-action="wechat-draft-cancel"]').click();
+  await page.waitForFunction(()=>!document.querySelector('[data-action="wechat-draft-cancel"]'));
+  check(await page.locator('#edit-summary').inputValue()==='还未保存的补充摘要','cancel retains dirty input');
+  let stored=await page.evaluate(id=>api('/state').then(s=>s.posts.find(p=>p.id===id)),f.post_id);
+  check(stored.summary==='','cancel does not save corrections first');
+  check((await page.evaluate(id=>api('/posts/'+id+'/flow'),f.post_id)).intent.status==='canceled','cancelled intent persisted');
+  await page.locator('[data-action="save"]').first().click();
+  await page.waitForFunction(()=>document.querySelector('#save-state').textContent.includes('已保存'));
+  check((await page.evaluate(()=>api('/state'))).jobs.length===0,'saving after cancellation does not enqueue');
+  await page.locator('[data-action="wechat-draft"]').first().click();
+  await page.waitForFunction(()=>document.querySelector('#article-flow').textContent.includes('已进入送稿队列'));
+  check((await page.evaluate(()=>api('/state'))).jobs.length===1,'one explicit check action enqueues exactly one job');
+  await page.locator('#article-flow .flow-models summary').click();
+  check(await page.locator('#article-flow').textContent().then(s=>s.includes('送入草稿箱 · 未调用模型')),'delivery has no model identity');
+  await page.screenshot({path:path.join(f.output,'editor-flow.png'),fullPage:true});
+  await page.locator('[data-action="wechat-draft"]').first().click();
+  await page.waitForTimeout(300);
+  check((await page.evaluate(()=>api('/state'))).jobs.length===1,'repeat check does not create another draft');
+  const existingBody=await page.locator('#edit-body').inputValue();await page.locator('#edit-body').fill(existingBody+'\n\n编辑中保留内容');
+  await page.waitForTimeout(3300);
+  check((await page.locator('#edit-body').inputValue()).endsWith('编辑中保留内容'),'status polling preserves unsaved content');
+  await page.setViewportSize({width:390,height:844});
+  check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'mobile page remains inside viewport');
+  await page.screenshot({path:path.join(f.output,'editor-mobile.png'),fullPage:true});
+  check(errors.length===0,'no runtime page errors');
+  fs.writeFileSync(path.join(f.output,'checks.json'),JSON.stringify({passed:true,checks,errors},null,2));
+  console.log(checks.length+' editor flow browser checks passed');
+ } finally {await browser.close()}
+})().catch(e=>{console.error(e);process.exitCode=1});

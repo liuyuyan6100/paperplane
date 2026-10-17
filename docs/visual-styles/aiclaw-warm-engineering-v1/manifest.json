@@ -1,0 +1,12 @@
+{
+  "style_id": "aiclaw-warm-engineering",
+  "version": "1.0.0",
+  "files": {
+    "easel-style.json": "9c81b30296db033b1f49fbc204d7e123807d0b0dcbe65f05cad73f0315ed5f12",
+    "PROMPTS.md": "7e024846ba95101a9bdcf07bbd44dc073c9babe2d19d68c425c29f1070348e2e",
+    "README.md": "9d2b6ee812a16048a81d9dd27fd170e113a1f78a0a5702d080cd82c8e98982b0",
+    "reference-cover.png": "a5dcf0f8209e014d3e164dbaf828a5a14075eec79624377e60bbc78a598bb7dc",
+    "style.json": "a61f9dea71e63f447c872add32d42a9304da183332ef8adf16075cd89b1f73f9",
+    "STYLE.md": "59ca4c1503ebbb7660300c92149daac6298da31a6870e81d77bd3cd2508efc35"
+  }
+}

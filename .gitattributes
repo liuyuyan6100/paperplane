@@ -1,0 +1,5 @@
+# Diagram receipts and embedded copies depend on exact delivered bytes.
+docs/requirements-alignment/** -text
+docs/requirements-alignment/index.html -diff
+docs/requirements-alignment/diagrams/*.html -diff
+docs/requirements-alignment/versions/**/index.html -diff

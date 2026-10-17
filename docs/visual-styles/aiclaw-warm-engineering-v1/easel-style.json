@@ -1,0 +1,44 @@
+{
+  "style_name": "aiclaw-warm-engineering",
+  "display_name": "Aiclaw 温暖工程手绘",
+  "description": "用户确认的米白纸感、深海军蓝、暖色工程场景与细腻墨线水彩插画；封面、正文插画和知识图卡共享。",
+  "suitable_for": [
+    "agent-learning",
+    "engineering-practice",
+    "technical-editorial",
+    "inline-explanations",
+    "cross-platform-cards"
+  ],
+  "newspic_ready": true,
+  "article_ready": true,
+  "canvas": {
+    "newspic_aspect": "3:4",
+    "newspic_size": "1080x1440",
+    "article_aspect": "4:3",
+    "article_size": "1200x900"
+  },
+  "palette": {
+    "paper": "#F6F1E7",
+    "navy": "#102B3F",
+    "wood": "#C59A73",
+    "teal": "#477A77",
+    "orange": "#D67E3F"
+  },
+  "typography": {
+    "heading": "深海军蓝中文无衬线粗体",
+    "body": "清晰规整中文",
+    "annotation": "少量可读手写标签"
+  },
+  "mood": [
+    "warm",
+    "thoughtful",
+    "grounded",
+    "hand-drawn",
+    "editorial"
+  ],
+  "prompt_template": {
+    "newspic_card": "Use the supplied Aiclaw cover image as a STYLE reference only, not as content to copy. Warm ivory paper background (#F6F1E7), fine dark ink linework, soft watercolor and colored-pencil shading, deep navy (#102B3F) typography and structure, muted wood (#C59A73) and teal (#477A77), small restrained orange (#D67E3F) accents. Quiet natural warm light and grounded engineering/editorial atmosphere. Adapt subjects and composition to this topic; do not repeat the original man, laptop, desk or scenery by default. No neon, sci-fi robots, glossy 3D, childish cartoon, peach gradient background or excessive stickers. Use only the supplied exact text; no invented data, slogans, screen output or decorative small writing. Create a 3:4 portrait knowledge card, page {card_index}/{card_total}, about {topic}. Exact main text: \"{card_main}\". Exact supporting text: \"{card_sub}\". Use each sentence only once when main and supporting text duplicate. Explain only this provided point: {point_full}. Recompose for portrait; large readable Chinese text, one coherent scene or relationship, calm whitespace. Small Aiclaw signature; no external URL or QR code.",
+    "article_inline": "Use the supplied Aiclaw cover image as a STYLE reference only, not as content to copy. Warm ivory paper background (#F6F1E7), fine dark ink linework, soft watercolor and colored-pencil shading, deep navy (#102B3F) typography and structure, muted wood (#C59A73) and teal (#477A77), small restrained orange (#D67E3F) accents. Quiet natural warm light and grounded engineering/editorial atmosphere. Adapt subjects and composition to this topic; do not repeat the original man, laptop, desk or scenery by default. No neon, sci-fi robots, glossy 3D, childish cartoon, peach gradient background or excessive stickers. Use only the supplied exact text; no invented data, slogans, screen output or decorative small writing. Create a 4:3 article illustration explaining this one subject: {image_subject}. Use a coherent scene or simple accurately connected objects. Keep the illustration lighter on text than a cover. Labels only when explicitly supplied; no invented labels. Match paper, brushwork and colors, not the original cover layout."
+  },
+  "notes": "仅选择本风格的 Aiclaw 画像使用。画像 assets/visual-style/reference-cover.png 须由制作 Agent 通过实际生图工具的参考图参数传入；风格 JSON 加载本身不等于图片已传入。精确图表保留确定性文字与关系。"
+}

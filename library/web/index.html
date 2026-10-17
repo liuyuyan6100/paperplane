@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>共享资料库</title><link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<body><main>
+  <h1>共享资料库</h1>
+  <p>纸飞机与 Easel 共用的笔记、图片和文档。来源仅手动检查更新，上传立即入库。</p>
+  <div class="toolbar">
+    <input id="query" type="search" placeholder="搜索标题、路径或笔记内容" aria-label="搜索资料">
+    <select id="source" aria-label="资料来源"><option value="">全部来源</option></select>
+    <button id="scan">检查来源更新</button>
+    <label class="upload">＋ 添加文件<input id="upload" type="file" multiple hidden></label>
+    <button id="add-folder">＋ 添加文件夹</button>
+    <button id="trash">回收站</button>
+  </div>
+  <div class="toolbar secondary"><button id="source-action" hidden></button><small id="source-help">选择一个来源，可整组移入回收站；原文件保留。</small><a href="/feishu">飞书在线资料</a></div>
+  <p id="status" role="status"></p><div id="items"></div>
+  <dialog id="folder">
+    <button id="folder-close" class="dialog-close">关闭</button><h2>添加文件夹</h2>
+    <h3>登记本机文件夹</h3>
+    <p>继续在原目录编辑。登记时导入一次，之后点击“检查来源更新”时再更新。</p>
+    <form id="register-form">
+      <label>来源名称<input id="folder-name" required maxlength="100" placeholder="例如：Agent 学习过程"></label>
+      <label>本机文件夹路径<input id="folder-path" required placeholder="例如：C:\my-documents"></label>
+      <button id="register" type="submit">登记并导入</button>
+    </form>
+    <hr><h3>一次性导入文件夹副本</h3>
+    <p>保留子目录结构。每次导入建立独立资料组，之后不自动检查原文件夹。</p>
+    <label class="upload">选择文件夹导入<input id="folder-upload" type="file" webkitdirectory multiple hidden></label>
+    <p class="hint">支持笔记、图片、PDF、网页和办公文档；跳过隐藏文件及内部目录，单个文件上限 32 MiB。导入期间请保持页面打开。</p>
+    <p id="folder-status" role="status"></p>
+  </dialog>
+  <dialog id="detail"><button id="close" class="dialog-close">关闭</button><h2 id="title"></h2><p id="meta"></p><a id="download">下载此版本</a><select id="version" aria-label="版本"></select><button id="detail-delete">移入回收站</button><pre id="text"></pre></dialog>
+</main></body></html>

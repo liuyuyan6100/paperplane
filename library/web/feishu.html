@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>飞书在线资料</title><link rel="stylesheet" href="/style.css"><script defer src="/feishu.js"></script></head>
+<body><main><h1>飞书在线资料</h1><p>通过飞书 API 访问原文，资料继续保存在飞书。</p><a href="/">本地资料库</a>
+<p id="auth" role="status">正在核验授权…</p><button id="check-auth">重新核验授权</button><details><summary>查看实际授权范围</summary><pre id="scopes"></pre></details>
+<form id="search-form" class="toolbar"><input id="query" maxlength="30" placeholder="搜索飞书资料" aria-label="搜索飞书资料"><button>搜索</button></form>
+<form id="read-form" class="toolbar"><input id="url" type="url" placeholder="或粘贴飞书文档 / 知识库链接" aria-label="飞书文档链接"><button>读取原文</button></form>
+<p id="status" role="status"></p><div id="results"></div><button id="next" hidden>下一页</button><pre id="content"></pre>
+<details><summary>飞书 API 工具</summary><p>使用已授予的用户权限调用飞书业务 API。点击执行会立即发起请求，写操作会改变飞书数据。</p>
+<form id="api-form"><label>方法<select id="method"><option>GET</option><option>POST</option><option>PATCH</option><option>PUT</option><option>DELETE</option></select></label><label>API 路径<input id="path" value="/open-apis/wiki/v2/spaces" aria-label="飞书 API 路径"></label><label>查询参数<textarea id="params" rows="3">{}</textarea></label><label>请求体<textarea id="data" rows="5">{}</textarea></label><button>执行 API 请求</button></form><pre id="api-result"></pre></details>
+</main></body></html>

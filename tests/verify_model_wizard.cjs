@@ -1,0 +1,65 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const {chromium}=require('playwright');
+const out=path.resolve(__dirname,'../../work/model-wizard-20261009'),fixture=JSON.parse(fs.readFileSync(path.join(out,'fixture.json'),'utf8'));
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'C:/Program Files/Google/Chrome/Application/chrome.exe'});
+try {
+ const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ let tests=0;page.on('request',r=>{if(r.url().includes('/model-settings/test'))tests++;});
+ const action=name=>page.locator(`#model-wizard [data-wizard="${name}"]`);
+ const step=n=>page.waitForFunction(n=>modelWizard?.step===n&&!modelWizard.busy,n);
+ await page.goto(fixture.url);await page.locator('#model-setup-dialog[open]').waitFor();
+ await page.locator('#model-setup-dialog [data-setup="open"]').click();await page.locator('#model-wizard[open]').waitFor();await step(0);
+ await page.locator('#model-wizard').screenshot({path:path.join(out,'text-step.png')});
+ await action('next').click();await page.waitForFunction(()=>document.querySelector('#wizard-message').textContent.includes('填写'));
+ assert.equal(await page.evaluate(()=>modelWizard.step),0);
+ await page.locator('#wizard-base').fill(fixture.model);await page.locator('#wizard-key').fill('synthetic-text-key');
+ await action('catalog').click();await page.waitForFunction(()=>document.querySelector('#wizard-catalog-choice').options.length>1);
+ await page.locator('#wizard-catalog-choice').selectOption('fixture-model');
+ assert.equal((await page.evaluate(()=>api('/model-settings'))).connection.model,'');
+ await action('next').click();await step(1);
+ assert.equal(tests,0);assert.equal((await page.evaluate(()=>api('/model-settings'))).connection.model,'fixture-model');
+ await action('skip').click();await step(2);assert((await page.locator('.wizard-summary').innerText()).includes('待配置'));
+ await action('finish').click();assert.equal(await page.locator('#model-wizard[open]').count(),0);
+ // Persistent entry works for configured users, including on reload.
+ await page.reload();await page.waitForFunction(()=>modelSetupState!==null);
+ assert.equal(await page.locator('#model-setup-dialog[open]').count(),0);
+ await page.locator('.topbar [data-wizard="open"]').click();await step(0);
+ assert.equal(await page.locator('#wizard-model').inputValue(),'fixture-model');assert.equal(await page.locator('#wizard-key').inputValue(),'');
+ await action('test').click();await page.waitForFunction(()=>document.querySelector('#wizard-message').textContent.includes('文字调用成功'));
+ await action('next').click();await step(1);
+ await page.locator('#wizard-base').fill(fixture.model);await page.locator('#wizard-key').fill('synthetic-image-key');await page.locator('#wizard-model').fill('image-model');
+ await page.locator('#model-wizard summary').click();await page.locator('#wizard-references').selectOption('none');
+ await page.locator('#model-wizard').screenshot({path:path.join(out,'image-step.png')});
+ await action('test').click();await page.waitForFunction(()=>document.querySelector('#wizard-message').textContent.includes('有效图片'));
+ assert.equal(await page.locator('#wizard-key').inputValue(),'');
+ await action('next').click();await step(2);
+ const saved=await page.evaluate(()=>api('/model-settings'));
+ assert.equal(saved.connection.model,'fixture-model');assert.equal(saved.image.model,'image-model');assert(saved.image.key_set);assert(!JSON.stringify(saved).includes('synthetic-image-key'));
+ assert(saved.image_tasks.find(t=>t.id==='cover').tested);assert(!saved.image_tasks.find(t=>t.id==='illustration').tested);
+ assert.equal(tests,2);await page.locator('#model-wizard').screenshot({path:path.join(out,'summary-step.png')});
+ // Changing destination without its new key is rejected; original remains intact.
+ await action('back').click();await step(1);await page.locator('#wizard-base').fill(fixture.model+'/new');await action('next').click();
+ await page.waitForFunction(()=>document.querySelector('#wizard-message').textContent.includes('填写对应 API Key'));
+ assert.equal((await page.evaluate(()=>api('/model-settings'))).image.base_url,fixture.model);
+ await action('close').click();assert(await page.locator('#wizard-close-warning').isVisible());await action('keep').click();
+ await action('close').click();await action('discard-close').click();
+ // Skipping a step does not save typed changes. Shared mode preserves the independent connection.
+ await page.locator('.topbar [data-wizard="open"]').click();await step(0);await page.locator('#wizard-model').fill('do-not-save');await action('skip').click();await step(1);
+ assert.equal((await page.evaluate(()=>api('/model-settings'))).connection.model,'fixture-model');
+ await page.locator('#wizard-image-shared').check();assert.equal(await page.locator('#wizard-key').count(),0);
+ await action('next').click();await step(2);const shared=await page.evaluate(()=>api('/model-settings'));assert(shared.image.use_shared);assert(shared.image.key_set);assert.equal(shared.image.base_url,fixture.model);
+ await action('finish').click();
+ // Unsaved settings block launching a second editor, then clean settings reconcile after wizard save.
+ await page.goto(fixture.url+'/#settings');await page.locator('#ai-model').waitFor();await page.locator('#ai-model').fill('unsaved-settings');
+ await page.locator('#model-settings-panel [data-wizard="open"]').click();assert.equal(await page.locator('#model-wizard[open]').count(),0);
+ await page.locator('#ai-model').fill('fixture-model');await page.locator('#model-settings-panel [data-wizard="open"]').click();await step(0);
+ await page.locator('#wizard-model').fill('updated-model');await action('next').click();await step(1);await action('close').click();
+ assert.equal(await page.locator('#ai-model').inputValue(),'updated-model');
+ await page.setViewportSize({width:390,height:844});await page.locator('.topbar [data-wizard="open"]').click();await step(0);
+ assert(await page.evaluate(()=>document.querySelector('#model-wizard').scrollWidth<=document.querySelector('#model-wizard').clientWidth+1));
+ await page.locator('#model-wizard').screenshot({path:path.join(out,'mobile-text.png')});await action('next').click();await step(1);
+ await page.locator('#model-wizard').screenshot({path:path.join(out,'mobile-image.png')});
+ assert.deepEqual(errors,[]);assert.equal(tests,2);
+ fs.writeFileSync(path.join(out,'browser.json'),JSON.stringify({passed:true,checks:['first_prompt_opens_wizard','persistent_entry','existing_config_reused','missing_fields_stay_on_step','catalog_does_not_save','text_save','skip_image','explicit_text_test','explicit_image_test','independent_credentials_preserved','summary_test_status','destination_key_guard','unsaved_exit_guard','skip_discards_only_current_draft','shared_image_preserves_independent_connection','settings_dirty_guard','settings_reconciled','mobile_layout','no_page_errors','no_automatic_generation']},null,2));
+ console.log('20 model wizard browser checks passed');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

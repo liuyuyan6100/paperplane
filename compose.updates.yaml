@@ -1,0 +1,33 @@
+name: paperplane-private-updates
+services:
+  updates:
+    build:
+      context: .
+      dockerfile: Dockerfile.updates
+    image: paperplane-private-updates:${PAPERPLANE_UPDATE_RELEASE:-local}
+    restart: unless-stopped
+    init: true
+    environment:
+      PAPERPLANE_UPDATE_TOKEN_SHA256: ${PAPERPLANE_UPDATE_TOKEN_SHA256:?Set the SHA256 hash of the private update token}
+    ports:
+      - "127.0.0.1:${PAPERPLANE_UPDATE_PORT:-8810}:8080"
+    volumes:
+      - ${PAPERPLANE_UPDATE_STORE:-./private-updates/releases}:/releases:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+    stop_grace_period: 15s
+    healthcheck:
+      test: [CMD, python, -c, "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8080/healthz',timeout=3))['ok']"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "2"

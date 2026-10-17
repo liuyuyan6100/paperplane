@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "style_id": "aiclaw-warm-engineering",
+  "version": "1.0.0",
+  "display_name": "Aiclaw 温暖工程手绘",
+  "confirmed_at": "2026-09-27",
+  "scope": {
+    "creator": "Aiclaw",
+    "applies_to": [
+      "cover",
+      "inline_illustration",
+      "explanatory_diagram",
+      "social_cards"
+    ],
+    "other_profiles_default": false
+  },
+  "reference": {
+    "path": "reference-cover.png",
+    "role": "style_reference_only",
+    "sha256": "a5dcf0f8209e014d3e164dbaf828a5a14075eec79624377e60bbc78a598bb7dc"
+  },
+  "instructions": "STYLE.md",
+  "prompt_templates": "PROMPTS.md",
+  "palette": {
+    "paper": "#F6F1E7",
+    "navy": "#102B3F",
+    "wood": "#C59A73",
+    "teal": "#477A77",
+    "orange": "#D67E3F"
+  },
+  "visual_traits": [
+    "warm paper texture",
+    "fine ink lines",
+    "watercolor and colored-pencil shading",
+    "natural warm light",
+    "grounded engineering scenes",
+    "clear visual hierarchy"
+  ],
+  "variable_elements": [
+    "subject",
+    "characters",
+    "props",
+    "scene",
+    "composition",
+    "aspect_ratio",
+    "text"
+  ],
+  "suggested_layouts": {
+    "wide_cover": "2.35:1",
+    "inline_illustration": "4:3 or content-driven",
+    "portrait_card": "3:4",
+    "video_cover": "9:16"
+  },
+  "layout_note": "These are working layout suggestions, not claims about current platform upload requirements.",
+  "reference_input_required_when_supported": true,
+  "cross_model_visual_validation": "not performed",
+  "automatic_cross_platform_sync": false
+}

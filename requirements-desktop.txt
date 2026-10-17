@@ -1,0 +1,9 @@
+# Windows client shell. The workspace web service itself has no pip dependencies.
+pywebview==6.2.1
+pystray==0.19.5
+Pillow==12.3.0
+pyinstaller==6.22.3
+PyYAML==6.0.3
+
+# Local browser publishing bridge
+websockets==15.0.1

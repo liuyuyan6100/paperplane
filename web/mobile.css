@@ -1,0 +1,15 @@
+#connection-notice { background: #fff2d7; color: #73520a; padding: 12px 18px; }
+#install-guide { width: min(480px, calc(100vw - 32px)); padding: 24px; line-height: 1.8; }
+#install-guide h2 { margin-top: 0; }
+#install-guide p { margin: 14px 0; }
+@media (max-width: 700px) {
+  input, select, textarea { font-size: 16px; }
+  button, .button, .nav-item { min-height: 44px; }
+  .topbar { height: auto; min-height: 62px; padding-top: env(safe-area-inset-top); }
+  .topbar-right { gap: 8px; }
+  .topbar-right #local-date, .topbar-right .avatar { display: none; }
+  #main { padding-bottom: calc(30px + env(safe-area-inset-bottom)); }
+  dialog { max-height: 88dvh; }
+  .workspace, #main, .editor-grid, .editor-main { min-width: 0; }
+  .editor-panes textarea { min-height: 45dvh; }
+}

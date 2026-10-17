@@ -1,0 +1,10 @@
+**
+!Dockerfile
+!requirements-cloud.txt
+!run.py
+!studio/
+!studio/*.py
+!web/
+!web/*
+!tools/
+!tools/restore_studio.py
