@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Start with any standard Python 3.10+: python run.py. No pip install required."""
+"""Install requirements.txt, then start the local workspace with python run.py."""
 import argparse
 import json
 import os

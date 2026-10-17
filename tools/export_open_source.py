@@ -7,7 +7,7 @@ import shutil
 
 ROOT=Path(__file__).resolve().parents[1]
 DIRECTORIES=('studio','web','library','knowledge','skills','agents','tests')
-FILES=('run.py','desktop.py','desktop_core.py','desktop_publishing.py','desktop_updates.py','desktop_xhs.py','desktop_version.py','private_update_server.py','release_protocol.py','desktop-installer.iss','PaperPlaneStudio.spec','requirements-cloud.txt','requirements-desktop.txt','requirements-test.txt','pytest.ini','.gitattributes','.dockerignore','.env.cloud.example','Dockerfile','Dockerfile.knowledge','Dockerfile.knowledge.dockerignore','Dockerfile.updates','Dockerfile.updates.dockerignore','compose.yaml','compose.knowledge.yaml','compose.updates.yaml','LICENSE','NOTICE.md')
+FILES=('run.py','desktop.py','desktop_core.py','desktop_publishing.py','desktop_updates.py','desktop_xhs.py','desktop_version.py','private_update_server.py','release_protocol.py','desktop-installer.iss','PaperPlaneStudio.spec','requirements.txt','requirements-cloud.txt','requirements-desktop.txt','requirements-test.txt','pytest.ini','.gitattributes','.dockerignore','.env.cloud.example','Dockerfile','Dockerfile.knowledge','Dockerfile.knowledge.dockerignore','Dockerfile.updates','Dockerfile.updates.dockerignore','compose.yaml','compose.knowledge.yaml','compose.updates.yaml','LICENSE','NOTICE.md')
 TOOLS=('build_desktop.ps1','control_studio.py','control_library.py','restore_studio.py','make_desktop_icon.py','make_app_icons.py','upgrade_paths.cs','prepare_desktop_upgrade.ps1','publish_desktop_release.py','init_private_updates.py','export_open_source.py','verify_skill_phase4.py')
 DOCS=('USER_GUIDE.md','PROJECT_COMPARISON.md','DATA_AND_SECURITY.md','DEPLOYMENT.md')
 IGNORED_PARTS={'__pycache__','.pytest_cache','node_modules','.git'}

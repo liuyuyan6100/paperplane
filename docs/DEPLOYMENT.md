@@ -2,7 +2,7 @@
 
 ## 本地 Web
 
-使用 Python 3.13，运行 python run.py --data-dir ./data --open，访问 http://127.0.0.1:8787。AI API、自有公众号与资料库由用户在界面配置；不需要开发者的私有服务或 OpenClaw 登录。
+使用 Python 3.13，先运行 python -m pip install -r requirements.txt，再运行 python run.py --data-dir ./data --open，访问 http://127.0.0.1:8787。AI API、自有公众号与资料库由用户在界面配置；不需要开发者的私有服务或 OpenClaw 登录。
 
 ## Windows 桌面
 

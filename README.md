@@ -18,11 +18,12 @@
 
 ## 从源码运行
 
-建议使用 Python 3.13。核心本地 Web 服务使用 Python 标准库；Windows 桌面和云端访问另有依赖。
+建议使用 Python 3.13。本地 Web 服务需要 Pillow 与 PyYAML；Windows 桌面和云端访问另有依赖。
 
 ```sh
 git clone https://github.com/liuyuyan6100/paperplane.git
 cd paperplane
+python -m pip install -r requirements.txt
 python run.py --data-dir ./data --open
 ```
 
