@@ -12,9 +12,9 @@ python -m pytest tests/verify_f10.py -q
 
 Windows 未激活虚拟环境时，将 python 替换为 .\.venv\Scripts\python.exe；PowerShell 调用 npm、npx 若遇脚本执行策略限制，可用 npm.cmd、npx.cmd。
 
-pytest 会自动建立隔离 Studio 并运行两个浏览器集成场景，覆盖文章准备/送稿意图与插图位置，不需要私人素材、平台登录或开发者本机浏览器路径。单独运行 test_article_flow_browser.cjs、test_illustration_positions_browser.cjs 需要其 Python 测试创建的 fixture，通常直接运行 pytest 即可。
+pytest 会自动建立隔离 Studio 并运行五个浏览器集成场景，覆盖首次配置/使用引导、文章准备/送稿意图与插图位置，不需要私人素材、平台登录或开发者本机浏览器路径。单独运行 test_article_flow_browser.cjs、test_illustration_positions_browser.cjs 需要其 Python 测试创建的 fixture，通常直接运行 pytest 即可。
 
-verify_usage_guide.cjs、verify_model_wizard.cjs、verify_model_setup.cjs 是历史手动探针，需要专用合成服务 fixture，不包含在上述完整回归中；没有 fixture 时不要照抄单独运行。它们不作为公开安装成功的证明。
+verify_usage_guide.cjs、verify_model_wizard.cjs、verify_model_setup.cjs 由 test_onboarding_browser.py 自动创建合成 fixture 后运行，检查引导入口、进度、保存/跳过、主动文字/图片自测和窄屏布局。无需另起服务或使用历史本机路径；不要直接运行缺少 fixture 参数的 .cjs。合成接口自测不证明真实供应商可用。
 
 专项覆盖率命令（只统计指定模块）：
 

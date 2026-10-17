@@ -1,6 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
-const out=path.resolve(__dirname,'../../work/usage-guide-20261010'),fixture=JSON.parse(fs.readFileSync(path.join(out,'fixture.json'),'utf8'));
+if(!process.argv[2])throw new Error('Run python -m pytest tests/test_onboarding_browser.py to create an isolated fixture.');
+const fixturePath=path.resolve(process.argv[2]),out=path.dirname(fixturePath),fixture=JSON.parse(fs.readFileSync(fixturePath,'utf8'));
 (async()=>{const browser=await chromium.launch({headless:true});
 const checks=[];try{
  const page=await browser.newPage({viewport:{width:1280,height:960}}),errors=[],writes=[];
@@ -19,7 +20,7 @@ const checks=[];try{
  await page.locator('#wechat-app-id').fill('');await reopen();
  await go('platforms');await page.locator('[data-managed-channel="wechat"]').waitFor();await reopen();checks.push('channel_jump');
  await step(2);await go('content');await page.locator('#main [data-action="new"]').first().waitFor();await reopen();await go('workflows');await page.waitForURL('**/#workflows');await reopen();checks.push('writing_destinations');
- await step(3);await go('repurpose');await page.locator('#repurpose-source').waitFor();await reopen();await go('illustrations');await page.waitForURL('**/#illustrations');await reopen();checks.push('visual_destinations');
+ await step(3);await go('content');await page.locator('#main [data-action="new"]').first().waitFor();await reopen();await go('illustrations');await page.waitForURL('**/#illustrations');await reopen();checks.push('visual_destinations');
  await step(4);await go('queue');await page.waitForURL('**/#queue');await page.locator('#usage-guide-dock [data-guide="pause"]').click();await page.waitForFunction(()=>!usageGuide.active&&!usageGuideBusy);await page.reload();await page.waitForFunction(()=>usageGuide!==null);assert.equal(await page.evaluate(()=>usageGuide.step),4);assert(await page.locator('#usage-guide-dock').isHidden());checks.push('pause_reload_and_resume');
  await reopen();await page.locator('[data-destination="queue"]').click();await page.waitForURL('**/#queue');await page.reload();await page.waitForFunction(()=>usageGuide?.active);assert(await page.locator('#usage-guide-dock').isVisible());checks.push('active_hint_survives_reload');await reopen();
  // Failure never advances progress or pretends to save.

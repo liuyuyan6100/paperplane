@@ -11,10 +11,10 @@
 | README / DEPLOYMENT：Inno Setup 安装包 | 实际编译并核对校验和 | 未在干净 Windows VM 中点完安装、升级与卸载；不声称验通 |
 | DEPLOYMENT：主 Docker Compose | 实际构建 Linux/amd64 镜像、启动、健康检查、持久化、设置/文章路由、资源校验及拒绝未认证请求 | 真实 Cloudflare 登录、域名/TLS、ARM 镜像未实测 |
 | DATA_AND_SECURITY：备份 / CLI 恢复 | 临时数据完整备份、校验与恢复；测试防重放 | 跨电脑 DPAPI 凭据不可迁移；真实旧版备份兼容性未穷举 |
-| USER_GUIDE：画像、素材、提纲、正文采用、侧边改稿、图文准备 | 本地合成回归；文章准备与配图位置有 Chromium 集成测试 | 真实模型内容质量、费用、限流与服务兼容性需配置后自测 |
+| USER_GUIDE：画像、素材、提纲、正文采用、侧边改稿、图文准备 | 本地合成回归；首次配置/使用引导、文章准备与配图位置有 Chromium 集成测试 | 真实模型内容质量、费用、限流与服务兼容性需配置后自测 |
 | USER_GUIDE：本地视频导入与位置 | 本地导入、文章引用和发送前拦截回归 | 微信原生视频上传、转码、原创声明及账号权限本轮未实测 |
 | USER_GUIDE：公众号草稿 / 其他平台 / 公开发表 | 合成回执的版本、防重复、待核对分支 | 真实账号送稿、审核、公开发表未执行；不可当作全平台验通 |
-| tests/README：安装依赖、pytest、额外契约、专项覆盖率 | 干净环境执行；浏览器依赖来自本仓库 npm lock | 历史 verify_*.cjs 专用手动探针未包含在完整回归中 |
+| tests/README：安装依赖、pytest、额外契约、专项覆盖率 | 干净环境执行；浏览器依赖来自本仓库 npm lock | 五个浏览器场景都由 pytest 自动创建合成 fixture 并纳入回归 |
 | agents/README、MEMORIES | 两段完整 Python 示例直接运行；不依赖未定义变量或私人数据 | 模型自动抽取质量未调用真实模型验证 |
 | skills/README、SPEC、各 SKILL.md 与 prompts | 检查资源与协议，技能测试覆盖 | SKILL / prompts、PERSONA / WORKFLOWS 是模型输入模板，不是终端操作步骤 |
 | visual-styles 风格包 | 校验文件与 manifest，检查 Windows 与 Docker 资源 | 当前 Easel 上游导入与真实生图效果未实测；历史集成路径仅供参考 |
@@ -27,6 +27,6 @@
 - Docker 构建上下文放行必要技能、提示词和视觉资源，补齐版本模块；验证设置、文章、技能与资源，避免 COPY 失败或服务存活但业务接口报错。
 - 浏览器回归改用公开 npm 固定版本 Playwright 和下载的 Chromium，移除开发机路径。
 - 修正 Windows runner 短路径导致的本地图片拒绝与路径断言；保持不可信 UNC / 越界路径拦截。
-- 明确文本 UTF-8 编码，清理不存在的文档链接、伪 API 示例和未实测性能数字。
+- 明确文本 UTF-8 编码，清理不存在的文档链接、伪 API 示例和未实测性能数字；将使用引导中的旧按钮名改为当前界面名称。
 
 后续每个提交的 CI 结果见 [GitHub Actions](https://github.com/liuyuyan6100/paperplane/actions)。通过一次核验不保证所有电脑、模型供应商或平台账号都适用；报告问题请附脱敏环境、命令和错误，不要提交密钥或个人数据库。

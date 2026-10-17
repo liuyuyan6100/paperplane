@@ -1,6 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
-const out=path.resolve(__dirname,'../../work/model-wizard-20261009'),fixture=JSON.parse(fs.readFileSync(path.join(out,'fixture.json'),'utf8'));
+if(!process.argv[2])throw new Error('Run python -m pytest tests/test_onboarding_browser.py to create an isolated fixture.');
+const fixturePath=path.resolve(process.argv[2]),out=path.dirname(fixturePath),fixture=JSON.parse(fs.readFileSync(fixturePath,'utf8'));
 (async()=>{const browser=await chromium.launch({headless:true});
 try {
  const page=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));

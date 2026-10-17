@@ -418,9 +418,9 @@ function drawHome() {
           `<div class="channel-row"><span class="channel-logo">◷</span><div class="channel-info"><b>${esc(j.title)}</b><small>${fmt(j.due_at)} · ${esc(j.channel_name)}</small></div></div>`,
       )
       .join("") ||
-    '<div class="tip">还没有排期。文章写好后，点击「检查与发布」选择时间。</div>'
+    '<div class="tip">还没有排期。文章写好后，可检查并送入公众号草稿箱；其他平台使用文章页的「检查与分发」。</div>'
   }</div></section>
-  <div class="tip-box tip"><strong>让工作台接着做</strong><br>在编辑器选择「交给模型处理」，后台调用你配置的模型或 Agent。去「创作任务」查看结果，审阅后再送入公众号草稿箱。</div></aside></div>`;
+  <div class="tip-box tip"><strong>让工作台接着做</strong><br>在编辑器选择「生成提纲 / 写正文」，后台调用你配置的模型。去「创作任务」查看结果，审阅后再送入公众号草稿箱。</div></aside></div>`;
 }
 
 function contentToolbar(kind) {
