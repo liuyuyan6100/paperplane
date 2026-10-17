@@ -9,7 +9,7 @@
 | README：公开 clone、基础 pip 安装、run.py --data-dir --open | 已以匿名公开仓库、新虚拟环境实际启动并打开首次配置页；再次检查候选版 | macOS/Linux 原生 Python 安装未实测 |
 | README / DEPLOYMENT：Windows 文件夹构建 | 全新 .venv 实际打包；检查冻结程序自检及资源 | WebView2 桌面窗口的全新系统依赖需用户环境验证 |
 | README / DEPLOYMENT：Inno Setup 安装包 | 实际编译并核对校验和 | 未在干净 Windows VM 中点完安装、升级与卸载；不声称验通 |
-| DEPLOYMENT：主 Docker Compose | 实际构建 Linux/amd64 镜像、启动、健康检查、持久化及拒绝未认证请求 | 真实 Cloudflare 登录、域名/TLS、ARM 镜像未实测 |
+| DEPLOYMENT：主 Docker Compose | 实际构建 Linux/amd64 镜像、启动、健康检查、持久化、设置/文章路由、资源校验及拒绝未认证请求 | 真实 Cloudflare 登录、域名/TLS、ARM 镜像未实测 |
 | DATA_AND_SECURITY：备份 / CLI 恢复 | 临时数据完整备份、校验与恢复；测试防重放 | 跨电脑 DPAPI 凭据不可迁移；真实旧版备份兼容性未穷举 |
 | USER_GUIDE：画像、素材、提纲、正文采用、侧边改稿、图文准备 | 本地合成回归；文章准备与配图位置有 Chromium 集成测试 | 真实模型内容质量、费用、限流与服务兼容性需配置后自测 |
 | USER_GUIDE：本地视频导入与位置 | 本地导入、文章引用和发送前拦截回归 | 微信原生视频上传、转码、原创声明及账号权限本轮未实测 |
@@ -24,7 +24,7 @@
 ## 本轮修复
 
 - Windows PowerShell 5 首次打包缺依赖时不再被 traceback 提前终止，会正常安装固定版本依赖。
-- Docker 构建上下文放行必要技能、提示词和视觉资源，避免 COPY 找不到文件。
+- Docker 构建上下文放行必要技能、提示词和视觉资源，补齐版本模块；验证设置、文章、技能与资源，避免 COPY 失败或服务存活但业务接口报错。
 - 浏览器回归改用公开 npm 固定版本 Playwright 和下载的 Chromium，移除开发机路径。
 - 修正 Windows runner 短路径导致的本地图片拒绝与路径断言；保持不可信 UNC / 越界路径拦截。
 - 明确文本 UTF-8 编码，清理不存在的文档链接、伪 API 示例和未实测性能数字。

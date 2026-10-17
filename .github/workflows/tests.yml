@@ -28,3 +28,10 @@ jobs:
         with:
           name: windows-test-results
           path: test-results/
+  container:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t paperplane-smoke .
+      - run: docker run --rm --read-only --tmpfs /tmp:rw,mode=1777 --entrypoint python paperplane-smoke tools/verify_container.py

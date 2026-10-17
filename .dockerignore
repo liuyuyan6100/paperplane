@@ -16,3 +16,5 @@
 !skills/**
 !agents/
 !agents/**
+!desktop_version.py
+!tools/verify_container.py

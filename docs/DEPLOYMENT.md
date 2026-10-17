@@ -47,7 +47,7 @@ docker compose --env-file .env.cloud ps
 docker compose --env-file .env.cloud logs --tail 50 studio
 ```
 
-端口默认只映射到宿主机 127.0.0.1:8790。访问 /healthz 可检查存活；主页面无有效 Access 身份时拒绝请求是预期行为。必须自行配置域名、HTTPS 入口、Cloudflare Access 应用与认证头转发。**本轮验证了镜像构建、服务存活、数据落盘、依赖/资源及未认证拒绝；真实 Cloudflare 登录、域名/TLS、代理入口与 ARM 构建未实测。** 不要删除认证来绕过错误。
+端口默认只映射到宿主机 127.0.0.1:8790。访问 /healthz 可检查存活；主页面无有效 Access 身份时拒绝请求是预期行为。必须自行配置域名、HTTPS 入口、Cloudflare Access 应用与认证头转发。**本轮验证了镜像构建、服务存活、设置与文章接口、数据落盘、依赖/资源及未认证拒绝；真实 Cloudflare 登录、域名/TLS、代理入口与 ARM 构建未实测。** 不要删除认证来绕过错误。
 
 停止并移除该项目容器：
 
