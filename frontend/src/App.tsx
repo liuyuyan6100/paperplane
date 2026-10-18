@@ -1,4 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from "react";
+import { AssistantPanel } from "./features/assistant/AssistantPanel";
+import { capture } from "./features/assistant/selection";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   bootstrap,
@@ -52,6 +54,7 @@ export function App() {
     initial(crypto.randomUUID()),
   );
   const current = useRef(state);
+  const bodyInput = useRef<HTMLTextAreaElement>(null);
   current.current = state;
   const saveBusy = useRef(false);
   const [search, setSearch] = useState("");
@@ -215,7 +218,7 @@ export function App() {
         <a className="brand" href="/editor/">
           <span className="brand-mark">↗</span>
           <span>
-            纸飞机<small>文章编辑验证版 · M1</small>
+            纸飞机<small>架构验证版 · M2</small>
           </span>
         </a>
         <button className="primary new" onClick={() => void navigate(null)}>
@@ -267,7 +270,7 @@ export function App() {
       <main className="editor-main">
         <header className="toolbar">
           <div>
-            <span className="milestone">M1 · 文章编辑</span>
+            <span className="milestone">M2 · 文章编辑与侧边 AI</span>
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
@@ -320,150 +323,170 @@ export function App() {
             正在读取文章…
           </p>
         ) : (
-          <>
-            <section className="document-meta">
-              <label className="title-label">
-                <span>文章标题</span>
-                <input
-                  className="title-input"
-                  aria-label="文章标题"
-                  value={state.draft.title}
-                  maxLength={150}
-                  placeholder="写下这篇文章的标题"
-                  onChange={(e) => edit({ title: e.target.value })}
-                />
-              </label>
-              <div className="meta-line">
-                <label>
-                  内容阶段
-                  <select
-                    value={state.draft.stage}
-                    onChange={(e) =>
-                      edit({ stage: e.target.value as Draft["stage"] })
-                    }
-                  >
-                    {Object.entries(stageNames).map(([k, v]) => (
-                      <option key={k} value={k}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
+          <div className="editing-layout">
+            <div className="editing-document">
+              <section className="document-meta">
+                <label className="title-label">
+                  <span>文章标题</span>
+                  <input
+                    className="title-input"
+                    aria-label="文章标题"
+                    value={state.draft.title}
+                    maxLength={150}
+                    placeholder="写下这篇文章的标题"
+                    onChange={(e) => edit({ title: e.target.value })}
+                  />
                 </label>
-                <label>
-                  账号画像
-                  <select
-                    value={state.draft.profile_id ?? ""}
-                    onChange={(e) =>
-                      edit({ profile_id: e.target.value || null })
-                    }
-                  >
-                    <option value="">不关联画像</option>
-                    {profiles.data?.profiles.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  aria-expanded={fields}
-                  onClick={() => setFields(!fields)}
-                >
-                  {fields ? "收起文章信息" : "摘要、署名与更多信息"}
-                </button>
-              </div>
-              {fields && (
-                <div className="extra-fields">
+                <div className="meta-line">
                   <label>
-                    摘要
-                    <textarea
-                      value={state.draft.summary}
-                      maxLength={300}
-                      onChange={(e) => edit({ summary: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    作者
-                    <input
-                      value={state.draft.author}
-                      maxLength={60}
-                      onChange={(e) => edit({ author: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    标签（逗号分隔）
-                    <input
-                      value={state.draft.tags.join(",")}
+                    内容阶段
+                    <select
+                      value={state.draft.stage}
                       onChange={(e) =>
-                        edit({ tags: e.target.value.split(/[,，]/) })
+                        edit({ stage: e.target.value as Draft["stage"] })
                       }
-                      onBlur={() =>
-                        edit({
-                          tags: state.draft.tags
-                            .map((t) => t.trim())
-                            .filter(Boolean),
-                        })
-                      }
-                    />
+                    >
+                      {Object.entries(stageNames).map(([k, v]) => (
+                        <option key={k} value={k}>
+                          {v}
+                        </option>
+                      ))}
+                    </select>
                   </label>
                   <label>
-                    封面地址
-                    <input
-                      value={state.draft.cover}
-                      maxLength={2000}
-                      onChange={(e) => edit({ cover: e.target.value })}
-                    />
+                    账号画像
+                    <select
+                      value={state.draft.profile_id ?? ""}
+                      onChange={(e) =>
+                        edit({ profile_id: e.target.value || null })
+                      }
+                    >
+                      <option value="">不关联画像</option>
+                      {profiles.data?.profiles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
                   </label>
-                  <label>
-                    来源
-                    <input
-                      value={state.draft.source}
-                      maxLength={2000}
-                      onChange={(e) => edit({ source: e.target.value })}
-                    />
-                  </label>
+                  <button
+                    aria-expanded={fields}
+                    onClick={() => setFields(!fields)}
+                  >
+                    {fields ? "收起文章信息" : "摘要、署名与更多信息"}
+                  </button>
                 </div>
-              )}
-            </section>
-            <section
-              className={"writing-space" + (preview ? " with-preview" : "")}
-            >
-              <div className="writing-pane">
-                <div className="pane-heading">
-                  <span>正文 · Markdown</span>
-                  <small>{state.draft.body.length.toLocaleString()} 字符</small>
+                {fields && (
+                  <div className="extra-fields">
+                    <label>
+                      摘要
+                      <textarea
+                        value={state.draft.summary}
+                        maxLength={300}
+                        onChange={(e) => edit({ summary: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      作者
+                      <input
+                        value={state.draft.author}
+                        maxLength={60}
+                        onChange={(e) => edit({ author: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      标签（逗号分隔）
+                      <input
+                        value={state.draft.tags.join(",")}
+                        onChange={(e) =>
+                          edit({ tags: e.target.value.split(/[,，]/) })
+                        }
+                        onBlur={() =>
+                          edit({
+                            tags: state.draft.tags
+                              .map((t) => t.trim())
+                              .filter(Boolean),
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      封面地址
+                      <input
+                        value={state.draft.cover}
+                        maxLength={2000}
+                        onChange={(e) => edit({ cover: e.target.value })}
+                      />
+                    </label>
+                    <label>
+                      来源
+                      <input
+                        value={state.draft.source}
+                        maxLength={2000}
+                        onChange={(e) => edit({ source: e.target.value })}
+                      />
+                    </label>
+                  </div>
+                )}
+              </section>
+              <section
+                className={"writing-space" + (preview ? " with-preview" : "")}
+              >
+                <div className="writing-pane">
+                  <div className="pane-heading">
+                    <span>正文 · Markdown</span>
+                    <small>
+                      {state.draft.body.length.toLocaleString()} 字符
+                    </small>
+                  </div>
+                  <textarea
+                    ref={bodyInput}
+                    className="body-input"
+                    aria-label="文章正文"
+                    spellCheck={false}
+                    value={state.draft.body}
+                    placeholder="从这里开始写作，支持 Markdown…"
+                    onChange={(e) => edit({ body: e.target.value })}
+                  />
                 </div>
-                <textarea
-                  className="body-input"
-                  aria-label="文章正文"
-                  spellCheck={false}
-                  value={state.draft.body}
-                  placeholder="从这里开始写作，支持 Markdown…"
-                  onChange={(e) => edit({ body: e.target.value })}
-                />
-              </div>
-              {preview && (
-                <div className="preview-pane">
-                  <div className="pane-heading">阅读预览</div>
-                  {previewError ? (
-                    <p role="alert">{previewError}</p>
-                  ) : (
-                    <article
-                      className="prose"
-                      dangerouslySetInnerHTML={{ __html: previewHtml }}
-                    />
-                  )}
-                </div>
-              )}
-            </section>
-          </>
+                {preview && (
+                  <div className="preview-pane">
+                    <div className="pane-heading">阅读预览</div>
+                    {previewError ? (
+                      <p role="alert">{previewError}</p>
+                    ) : (
+                      <article
+                        className="prose"
+                        dangerouslySetInnerHTML={{ __html: previewHtml }}
+                      />
+                    )}
+                  </div>
+                )}
+              </section>
+            </div>
+            <AssistantPanel
+              key={state.session}
+              state={state}
+              getCurrent={() => current.current}
+              getSelection={() =>
+                bodyInput.current
+                  ? capture(
+                      current.current.draft.body,
+                      bodyInput.current.selectionStart,
+                      bodyInput.current.selectionEnd,
+                    )
+                  : null
+              }
+              dispatch={dispatch}
+            />
+          </div>
         )}
         <footer>
           <details>
             <summary>验证版信息与本轮范围</summary>
             <p>
-              版本 {session.data.version}。本轮验证文章编辑；侧边 AI
-              和任务状态将在后续阶段迁入。其他功能可通过原工作台使用。
+              版本 {session.data.version}。本轮验证文章编辑和侧边
+              AI；任务总览将在后续阶段迁入。其他功能可通过原工作台使用。
             </p>
             <p className="data-path">数据目录：{session.data.data_dir}</p>
             <p>

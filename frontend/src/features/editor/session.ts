@@ -21,6 +21,11 @@ export interface SaveRequest {
   draft: Draft;
 }
 export interface EditorState {
+  undo: {
+    before: Pick<Draft, "title" | "body">;
+    after: Pick<Draft, "title" | "body">;
+    sequence: number;
+  } | null;
   session: string;
   articleId: string | null;
   version: number | null;
@@ -58,6 +63,7 @@ export const initial = (
   session = "",
   articleId: string | null = null,
 ): EditorState => ({
+  undo: null,
   session,
   articleId,
   version: null,
@@ -72,6 +78,14 @@ export const initial = (
 export const isDirty = (s: EditorState) =>
   JSON.stringify(s.draft) !== JSON.stringify(s.saved);
 export type Action =
+  | {
+      type: "assistant_apply";
+      session: string;
+      sequence: number;
+      before: Pick<Draft, "title" | "body">;
+      replacement: Pick<Draft, "title" | "body">;
+    }
+  | { type: "assistant_undo" }
   | { type: "navigate"; session: string; articleId: string | null }
   | { type: "loaded"; session: string; article: Article }
   | { type: "edit"; patch: Partial<Draft> }
@@ -81,6 +95,44 @@ export type Action =
 
 export function reducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
+    case "assistant_apply":
+      if (
+        state.session !== action.session ||
+        state.sequence !== action.sequence ||
+        state.saving ||
+        state.loading ||
+        state.draft.title !== action.before.title ||
+        state.draft.body !== action.before.body
+      )
+        return state;
+      return {
+        ...state,
+        draft: { ...state.draft, ...action.replacement },
+        sequence: state.sequence + 1,
+        undo: {
+          before: action.before,
+          after: action.replacement,
+          sequence: state.sequence + 1,
+        },
+        notice: "建议已填入编辑区，尚未保存。",
+        error: "",
+      };
+    case "assistant_undo":
+      if (
+        !state.undo ||
+        state.sequence !== state.undo.sequence ||
+        state.draft.title !== state.undo.after.title ||
+        state.draft.body !== state.undo.after.body ||
+        state.saving
+      )
+        return state;
+      return {
+        ...state,
+        draft: { ...state.draft, ...state.undo.before },
+        sequence: state.sequence + 1,
+        undo: null,
+        notice: "已撤销本次 AI 填入，尚未保存。",
+      };
     case "navigate":
       return initial(action.session, action.articleId);
     case "loaded":
@@ -96,6 +148,7 @@ export function reducer(state: EditorState, action: Action): EditorState {
     case "edit":
       return {
         ...state,
+        undo: null,
         draft: { ...state.draft, ...action.patch },
         sequence: state.sequence + 1,
         error: "",

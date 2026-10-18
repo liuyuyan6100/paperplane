@@ -168,7 +168,7 @@ def test_chunked_request_limit_and_invalid_id(client):
 def test_assets_cannot_escape_frontend(client):
     assert client.get("/editor/").status_code == 200
     assert client.get("/editor/%2e%2e/%2e%2e/AGENTS.md").status_code == 404
-    assert client.get("/api/v2/session").json()["milestone"] == "M1"
+    assert client.get("/api/v2/session").json()["milestone"] == "M2"
 
 
 def test_preview_data_is_separate_and_stable_path_rejected(tmp_path, monkeypatch):

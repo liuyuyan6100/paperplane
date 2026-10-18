@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$InstallDir)
+param([Parameter(Mandatory=$true)][string]$InstallDir, [ValidateSet('PaperPlaneStudio','PaperPlaneStudioPreview')][string]$ExecutableName = 'PaperPlaneStudio')
 
 # Bundled installer helper. Never terminate by image name alone or touch user data.
 $ErrorActionPreference = 'Stop'
@@ -16,7 +16,7 @@ try {
     foreach ($marker in @('studio.sqlite3','private.json','desktop.json','local','browser')) {
         if (Test-Path -LiteralPath (Join-Path $targetDir $marker)) { throw 'The selected directory contains user data.' }
     }
-    $ownedExe = Join-Path $targetDir 'PaperPlaneStudio.exe'
+    $ownedExe = Join-Path $targetDir "$ExecutableName.exe"
     $ownedRuntime = Join-Path $targetDir '_internal'
     if ((Test-Path -LiteralPath $ownedRuntime) -and -not (Test-Path -LiteralPath $ownedExe)) {
         throw 'Runtime exists without the application identity marker.'
@@ -48,7 +48,7 @@ try {
         $expectedExe = [UpgradePaths]::Final($ownedExe)
         for ($attempt=0; $attempt -lt 3; $attempt++) {
             $roots = @()
-            foreach ($candidate in @(Get-Process -Name PaperPlaneStudio -ErrorAction SilentlyContinue)) {
+            foreach ($candidate in @(Get-Process -Name $ExecutableName -ErrorAction SilentlyContinue)) {
                 try {
                     # Hold the process handle before reading identity or terminating,
                     # so PID reuse cannot redirect Kill() to an unrelated process.

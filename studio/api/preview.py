@@ -10,11 +10,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 
 from studio.api.articles import article_router
+from studio.api.assistant import assistant_router
 from studio.application.articles import ArticleService
+from studio.application.assistant import AssistantService
 from studio.infrastructure.legacy_articles import LegacyArticleRepository
+from studio.infrastructure.legacy_assistant import LegacyAssistant
 from studio.service import Problem
 
-PREVIEW_VERSION = "0.2.0-m1.1"
+PREVIEW_VERSION = "0.2.0-m2.1"
 CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self'; "
     "img-src 'self' https: http: data:; media-src 'self'; connect-src 'self'; "
@@ -100,13 +103,14 @@ def create_app(studio, legacy_url, token, port, frontend=None):
         return JSONResponse({"error": "输入格式或长度不正确，请检查文章字段"}, status_code=422)
 
     app.include_router(article_router(ArticleService(LegacyArticleRepository(studio))))
+    app.include_router(assistant_router(AssistantService(LegacyAssistant(studio))))
 
     @app.get("/api/v2/session")
     def session():
         return {
             "token": token,
             "version": PREVIEW_VERSION,
-            "milestone": "M1",
+            "milestone": "M2",
             "data_dir": str(studio.db.data_dir),
             "legacy_url": "/",
         }
@@ -171,7 +175,7 @@ def create_app(studio, legacy_url, token, port, frontend=None):
             )
             content = content.replace(
                 b"</body>",
-                '<a class="preview-return" href="/editor/">\u2190 \u8fd4\u56de M1 \u6587\u7ae0\u7f16\u8f91</a></body>'.encode(),
+                '<a class="preview-return" href="/editor/">\u2190 \u8fd4\u56de\u65b0\u7f16\u8f91\u5668</a></body>'.encode(),
                 1,
             )
         return Response(

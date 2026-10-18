@@ -36,9 +36,15 @@ try {
     if (-not $iscc) { throw 'Inno Setup 6 is required.' }
     $packageSource = Join-Path $distRoot 'PaperPlaneStudioPreview'
     $packageOutput = Join-Path $distRoot 'preview-installer'
-    & $iscc.Source "/DSourcePath=$packageSource" "/DOutputPath=$packageOutput" preview-installer.iss
+    $helperDirectory = Join-Path $buildRoot 'upgrade-helper'
+    New-Item -ItemType Directory -Path $helperDirectory -Force | Out-Null
+    $helperLibrary = Join-Path $helperDirectory 'upgrade_paths.dll'
+    $csharpCompiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+    & $csharpCompiler /nologo /target:library "/out:$helperLibrary" "$projectRoot\tools\upgrade_paths.cs"
+    if ($LASTEXITCODE -ne 0) { throw 'Upgrade helper compilation failed.' }
+    & $iscc.Source "/DSourcePath=$packageSource" "/DOutputPath=$packageOutput" "/DUpgradeHelperPath=$helperLibrary" preview-installer.iss
     if ($LASTEXITCODE -ne 0) { throw 'Preview installer build failed.' }
-    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-M1-Setup-0.2.0.1.exe'
+    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-Setup-0.2.0.2.exe'
     $checksum = (Get-FileHash -LiteralPath $package -Algorithm SHA256).Hash.ToLowerInvariant()
     [IO.File]::WriteAllText("$package.sha256", "$checksum  $([IO.Path]::GetFileName($package))`n", [Text.Encoding]::ASCII)
     Write-Output $package

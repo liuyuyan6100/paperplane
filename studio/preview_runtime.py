@@ -10,7 +10,7 @@ from pathlib import Path
 import uvicorn
 
 from run import InstanceLock
-from studio.api.preview import create_app
+from studio.api.preview import PREVIEW_VERSION, create_app
 from studio.server import Server
 from studio.service import Studio
 
@@ -30,17 +30,26 @@ def validate_preview_data_dir(path):
 
 
 class PreviewService:
-    def __init__(self, data_dir, frontend=None):
+    def __init__(self, data_dir, frontend=None, reuse_settings=False):
         self.data_dir = validate_preview_data_dir(data_dir)
         self.frontend = frontend
         self.app = self.server = self.http = self.lock = self.socket = None
         self.legacy_thread = self.thread = None
         self.configure = None
+        self.reuse_settings = reuse_settings
 
     def start(self):
         self.lock = InstanceLock(self.data_dir)
         try:
+            if self.reuse_settings:
+                from studio.infrastructure.configuration_reuse import prepare_configuration
+
+                prepare_configuration(self.data_dir)
             self.app = Studio(self.data_dir)
+            if self.reuse_settings:
+                from studio.infrastructure.configuration_reuse import finish_configuration
+
+                self.app.configuration_reuse = finish_configuration(self.app)
             if self.configure:
                 self.configure(self.app)
             self.server = Server(("127.0.0.1", 0), self.app)
@@ -90,7 +99,7 @@ class PreviewService:
                         "pid": os.getpid(),
                         "url": self.url,
                         "data_dir": str(self.data_dir),
-                        "version": "0.2.0-m1.1",
+                        "version": PREVIEW_VERSION,
                     }
                 ),
                 encoding="utf-8",

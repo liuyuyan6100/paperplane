@@ -43,6 +43,11 @@ def verify(package, output):
     modules = [
         "studio.api.preview",
         "studio.api.articles",
+        "studio.api.assistant",
+        "studio.application.assistant",
+        "studio.domain.assistant",
+        "studio.infrastructure.legacy_assistant",
+        "studio.infrastructure.configuration_reuse",
         "studio.application.articles",
         "studio.domain.articles",
         "studio.infrastructure.legacy_articles",
@@ -118,7 +123,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.2.0-m1.1"
+                assert session["version"] == "0.2.0-m2.1"
                 client.headers["X-Studio-Token"] = session["token"]
                 response = client.post(
                     "/api/v2/articles", json={"title": "成品保存验收", "body": "成品原始内容😀"}
@@ -126,12 +131,18 @@ def verify(package, output):
                 assert response.status_code == 200
                 article = response.json()
                 assert article["stage"] == "draft"
+                assistant = client.get(f"/api/v2/articles/{article['id']}/assistant")
+                assert assistant.status_code == 200 and assistant.json()["turns"] == []
+                assert assistant.json()["content"]["body"] == article["body"]
+                configuration = client.get("/api/v2/assistant/configuration").json()
+                assert configuration["reuse"]["status"] == "not_requested"
+                assert "AI_API_KEY" not in configuration
                 state = client.get("/api/state").json()
                 assert (
                     next(p for p in state["posts"] if p["id"] == article["id"])["body"]
                     == article["body"]
                 )
-                assert "返回 M1" in client.get("/").text
+                assert "返回新编辑器" in client.get("/").text
                 assert (
                     client.post(
                         "/api/v2/articles",
@@ -154,7 +165,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.2.0-m1.1",
+        "version": "0.2.0-m2.1",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -163,6 +174,8 @@ def verify(package, output):
             "worker_alive",
             "frontend",
             "save",
+            "assistant_routes",
+            "isolated_cli_skips_configuration_import",
             "legacy_readback",
             "mutation_security",
             "compatibility_return_link",

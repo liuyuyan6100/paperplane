@@ -11,7 +11,7 @@ from pathlib import Path
 from studio.api.preview import PREVIEW_VERSION
 from studio.preview_runtime import PreviewService, preview_data_dir
 
-TITLE = "纸飞机 · 架构验证版 M1"
+TITLE = "纸飞机 · 架构验证版"
 
 
 def desktop(service):
@@ -123,7 +123,11 @@ def main():
         mutex = kernel.CreateMutexW(None, False, "PaperPlaneStudioPreview")
         # The data-directory lock governs instances. This mutex only lets the
         # preview installer detect any running preview executable.
-    service = PreviewService(args.data_dir)
+    service = PreviewService(
+        args.data_dir,
+        reuse_settings=not (args.serve or args.smoke_test)
+        and args.data_dir.resolve() == preview_data_dir().resolve(),
+    )
     if args.serve or args.smoke_test:
         import httpx
 

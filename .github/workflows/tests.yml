@@ -26,7 +26,7 @@ jobs:
       - run: npm run lint --prefix frontend
       - run: npm test --prefix frontend
       - run: npm run build --prefix frontend
-      - run: python -m ruff check studio/api studio/application studio/domain studio/infrastructure studio/preview_runtime.py preview.py tests/test_preview_editor.py
+      - run: python -m ruff check studio/api studio/application studio/domain studio/infrastructure studio/preview_runtime.py preview.py tests/test_preview_editor.py tests/test_preview_assistant.py
       - run: python -m pytest -q -o faulthandler_timeout=90 --junitxml=test-results/pytest.xml
       - uses: actions/upload-artifact@v4
         if: always()
