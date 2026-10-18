@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "../../api";
+import { ModelPicker } from "./ModelPicker";
 
 export interface ModelSettingsData {
   connection: { base_url: string; model: string; key_set: boolean };
@@ -165,42 +166,34 @@ function SettingsForm({
       <div className="settings-body">
         <fieldset>
           <legend>文字模型</legend>
-          <label>
-            默认文字模型
-            <input
-              aria-label="默认文字模型"
-              list="text-models"
-              value={connection.model}
-              onChange={(e) =>
-                setConnection({ ...connection, model: e.target.value })
-              }
-            />
-          </label>
-          <label>
-            讨论默认模型
-            <input
-              aria-label="讨论默认模型"
-              list="text-models"
-              placeholder="跟随默认文字模型"
-              value={text.chat}
-              onChange={(e) => setText({ ...text, chat: e.target.value })}
-            />
-          </label>
-          <label>
-            修改默认模型
-            <input
-              aria-label="修改默认模型"
-              list="text-models"
-              placeholder="跟随默认文字模型"
-              value={text.body}
-              onChange={(e) => setText({ ...text, body: e.target.value })}
-            />
-          </label>
-          <datalist id="text-models">
-            {catalog.data?.models.map((model) => (
-              <option key={model} value={model} />
-            ))}
-          </datalist>
+          <ModelPicker
+            label="默认文字模型"
+            value={connection.model}
+            models={catalog.data?.models ?? []}
+            emptyLabel="请选择文字模型"
+            onChange={(model) => setConnection({ ...connection, model })}
+          />
+          <ModelPicker
+            label="讨论默认模型"
+            value={text.chat}
+            models={catalog.data?.models ?? []}
+            emptyLabel={`跟随默认文字模型：${connection.model || "未配置"}`}
+            onChange={(chat) => setText({ ...text, chat })}
+          />
+          <ModelPicker
+            label="修改默认模型"
+            value={text.body}
+            models={catalog.data?.models ?? []}
+            emptyLabel={`跟随默认文字模型：${connection.model || "未配置"}`}
+            onChange={(body) => setText({ ...text, body })}
+          />
+          <button
+            type="button"
+            disabled={catalog.isFetching}
+            onClick={() => void catalog.refetch()}
+          >
+            刷新文字模型目录
+          </button>
           <small>
             {catalog.error
               ? catalog.error.message
@@ -222,37 +215,29 @@ function SettingsForm({
               <option value="independent">沿用独立图片接口</option>
             </select>
           </label>
-          <label>
-            默认生图模型
-            <input
-              aria-label="默认生图模型"
-              list="image-models"
-              value={image.model}
-              onChange={(e) => setImage({ ...image, model: e.target.value })}
-            />
-          </label>
-          <label>
-            封面模型
-            <input
-              list="image-models"
-              placeholder="跟随默认生图模型"
-              value={image.cover_model}
-              onChange={(e) =>
-                setImage({ ...image, cover_model: e.target.value })
-              }
-            />
-          </label>
-          <label>
-            正文插图模型
-            <input
-              list="image-models"
-              placeholder="跟随默认生图模型"
-              value={image.illustration_model}
-              onChange={(e) =>
-                setImage({ ...image, illustration_model: e.target.value })
-              }
-            />
-          </label>
+          <ModelPicker
+            label="默认生图模型"
+            value={image.model}
+            models={images.data?.models ?? []}
+            emptyLabel="请选择生图模型"
+            onChange={(model) => setImage({ ...image, model })}
+          />
+          <ModelPicker
+            label="封面模型"
+            value={image.cover_model}
+            models={images.data?.models ?? []}
+            emptyLabel={`跟随默认生图模型：${image.model || "未配置"}`}
+            onChange={(cover_model) => setImage({ ...image, cover_model })}
+          />
+          <ModelPicker
+            label="正文插图模型"
+            value={image.illustration_model}
+            models={images.data?.models ?? []}
+            emptyLabel={`跟随默认生图模型：${image.model || "未配置"}`}
+            onChange={(illustration_model) =>
+              setImage({ ...image, illustration_model })
+            }
+          />
           <label>
             参考图能力
             <select
@@ -268,11 +253,16 @@ function SettingsForm({
               <option value="none">仅文字生图</option>
             </select>
           </label>
-          <datalist id="image-models">
-            {images.data?.models.map((model) => (
-              <option key={model} value={model} />
-            ))}
-          </datalist>
+          <button
+            type="button"
+            disabled={images.isFetching}
+            onClick={() => void images.refetch()}
+          >
+            刷新生图模型目录
+          </button>
+          <small>
+            使用已保存图片连接的完整目录；切换接口后请先保存再刷新。
+          </small>
           {images.error && (
             <small>{images.error.message}；已保存的生图模型继续保留。</small>
           )}

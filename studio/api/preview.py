@@ -17,7 +17,7 @@ from studio.infrastructure.legacy_articles import LegacyArticleRepository
 from studio.infrastructure.legacy_assistant import LegacyAssistant
 from studio.service import Problem
 
-PREVIEW_VERSION = "0.2.0-m2.2"
+PREVIEW_VERSION = "0.2.0-m2.3"
 CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self'; "
     "img-src 'self' https: http: data:; media-src 'self'; connect-src 'self'; "

@@ -876,3 +876,17 @@ body,
     grid-template-columns: 1fr;
   }
 }
+
+.model-picker {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+.model-picker > button {
+  justify-self: start;
+  padding: 2px 0;
+  border: 0;
+  color: #2563eb;
+  font-size: 11px;
+  background: transparent;
+}

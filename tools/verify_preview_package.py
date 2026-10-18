@@ -126,7 +126,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.2.0-m2.2"
+                assert session["version"] == "0.2.0-m2.3"
                 client.headers["X-Studio-Token"] = session["token"]
                 response = client.post(
                     "/api/v2/articles", json={"title": "成品保存验收", "body": "成品原始内容😀"}
@@ -171,7 +171,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.2.0-m2.2",
+        "version": "0.2.0-m2.3",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,

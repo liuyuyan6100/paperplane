@@ -48,9 +48,27 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     const popup=await popupStarted; await popup.waitForURL('**/#profiles'); await popup.close();
     assert.equal(await body.inputValue(),'开始😀\n旧段落\n结束');
     await page.screenshot({path:path.join(f.output,'model-settings.png'),fullPage:true});
-    await settings.getByLabel('讨论默认模型',{exact:true}).fill('synthetic-model');
+    for (const label of ['默认文字模型','讨论默认模型','修改默认模型','默认生图模型','封面模型','正文插图模型']) {
+      const control=settings.getByLabel(label,{exact:true});
+      assert.equal(await control.evaluate(el=>el.tagName),'SELECT');
+      const options=await control.locator('option').evaluateAll(nodes=>nodes.map(node=>node.value));
+      assert(options.includes('synthetic-alternate') && options.includes('synthetic-model'), label+' must show the complete catalog despite the saved value');
+    }
+    await settings.getByLabel('修改默认模型',{exact:true}).selectOption('synthetic-alternate');
+    await settings.getByRole('button',{name:'修改默认模型：手动填写',exact:true}).click();
+    await settings.getByLabel('修改默认模型',{exact:true}).fill('custom-not-in-catalog');
+    await settings.getByRole('button',{name:'修改默认模型：从目录选择',exact:true}).click();
+    assert.equal(await settings.getByLabel('修改默认模型',{exact:true}).inputValue(),'custom-not-in-catalog');
+    await settings.getByLabel('修改默认模型',{exact:true}).selectOption('');
+    await settings.getByLabel('讨论默认模型',{exact:true}).selectOption('synthetic-model');
     await settings.getByRole('button',{name:'保存模型设置',exact:true}).click();
     await settings.waitFor({state:'hidden'});
+    await panel.getByRole('button',{name:'模型与生图设置',exact:true}).click();
+    await settings.getByLabel('讨论默认模型',{exact:true}).waitFor();
+    assert.equal(await settings.getByLabel('讨论默认模型',{exact:true}).inputValue(),'synthetic-model');
+    assert.equal(await settings.getByLabel('修改默认模型',{exact:true}).inputValue(),'');
+    assert((await settings.getByLabel('修改默认模型',{exact:true}).locator('option').allTextContents()).some(text=>text.includes('synthetic-alternate')));
+    await settings.getByRole('button',{name:'关闭设置',exact:true}).click();
     assert.equal(await body.inputValue(),'开始😀\n旧段落\n结束');
     const sent=page.waitForRequest(r=>r.method()==='POST'&&r.url().endsWith('/assistant'));
     await send('讨论表达是否清楚',1);
@@ -99,6 +117,6 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     await page.screenshot({path:path.join(f.output,'assistant-mobile.png'),fullPage:true});
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     assert.deepEqual(errors,[]);
-    fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['discuss','unicode-selection','diff','fill','undo','late-response','refine-current-draft','save-reopen-history','failure','mobile','short-window-controls-visible','ctrl-enter-send','plain-enter-newline','ime-no-send','catalog-selection-sent','settings-preserve-editor']},null,2));
+    fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['discuss','unicode-selection','diff','fill','undo','late-response','refine-current-draft','save-reopen-history','failure','mobile','short-window-controls-visible','ctrl-enter-send','plain-enter-newline','ime-no-send','catalog-selection-sent','settings-preserve-editor','settings-full-catalog','manual-model-preserved','model-inheritance']},null,2));
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

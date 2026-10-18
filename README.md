@@ -2,7 +2,7 @@
 
 一个面向个人创作者的 AI 内容工作台，把素材、账号画像、提纲、正文修改、配图、平台改编和送稿记录放在同一处。
 
-本分支为 **架构验证分支**。M1 已由用户安装验收通过，当前 M2 候选 `0.2.0-m2.2` 接通文章旁的讨论、改稿、选区、差异、填入与撤销，自动复用原纸飞机配置，并以固定名称覆盖升级验证版。[M2 实施记录](docs/architecture/milestones/02-assistant-implementation.md)与[验收步骤](docs/architecture/milestones/02-assistant-acceptance.md)记录交付状态；M2 用户验收尚待确认，M3 未开始。参见[架构计划](docs/architecture/README.md)与[项目 Wiki](docs/wiki/README.md)。下方原有启动命令继续打开兼容工作台。
+本分支为 **架构验证分支**。M1 已由用户安装验收通过，当前 M2 候选 `0.2.0-m2.3` 接通文章旁的讨论、改稿、选区、差异、填入与撤销，自动复用原纸飞机配置，并以固定名称覆盖升级验证版。[M2 实施记录](docs/architecture/milestones/02-assistant-implementation.md)与[验收步骤](docs/architecture/milestones/02-assistant-acceptance.md)记录交付状态；M2 用户验收尚待确认，M3 未开始。参见[架构计划](docs/architecture/README.md)与[项目 Wiki](docs/wiki/README.md)。下方原有启动命令继续打开兼容工作台。
 
 验证新编辑器需安装 `requirements-preview.txt`，在 `frontend/` 执行 `npm ci`、`npm run build`，再在仓库根运行 `python preview.py --serve --open --data-dir ./data-preview`。Windows 独立安装包由 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_preview.ps1` 构建。验证版默认使用 `%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，与正式版独立。
 
