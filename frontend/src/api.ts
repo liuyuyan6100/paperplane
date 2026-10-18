@@ -41,7 +41,10 @@ export async function request<T>(
     throw new Error("服务响应不完整，请保留当前文字后重试。");
   }
   if (!res.ok)
-    throw new Error(value.error || "请求失败，请保留当前文字后重试。");
+    throw Object.assign(
+      new Error(value.error || "请求失败，请保留当前文字后重试。"),
+      { status: res.status, details: value.details },
+    );
   return value as T;
 }
 export async function bootstrap() {

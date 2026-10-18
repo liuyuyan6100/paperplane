@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS jobs (
  error TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '',
  reads INTEGER NOT NULL DEFAULT 0, likes INTEGER NOT NULL DEFAULT 0,
  comments INTEGER NOT NULL DEFAULT 0, metrics_at TEXT, legacy_key TEXT UNIQUE,
- deleted_at TEXT
+ deleted_at TEXT, run_token TEXT NOT NULL DEFAULT ''
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_delivery ON jobs(post_id,channel_id,version) WHERE status != 'canceled';
 CREATE INDEX IF NOT EXISTS idx_jobs_due ON jobs(status,due_at);
@@ -128,6 +128,8 @@ class Database:
                     db.execute(f"ALTER TABLE posts ADD COLUMN {name} {definition}")
             if "deleted_at" not in {r[1] for r in db.execute("PRAGMA table_info(jobs)")}:
                 db.execute("ALTER TABLE jobs ADD COLUMN deleted_at TEXT")
+            if "run_token" not in {r[1] for r in db.execute("PRAGMA table_info(jobs)")}:
+                db.execute("ALTER TABLE jobs ADD COLUMN run_token TEXT NOT NULL DEFAULT ''")
             from .memories import SCHEMA as MEMORY_SCHEMA
             for statement in MEMORY_SCHEMA.split(";"):
                 if statement.strip():

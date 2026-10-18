@@ -1,4 +1,5 @@
 "use strict";
+let queueDeepLinkOpened = "";
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = (v) =>
@@ -674,6 +675,11 @@ function drawQueue() {
     }</section>`;
   $("#queue-select-all").indeterminate = count > 0 && count < selectable.length;
   if (focusSelector) $(focusSelector)?.focus({ preventScroll: true });
+  const linkedTask = location.hash.split("/")[1] || "";
+  if (/^[a-f0-9]{32}$/.test(linkedTask) && queueDeepLinkOpened !== linkedTask) {
+    queueDeepLinkOpened = linkedTask;
+    void showJob(linkedTask).catch(error => toast(error.message));
+  }
 }
 async function showQueueBatch(action, ids, emptying = false) {
   modal(

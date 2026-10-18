@@ -41,6 +41,11 @@ def verify(package, output):
     archive = CArchiveReader(str(exe))
     pyz = archive.open_embedded_archive(next(k for k in archive.toc if k.endswith(".pyz")))
     modules = [
+        "studio.api.tasks",
+        "studio.application.tasks",
+        "studio.domain.tasks",
+        "studio.infrastructure.legacy_tasks",
+        "studio.infrastructure.delivery_execution",
         "studio.api.preview",
         "studio.api.articles",
         "studio.api.assistant",
@@ -126,7 +131,9 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.2.0-m2.5"
+                assert session["version"] == "0.3.0-m3.1" and session["milestone"] == "M3"
+                tasks = client.get("/api/v2/tasks").json()
+                assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
                 response = client.post(
                     "/api/v2/articles", json={"title": "成品保存验收", "body": "成品原始内容😀"}
@@ -158,20 +165,61 @@ def verify(package, output):
                     == 403
                 )
             stop()
+            # Simulate an interrupted request and an unacknowledged recovery command.
+            task_id = "f" * 32
+            stamp = "2026-01-01T00:00:00+00:00"
+            snapshot = json.dumps(
+                {
+                    "post": {"id": article["id"]},
+                    "draft": {"title": article["title"], "body": article["body"]},
+                }
+            )
+            with sqlite3.connect(data / "studio.sqlite3") as db:
+                db.execute(
+                    "INSERT INTO editor_assistant_turns(id,kind,target_id,message,mode,status,snapshot,created_at,updated_at) VALUES(?, 'post', ?, '成品中断恢复验证', 'discuss', 'running', ?, ?, ?)",
+                    (task_id, article["id"], snapshot, stamp, stamp),
+                )
+                db.execute(
+                    "INSERT INTO task_commands(request_id,kind,task_id,fingerprint,action,status,created_at,updated_at) VALUES(?, 'assistant', ?, ?, 'retry', 'pending', ?, ?)",
+                    ("e" * 32, task_id, "0" * 64, stamp, stamp),
+                )
             origin = start()
             with httpx.Client(base_url=origin, trust_env=False) as client:
                 assert (
                     client.get("/api/v2/articles/" + article["id"]).json()["body"]
                     == "成品原始内容😀"
                 )
+                task = client.get(f"/api/v2/tasks/assistant/{task_id}").json()
+                assert task["status"] == "interrupted" and task["post_id"] == article["id"]
+                assert "run_token" not in task and "snapshot" not in task
+                assert client.get("/api/v2/tasks?group=attention").json()["total"] == 1
+                assert (
+                    client.post(
+                        f"/api/v2/tasks/assistant/{task_id}/commands",
+                        json={
+                            "request_id": "d" * 32,
+                            "revision": task["revision"],
+                            "action": "retry",
+                        },
+                        headers={"X-Studio-Token": "wrong"},
+                    ).status_code
+                    == 403
+                )
             stop()
             with sqlite3.connect(data / "studio.sqlite3") as db:
                 assert db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+                assert (
+                    db.execute(
+                        "SELECT status FROM task_commands WHERE request_id=?", ("e" * 32,)
+                    ).fetchone()[0]
+                    == "unknown"
+                )
+                assert db.execute("SELECT COUNT(*) FROM editor_assistant_turns").fetchone()[0] == 1
         finally:
             stop()
     report = {
         "status": "passed",
-        "version": "0.2.0-m2.5",
+        "version": "0.3.0-m3.1",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -181,6 +229,9 @@ def verify(package, output):
             "frontend",
             "save",
             "assistant_routes",
+            "task_routes",
+            "interrupted_task_persists_without_replay",
+            "unfinished_command_not_replayed",
             "isolated_cli_skips_configuration_import",
             "legacy_readback",
             "mutation_security",

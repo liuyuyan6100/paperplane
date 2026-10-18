@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**M1 已由用户安装验收通过，当前为 M2 侧边 AI 候选 `0.2.0-m2.5`**。新侧栏复用原编辑助手的持久化对话、模型调用与版本保护；文章和旧功能继续共用验证库。自动复用原纸飞机已有模型与平台设置。固定名称“纸飞机架构验证版”，同 AppId 覆盖 M1，安装时退出旧验证版；正式版独立保留。M2 用户验收尚待确认，M3 任务状态尚未开始。详见 [M2 实施记录](milestones/02-assistant-implementation.md) 和 [安装验收单](milestones/02-assistant-acceptance.md)。
+**M1、M2已由用户安装验收通过，当前M3任务状态候选 `0.3.0-m3.1` 已通过完整回归与成品核验，待用户安装验收。** 任务中心按原编号读取业务记录，保留编辑区、原任务确认点和配置；恢复委托原业务状态机。固定名称“纸飞机架构验证版”，同AppId覆盖升级，安装时退出旧验证版，正式版独立。M3用户验收待确认，M4未开始。见[M3实施记录](milestones/03-tasks-implementation.md)与[安装验收单](milestones/03-tasks-acceptance.md)。
 
 分支起点为公开主分支 `4b35c6d4595ffd25f0e955d626ce99ce47c52545`，包含公开源码安全清理与后台刷新保护。仅继承清理后的公开历史，不从私人开发历史合并。
 
@@ -19,6 +19,9 @@
 | [M0 记录](milestones/00-foundation.md) | 本轮实际执行与验证结果 |
 | [M1 安装验收单](milestones/01-editor-acceptance.md) | 第一份安装包要让使用者学会并核对的操作 |
 | [M1 实施记录](milestones/01-editor-implementation.md) | 运行入口、模块关系、测试与候选交付 |
+| [M2验收与结论](milestones/02-assistant-acceptance.md) | 侧边AI最终版本与用户验收 |
+| [M3实施记录](milestones/03-tasks-implementation.md) | 查询契约、执行保护与本轮证据 |
+| [M3安装验收](milestones/03-tasks-acceptance.md) | 任务中心的逐步验证 |
 | [Wiki 入口](../wiki/README.md) | 使用、开发、阶段记录的统一索引 |
 
 ## 维护约定

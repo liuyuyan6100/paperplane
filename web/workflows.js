@@ -1,4 +1,5 @@
 "use strict";
+let workflowDeepLinkOpened = "";
 
 // Shared app helpers are resolved when these functions run, after app.js loads.
 const workflowLabels = {
@@ -136,6 +137,12 @@ async function drawWorkflows() {
     if (request !== workflowPageSequence || view !== "workflows") return;
     workflowRows = result.workflows;
     renderWorkflowList();
+    const linkedTask = location.hash.split("/")[1] || "";
+    if (/^[a-f0-9]{32}$/.test(linkedTask) && workflowDeepLinkOpened !== linkedTask) {
+      workflowDeepLinkOpened = linkedTask;
+      await openWorkflowTask(linkedTask);
+    }
+
   } catch (error) {
     if (request !== workflowPageSequence || view !== "workflows") return;
     $("#workflow-page-count").textContent = "暂时无法读取任务";

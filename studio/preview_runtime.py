@@ -46,6 +46,8 @@ class PreviewService:
 
                 prepare_configuration(self.data_dir)
             self.app = Studio(self.data_dir)
+            from studio.infrastructure.legacy_tasks import prepare_preview_restart
+            prepare_preview_restart(self.app)
             if self.reuse_settings:
                 from studio.infrastructure.configuration_reuse import finish_configuration
 

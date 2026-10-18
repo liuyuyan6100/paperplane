@@ -31,3 +31,8 @@
 
 
 M2.5补充：历史建议通过“基于当前稿继续修改”承接到新请求，当前正文与旧快照各自保留；具体步骤与交付证据继续维护在M2验收单/实施记录。
+
+
+## M3任务状态
+
+M2.5用户已确认当前验证无问题，M2验收通过。后续操作沿用[M3安装与逐步验证](../architecture/milestones/03-tasks-acceptance.md)，模块、恢复规则和回归证据见[M3实施记录](../architecture/milestones/03-tasks-implementation.md)。现有文章与配置保留，M3用户验收待确认，M4未开始。

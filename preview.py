@@ -90,7 +90,7 @@ def desktop(service):
         Image.open(root / "web/icon-192.png"),
         TITLE,
         pystray.Menu(
-            pystray.MenuItem("打开文章编辑验证版", lambda *_: window.show(), default=True),
+            pystray.MenuItem("打开纸飞机架构验证版", lambda *_: window.show(), default=True),
             pystray.MenuItem("退出验证版", lambda *_: close()),
         ),
     )

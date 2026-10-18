@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 
 from . import adapters, local_ai, assets, xiaohongshu, network, wechat, profiles
 from .config import Config
+from .domain.tasks import ExecutionLease
 from . import platform_catalog
 from .db import Database, decode_post, dumps, event, now, uid
 from .markdown import render, safe_url
@@ -220,6 +221,7 @@ class Studio:
         rows = self.db.rows("SELECT j.*,p.title,c.name channel_name,c.kind channel_kind FROM jobs j JOIN posts p ON p.id=j.post_id JOIN channels c ON c.id=j.channel_id ORDER BY j.created_at DESC,j.rowid DESC")
         self.publication_sync.decorate(rows)
         for row in rows:
+            row.pop("run_token", None)
             snapshot = json.loads(row.pop("snapshot"))
             row["title"] = snapshot["title"]
             row["public_url"] = public_article_url(row)
@@ -376,6 +378,7 @@ class Studio:
         job = self.db.one("SELECT j.*,c.name channel_name,c.kind channel_kind FROM jobs j JOIN channels c ON c.id=j.channel_id WHERE j.id=?", (job_id,))
         if not job:
             raise Problem("任务不存在", 404)
+        job.pop("run_token", None)
         job["snapshot"] = json.loads(job["snapshot"])
         if job["channel_id"] == "wechat" and job["snapshot"].get("delivery_config", {}).get("mode") == "api":
             job["channel_kind"] = "wechat"
@@ -506,7 +509,7 @@ class Studio:
                 return {"ok": True}
             else:
                 raise Problem("未知任务操作")
-            db.execute("UPDATE jobs SET status=?,updated_at=?,error='',note=?,url=CASE WHEN ?!='' THEN ? ELSE url END,due_at=CASE WHEN ?='queued' THEN ? ELSE due_at END WHERE id=?", (new, now(), note or message, url, url, new, now(), job_id))
+            db.execute("UPDATE jobs SET status=?,run_token='',updated_at=?,error='',note=?,url=CASE WHEN ?!='' THEN ? ELSE url END,due_at=CASE WHEN ?='queued' THEN ? ELSE due_at END WHERE id=?", (new, now(), note or message, url, url, new, now(), job_id))
             event(db, job_id, new, message)
         self.wake.set()
         return {"ok": True}
@@ -516,17 +519,20 @@ class Studio:
             for job in db.execute("SELECT * FROM jobs WHERE status='running' AND deleted_at IS NULL").fetchall():
                 status = "queued" if job["channel_id"] == "local" else "uncertain"
                 message = "服务重启，恢复本地发布" if status == "queued" else "服务在执行时中断，请先核对平台是否收到内容"
-                db.execute("UPDATE jobs SET status=?,error=?,updated_at=? WHERE id=?", (status, message, now(), job["id"]))
+                db.execute("UPDATE jobs SET status=?,run_token='',error=?,updated_at=? WHERE id=?", (status, message, now(), job["id"]))
                 event(db, job["id"], status, message)
 
     def tick(self):
+        if self.stop.is_set():
+            return False
         self.last_tick = now()
         with self.db.connect(immediate=True) as db:
             job = db.execute("SELECT j.*,c.kind,c.enabled FROM jobs j JOIN channels c ON c.id=j.channel_id WHERE j.status='queued' AND j.deleted_at IS NULL AND j.due_at<=? ORDER BY j.due_at,j.rowid LIMIT 1", (now(),)).fetchone()
             if not job:
                 return False
             job = dict(job)
-            db.execute("UPDATE jobs SET status='running',attempts=attempts+1,updated_at=? WHERE id=?", (now(), job["id"]))
+            lease = ExecutionLease.next(job["attempts"])
+            db.execute("UPDATE jobs SET status='running',run_token=?,attempts=attempts+1,updated_at=? WHERE id=?", (lease.token, now(), job["id"]))
             event(db, job["id"], "running", "开始执行渠道分发")
         snapshot = json.loads(job["snapshot"])
         delivery_kind = "wechat" if job["channel_id"] == "wechat" and snapshot.get("delivery_config", {}).get("mode") == "api" else job["kind"]
@@ -536,10 +542,14 @@ class Studio:
             delivery_kind = 'xhs-browser'
         fingerprint = platform_catalog.credential_fingerprint(self, job["channel_id"])
         try:
+            if self.stop.is_set():
+                return True
             if not job["enabled"]:
                 raise adapters.DeliveryError("渠道已停用，请重新启用后重试")
             if job["kind"] == "local":
                 with self.db.connect(immediate=True) as db:
+                    if not lease.owns(db.execute("SELECT status,run_token FROM jobs WHERE id=?",(job["id"],)).fetchone()):
+                        return True
                     db.execute("INSERT OR IGNORE INTO publications(job_id,post_id,snapshot,published_at) VALUES(?,?,?,?)", (job["id"], job["post_id"], job["snapshot"], now()))
                     db.execute("UPDATE jobs SET status='published',url=?,error='',note='已发布到本地专栏',updated_at=? WHERE id=?", ("/read/" + job["id"], now(), job["id"]))
                     event(db, job["id"], "published", "已发布到本地专栏，可查看完整文章")
@@ -562,6 +572,11 @@ class Studio:
             else:
                 raise adapters.DeliveryError("不支持的渠道类型")
             with self.db.connect(immediate=True) as db:
+                current = db.execute("SELECT status,run_token FROM jobs WHERE id=?",(job["id"],)).fetchone()
+                if not lease.owns(current):
+                    from .infrastructure.delivery_execution import retain_late_result
+                    retain_late_result(db,job["id"],lease,result)
+                    return True
                 if delivery_kind == 'bridge' and result.get('desktop_receipt'):
                     snapshot['desktop_receipt'] = result['desktop_receipt']
                     db.execute('UPDATE jobs SET snapshot=? WHERE id=?', (dumps(snapshot), job['id']))
@@ -581,6 +596,8 @@ class Studio:
             state = "uncertain" if uncertain else "failed"
             message = str(exc) if known else "执行异常，请检查本地服务并核对渠道结果"
             with self.db.connect(immediate=True) as db:
+                if not lease.owns(db.execute("SELECT status,run_token FROM jobs WHERE id=?",(job["id"],)).fetchone()):
+                    return True
                 db.execute("UPDATE jobs SET status=?,error=?,updated_at=? WHERE id=?", (state, message, now(), job["id"]))
                 event(db, job["id"], state, message)
         return True
@@ -612,6 +629,11 @@ class Studio:
 
     def close(self):
         self.stop.set()
+        with self.db.connect(immediate=True) as db:
+            for job in db.execute("SELECT id FROM jobs WHERE status='running' AND channel_id!='local' AND deleted_at IS NULL").fetchall():
+                message = '服务停止时任务尚未确认，请先核对原平台结果'
+                db.execute("UPDATE jobs SET status='uncertain',run_token='',error=?,updated_at=? WHERE id=?",(message,now(),job['id']))
+                event(db,job['id'],'uncertain','关闭时保留待核对状态，不自动重新发送')
         self.publication_sync.close()
         self.xhs_drafts.close()
         self.chat.stop()
@@ -767,14 +789,16 @@ class Studio:
         return self.settings()
 
     def recheck_wechat(self, job_id):
+        baseline = self.db.one("SELECT * FROM jobs WHERE id=?", (job_id,))
         job = self.job_detail(job_id)
         if job["deleted_at"] or job["channel_kind"] != "wechat" or job["status"] not in ("draft", "uncertain") or not job["external_id"]:
             raise Problem("只能核对已有微信草稿编号且未回收的记录", 409)
         result = wechat.verify_draft(job["external_id"], job["snapshot"], self.config, self.db.data_dir,
                                      expected_receipt=job["snapshot"].get("wechat_receipt"))
         with self.db.connect(immediate=True) as db:
-            fresh = db.execute("SELECT status,deleted_at FROM jobs WHERE id=?", (job_id,)).fetchone()
-            if not fresh or fresh["deleted_at"] or fresh["status"] not in ("draft", "uncertain"):
+            fresh = db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+            keys = ('status','external_id','attempts','run_token','updated_at','deleted_at')
+            if not fresh or any(fresh[key] != baseline[key] for key in keys) or fresh['snapshot'] != baseline['snapshot']:
                 raise Problem("任务状态已变化，未覆盖最新结果", 409)
             db.execute("UPDATE jobs SET status=?,note=?,error='',updated_at=? WHERE id=?", (result["status"], result["note"], now(), job_id))
             event(db, job_id, result["status"], result["note"])

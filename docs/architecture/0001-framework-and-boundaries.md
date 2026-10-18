@@ -1,6 +1,6 @@
 # 框架与模块边界
 
-日期：2026-10-18。状态：M1 编辑链路已接通前后端，剩余部分逐阶段实现。目标是减少功能修改的影响范围，同时保留现有创作流程与数据兼容性。
+日期：2026-10-19。状态：M1/M2已用户验收，M3任务状态候选已通过回归与成品核验，待用户安装体验。目标是减少功能修改的影响范围，同时保留现有创作流程与数据兼容性。
 
 ## 技术选择
 
@@ -11,7 +11,7 @@
 | 后端接口 | FastAPI、Pydantic、Uvicorn | M1 按业务分 APIRouter，统一请求校验、错误及生命周期；HTTP 层不持有业务决策 |
 | 业务服务 | Python 模块化单体，显式构造依赖 | 文章、编辑助手、任务分别有用例服务；服务通过窄接口协作，不传入万能 Studio 对象 |
 | 数据 | SQLite；SQLAlchemy 2.x 数据访问，Alembic 迁移 | 保留数据库格式与原表。先通过 Repository 包装旧访问，后逐表迁入；M1 不强制切换全部 SQL，也不重建旧库 |
-| 后台执行 | SQLite 持久化任务记录＋进程内 worker | M3 提取统一执行协议，旧任务表先通过适配器读取；任务不是 FastAPI 请求结束后随意丢失的内存状态 |
+| 后台执行 | SQLite 持久化任务记录＋进程内 worker | M3增加类型化任务查询、操作日志与执行保护，原任务表通过适配器读取；任务不是 FastAPI 请求结束后随意丢失的内存状态 |
 | 模型 | 现有自选 API，经 ModelGateway 适配 | 保留分功能模型、请求快照、超时、流式接收、错误分类；不引入 Agent 登录要求 |
 | 平台 | 每平台适配器与能力/回执契约 | 分开上传、草稿保存、可用性核验、公开发表，不由一个 success 布尔值代表所有结果 |
 | Windows | 现有 pywebview/WebView2、pystray、PyInstaller、Inno Setup | 验证版独立 AppId、程序名、目录与实例锁；沿用已有桌面壳能力，先不更换 Electron/Tauri |
@@ -73,3 +73,8 @@ Alembic 接管前需列出旧初始化建表/改表逻辑，识别旧 schema 并
 - [TanStack Query 服务端状态管理](https://tanstack.com/query/latest/docs/framework/react/overview)
 - [SQLAlchemy 事务管理](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html)
 - [Alembic 的 SQLite 批量迁移](https://alembic.sqlalchemy.org/en/latest/batch.html)
+
+
+## M3落地补记
+
+M1/M2已用户验收。M3以TaskService/TaskRepository协议统一查询与显式恢复，既有任务表和worker仍是唯一执行来源。送稿增加ExecutionLease校验，恢复操作有持久化编号与版本检查；原AI管理器令牌规则保留。任务中心没有重建业务任务表，没有提前接管SQLAlchemy/Alembic，也没有移植媒体生产和指标采集；这些仍按后续阶段评估。具体边界与证据见M3实施记录。

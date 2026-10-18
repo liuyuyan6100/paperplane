@@ -1,4 +1,5 @@
 import { useEffect, useReducer, useRef, useState } from "react";
+import { TasksButton } from "./features/tasks/TaskCenter";
 import { AssistantPanel } from "./features/assistant/AssistantPanel";
 import {
   EditorSplit,
@@ -229,7 +230,7 @@ export function App() {
         <a className="brand" href="/editor/">
           <span className="brand-mark">↗</span>
           <span>
-            纸飞机<small>架构验证版 · M2</small>
+            纸飞机<small>架构验证版 · M3</small>
           </span>
         </a>
         <button className="primary new" onClick={() => void navigate(null)}>
@@ -281,7 +282,7 @@ export function App() {
       <main className="editor-main">
         <header className="toolbar">
           <div>
-            <span className="milestone">M2 · 文章编辑与侧边 AI</span>
+            <span className="milestone">M3 · 文章编辑、AI 与任务状态</span>
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
@@ -297,6 +298,12 @@ export function App() {
             >
               {mobileAI ? "返回文章" : "显示 AI"}
             </button>
+            <TasksButton
+              articleId={state.articleId}
+              onOpenArticle={(id) => {
+                if (id !== current.current.articleId) void navigate(id);
+              }}
+            />
             <button
               className="desktop-ai-toggle"
               aria-expanded={!aiCollapsed}
@@ -526,8 +533,8 @@ export function App() {
           <details>
             <summary>验证版信息与本轮范围</summary>
             <p>
-              版本 {session.data.version}。本轮验证文章编辑和侧边
-              AI；任务总览将在后续阶段迁入。其他功能可通过原工作台使用。
+              版本 {session.data.version}。当前可验证文章编辑、侧边 AI
+              与任务状态。 其他功能可通过原工作台使用。
             </p>
             <p className="data-path">数据目录：{session.data.data_dir}</p>
             <p>
