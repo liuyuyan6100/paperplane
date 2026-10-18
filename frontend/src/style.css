@@ -420,7 +420,7 @@ select:focus {
   gap: 7px;
   font-size: 12px;
 }
-.extra-fields label:first-child {
+.extra-fields label:first-of-type {
   grid-column: 1/-1;
 }
 .extra-fields textarea {
@@ -1603,3 +1603,14 @@ body,
     font-size: 10px;
   }
 }
+
+.metadata-assistant { grid-column: 1 / -1; min-width: 0; padding-bottom: 18px; border-bottom: 1px solid #dce5f2; }
+.metadata-action { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.metadata-assistant p, .metadata-assistant small { font-size: 12px; line-height: 1.7; color: #596b84; }
+.metadata-proposal { background: white; padding: 16px; border: 1px solid #dce5f2; border-radius: 10px; margin-top: 12px; overflow-wrap: anywhere; }
+.metadata-proposal dl { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px; line-height: 1.7; }
+.metadata-proposal dt { color: #596b84; }
+.metadata-proposal dd { margin: 0; white-space: pre-wrap; }
+.metadata-proposal small { display: block; }
+.task-purpose { max-width: 700px; line-height: 1.6; }
+.article-tasks { font-size: 12px; color: #235bc6; }

@@ -10,6 +10,15 @@ class AssistantService:
     def get(self, article_id):
         return self.port.get(article_id)
 
+    def metadata(self, article_id):
+        return self.port.metadata(article_id)
+
+    def suggest_metadata(self, article_id, values):
+        return self.port.suggest_metadata(article_id, values)
+
+    def accept_metadata(self, article_id, turn_id, values):
+        return self.port.accept_metadata(article_id, turn_id, values)
+
     def send(self, article_id, values):
         return self.port.send(article_id, values)
 

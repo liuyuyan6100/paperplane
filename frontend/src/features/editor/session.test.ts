@@ -136,3 +136,51 @@ describe("编辑会话竞争保护", () => {
     expect(isDirty(state)).toBe(true);
   });
 });
+
+describe("文章信息补齐的编辑竞争保护", () => {
+  it("只补齐空白信息，保留正文、来源和手动署名", () => {
+    const state = reducer(opened(), {
+      type: "edit",
+      patch: { author: "手写署名", source: "https://example.com/" },
+    });
+    const next = reducer(state, {
+      type: "metadata_apply",
+      session: state.session,
+      sequence: state.sequence,
+      before: state.draft,
+      replacement: { summary: "建议摘要", author: "画像署名", tags: ["标签"] },
+    });
+    expect(next.draft.author).toBe("手写署名");
+    expect(next.draft.body).toBe("原稿");
+    expect(next.draft.source).toBe("https://example.com/");
+    expect(next.draft.summary).toBe("建议摘要");
+    expect(isDirty(next)).toBe(true);
+  });
+  it("晚到结果不能覆盖后续输入、保存或其他文章", () => {
+    const state = opened();
+    const action = {
+      type: "metadata_apply" as const,
+      session: state.session,
+      sequence: state.sequence,
+      before: state.draft,
+      replacement: { summary: "旧建议", author: "署名", tags: [] },
+    };
+    const edited = reducer(state, {
+      type: "edit",
+      patch: { summary: "后续手写" },
+    });
+    expect(reducer(edited, action)).toBe(edited);
+    const other = initial("另一文章");
+    expect(reducer(other, action)).toBe(other);
+    const saving = reducer(state, {
+      type: "saving",
+      request: {
+        id: "saving",
+        session: state.session,
+        sequence: state.sequence,
+        draft: state.draft,
+      },
+    });
+    expect(reducer(saving, action)).toBe(saving);
+  });
+});

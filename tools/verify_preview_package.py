@@ -41,6 +41,7 @@ def verify(package, output):
     archive = CArchiveReader(str(exe))
     pyz = archive.open_embedded_archive(next(k for k in archive.toc if k.endswith(".pyz")))
     modules = [
+        "studio.article_metadata",
         "studio.api.tasks",
         "studio.application.tasks",
         "studio.domain.tasks",
@@ -131,7 +132,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.3.0-m3.1" and session["milestone"] == "M3"
+                assert session["version"] == "0.3.0-m3.2" and session["milestone"] == "M3"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -144,6 +145,10 @@ def verify(package, output):
                 assistant = client.get(f"/api/v2/articles/{article['id']}/assistant")
                 assert assistant.status_code == 200 and assistant.json()["turns"] == []
                 assert assistant.json()["content"]["body"] == article["body"]
+                metadata = client.get(f"/api/v2/articles/{article['id']}/metadata")
+                assert metadata.status_code == 200 and metadata.json()["turns"] == []
+                assert metadata.json()["content"]["summary"] == ""
+                assert metadata.json()["content"]["body"] == article["body"]
                 configuration = client.get("/api/v2/assistant/configuration").json()
                 assert configuration["reuse"]["status"] == "not_requested"
                 assert "AI_API_KEY" not in configuration
@@ -219,7 +224,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.3.0-m3.1",
+        "version": "0.3.0-m3.2",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -229,6 +234,7 @@ def verify(package, output):
             "frontend",
             "save",
             "assistant_routes",
+            "metadata_routes",
             "task_routes",
             "interrupted_task_persists_without_replay",
             "unfinished_command_not_replayed",

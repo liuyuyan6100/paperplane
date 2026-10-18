@@ -1,7 +1,7 @@
 {
   "name": "paperplane-editor-preview",
   "private": true,
-  "version": "0.3.0-m3.1",
+  "version": "0.3.0-m3.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",

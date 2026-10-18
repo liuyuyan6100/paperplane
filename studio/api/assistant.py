@@ -5,7 +5,7 @@ from typing import Literal
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
-from studio.api.articles import ArticleId
+from studio.api.articles import ArticleId, ArticleInput
 from studio.application.assistant import AssistantService
 
 
@@ -36,6 +36,18 @@ class Message(BaseModel):
 class Adoption(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
     draft: Content
+
+
+class MetadataMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    request_id: str = Field(pattern=r"^[a-f0-9]{32}$")
+    revision: str = Field(pattern=r"^[a-f0-9]{64}$")
+    draft: ArticleInput
+
+
+class MetadataAdoption(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    draft: ArticleInput
 
 
 class Connection(BaseModel):
@@ -72,6 +84,26 @@ class Settings(BaseModel):
 
 def assistant_router(service: AssistantService):
     router = APIRouter(prefix="/api/v2")
+
+    @router.get("/articles/{article_id}/metadata")
+    def metadata(article_id: ArticleId):
+        return service.metadata(article_id)
+
+    @router.post("/articles/{article_id}/metadata")
+    def suggest_metadata(article_id: ArticleId, values: MetadataMessage):
+        data = values.model_dump()
+        data["draft"].pop("version", None)
+        return service.suggest_metadata(article_id, data)
+
+    @router.post("/articles/{article_id}/metadata/{turn_id}/accept")
+    def accept_metadata(article_id: ArticleId, turn_id: ArticleId, values: MetadataAdoption):
+        return service.accept_metadata(
+            article_id,
+            turn_id,
+            {
+                "draft": values.draft.model_dump(exclude={"version"}),
+            },
+        )
 
     @router.get("/assistant/configuration")
     def configuration():

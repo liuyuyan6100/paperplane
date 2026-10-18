@@ -186,6 +186,12 @@ def prepare_preview_restart(app):
             "UPDATE draft_preparations SET status='interrupted',run_token='',error='上次补齐准备未完成，请到原文章核对后继续',updated_at=? WHERE status='queued'",
             (now(),),
         )
+        db.execute(
+            "UPDATE editor_assistant_turns SET status='interrupted',run_token='',"
+            "error='上次文章信息补齐未完成，请手动重试',updated_at=? "
+            "WHERE kind='metadata' AND status='queued'",
+            (now(),),
+        )
         if db.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='task_commands'"
         ).fetchone():
@@ -299,7 +305,13 @@ class LegacyTasks:
 
             item["stage_label"] = STAGE_LABELS.get(row["stage"], item["status_label"])
         elif row["kind"] == "assistant":
-            item["stage_label"] = "文章讨论" if row["stage"] == "discuss" else "修改建议"
+            item["stage_label"] = (
+                "文章信息补齐"
+                if raw["kind"] == "metadata"
+                else "文章讨论"
+                if row["stage"] == "discuss"
+                else "修改建议"
+            )
         elif row["kind"] == "delivery":
             channel = db.execute(
                 "SELECT name FROM channels WHERE id=?", (raw["channel_id"],)
@@ -341,7 +353,7 @@ class LegacyTasks:
             context_kind = raw["kind"]
             item["legacy_url"] = (
                 "/#edit/" + row["post_id"]
-                if context_kind == "post"
+                if context_kind in ("post", "metadata")
                 else "/#"
                 + (
                     "workflows"
@@ -370,6 +382,12 @@ class LegacyTasks:
             instruction = "请在原工作项核对结果；任务中心不自动采用、保存或公开发表。"
         else:
             instruction = "按原工作项处理；重试使用原输入快照，不创建另一条任务。"
+        if row["kind"] == "assistant" and raw["kind"] == "metadata":
+            item["legacy_url"] = ""
+            item["stage_label"] = "文章信息补齐"
+            instruction = (
+                "打开所属文章，在“摘要、署名与更多信息”中查看补齐结果；确认填入后仍需保存文章。"
+            )
         item["instruction"] = instruction
         return item
 

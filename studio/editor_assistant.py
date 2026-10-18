@@ -25,8 +25,8 @@ CREATE TABLE IF NOT EXISTS workflow_body_edits (
  snapshot TEXT NOT NULL, created_at TEXT NOT NULL
 );
 """
-KINDS = ('post', 'outline', 'body', 'variant', 'plan', 'image')
-TASKS = {'post': 'body', 'outline': 'outline', 'body': 'body', 'variant': 'repurpose', 'plan': 'illustration_plan'}
+KINDS = ('metadata', 'post', 'outline', 'body', 'variant', 'plan', 'image')
+TASKS = {'metadata': 'body', 'post': 'body', 'outline': 'outline', 'body': 'body', 'variant': 'repurpose', 'plan': 'illustration_plan'}
 
 
 def signature(value):
@@ -37,6 +37,9 @@ def clean(kind, value, allow_empty=False):
     from .service import text_value
     if not isinstance(value, dict):
         fail('修改内容格式不正确')
+    if kind == 'metadata':
+        from .article_metadata import clean_draft
+        return clean_draft(value)
     if kind in ('post', 'outline', 'body'):
         if set(value) != {'title', 'body'}:
             fail('修改结果必须包含标题和正文')
@@ -75,12 +78,15 @@ class EditorAssistant:
             fail('不支持此工作项')
         identifier(target_id)
         context, version, editable = {}, None, False
-        if kind == 'post':
+        if kind in ('post', 'metadata'):
             row = db.execute('SELECT * FROM posts WHERE id=?', (target_id,)).fetchone()
             if not row:
                 fail('文章不存在', 404)
             post = decode_post(row)
             content = {'title': post['title'], 'body': post['body']}
+            if kind == 'metadata':
+                from .article_metadata import FIELDS
+                content = {key: post[key] for key in FIELDS}
             version, editable = post['version'], not post['archived']
         elif kind in ('outline', 'body'):
             row = db.execute('SELECT * FROM workflows WHERE id=?', (target_id,)).fetchone()
@@ -198,6 +204,8 @@ class EditorAssistant:
                     # Preserve exactly the editor buffer used by the author for the later CAS.
                     if kind != 'image':
                         draft = original_draft
+                    if kind == 'metadata' and (mode != 'edit' or draft['profile_id'] != source['profile_id']):
+                        fail('请先保存当前账号画像，再补齐文章信息', 409)
                     selection = values.get('selection')
                     if selection is not None:
                         if kind not in ('post', 'outline', 'body', 'variant') or not isinstance(selection, dict) or set(selection) != {'start', 'end'}:
@@ -222,7 +230,7 @@ class EditorAssistant:
                     db.execute('INSERT INTO editor_assistant_turns(id,kind,target_id,message,mode,status,snapshot,route,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
                                (request_id, kind, target_id, message, mode, 'queued', dumps(snapshot), dumps(route), now(), now()))
                     from .profile_learning import enqueue, explicit_longterm
-                    if source['profile_id'] and explicit_longterm(message):
+                    if kind != 'metadata' and source['profile_id'] and explicit_longterm(message):
                         enqueue(db, source['profile_id'], 'editor_feedback', request_id, 1, message,
                                 title='工作项侧边对话反馈', post_id=source['post']['id'], manual=True)
             if kind == 'image' and not prior:
@@ -269,10 +277,18 @@ class EditorAssistant:
                        'selection': snapshot['selection'], 'history': history,'videos':snapshot['context'].get('videos',[]),'previous_suggestion':snapshot.get('reference'),
                        'references': snapshot['context'].get('references', []), 'outline': snapshot['context'].get('outline', ''),
                        'requirements': snapshot['context'].get('requirements', ''), 'platform': snapshot['post'].get('target_channel', '')}
+            if row['kind'] == 'metadata':
+                from .article_metadata import INSTRUCTION
+                instruction = INSTRUCTION
             try:
                 raw = self.app.generate_draft({'title': snapshot['post']['title'], 'summary': '', 'body': dumps(payload),
                     '_profile_snapshot': snapshot['profile'], '_model_task': route['task'], '_model_route': route, '_json_object': True}, instruction, structured=True)
                 parsed = json.loads(raw)
+                metadata_source = ''
+                if row['kind'] == 'metadata':
+                    from .article_metadata import proposal
+                    parsed = proposal(self.app, snapshot, parsed)
+                    metadata_source = parsed.pop('author_source')
                 if not isinstance(parsed, dict) or set(parsed) != {'reply', 'replacement'} or not isinstance(parsed['reply'], str) or len(parsed['reply']) > 8000:
                     raise DeliveryError('AI修改返回格式不正确，原内容保留，请重试')
                 replacement = parsed['replacement'] if row['mode'] == 'edit' else None
@@ -282,7 +298,9 @@ class EditorAssistant:
                             raise DeliveryError('AI未返回有效的片段修改，原内容保留')
                         start, end = snapshot['selection']['start'], snapshot['selection']['end']
                         replacement = {**snapshot['draft'], 'body': snapshot['draft']['body'][:start] + replacement + snapshot['draft']['body'][end:]}
-                    if row['kind'] == 'variant':
+                    if row['kind'] == 'metadata':
+                        pass  # The metadata proposal is validated and restricted above.
+                    elif row['kind'] == 'variant':
                         from .repurpose import clean_content
                         replacement = clean_content(replacement, snapshot['post']['target_channel'])
                     else:
@@ -298,10 +316,12 @@ class EditorAssistant:
                         from .videos import MARKER
                         known={v['id'] for v in snapshot['context'].get('videos',[])}|{m[2] for m in MARKER.finditer(_visible_markdown(snapshot['draft'].get('body','')))}
                         if not {m[2] for m in MARKER.finditer(_visible_markdown(replacement['body']))}<=known:raise DeliveryError('AI修改出现了未提供的视频地址，原内容保留，请重新修改')
-                before = json.dumps(snapshot['draft'],ensure_ascii=False,indent=2) if row['kind'] in ('plan', 'variant') else '# ' + snapshot['draft']['title'] + '\n\n' + snapshot['draft']['body']
-                after = (json.dumps(replacement,ensure_ascii=False,indent=2) if row['kind'] in ('plan', 'variant') else '# ' + replacement['title'] + '\n\n' + replacement['body']) if replacement else ''
+                before = json.dumps(snapshot['draft'],ensure_ascii=False,indent=2) if row['kind'] in ('plan', 'variant', 'metadata') else '# ' + snapshot['draft']['title'] + '\n\n' + snapshot['draft']['body']
+                after = (json.dumps(replacement,ensure_ascii=False,indent=2) if row['kind'] in ('plan', 'variant', 'metadata') else '# ' + replacement['title'] + '\n\n' + replacement['body']) if replacement else ''
                 diff = ''.join(difflib.unified_diff([s+'\n' for s in before.splitlines()], [s+'\n' for s in after.splitlines()], fromfile='修改前', tofile='建议稿')) if replacement else ''
                 result = {'reply': parsed['reply'], 'replacement': replacement, 'diff': diff[:60000], 'diff_truncated': len(diff) > 60000}
+                if row['kind'] == 'metadata':
+                    result['author_source'] = metadata_source
                 with self.db.connect(immediate=True) as db:
                     db.execute("UPDATE editor_assistant_turns SET status='review',result=?,updated_at=? WHERE id=? AND status='running' AND run_token=?", (dumps(result), now(), row['id'], token))
             except Exception as exc:

@@ -79,6 +79,13 @@ export const isDirty = (s: EditorState) =>
   JSON.stringify(s.draft) !== JSON.stringify(s.saved);
 export type Action =
   | {
+      type: "metadata_apply";
+      session: string;
+      sequence: number;
+      before: Draft;
+      replacement: Pick<Draft, "summary" | "author" | "tags">;
+    }
+  | {
       type: "assistant_apply";
       session: string;
       sequence: number;
@@ -95,6 +102,35 @@ export type Action =
 
 export function reducer(state: EditorState, action: Action): EditorState {
   switch (action.type) {
+    case "metadata_apply":
+      if (
+        state.session !== action.session ||
+        state.sequence !== action.sequence ||
+        state.saving ||
+        state.loading ||
+        JSON.stringify(toDraft(state.draft)) !==
+          JSON.stringify(toDraft(action.before))
+      )
+        return state;
+      return {
+        ...state,
+        draft: {
+          ...state.draft,
+          summary: state.draft.summary.trim()
+            ? state.draft.summary
+            : action.replacement.summary,
+          author: state.draft.author.trim()
+            ? state.draft.author
+            : action.replacement.author,
+          tags: state.draft.tags.some((t) => t.trim())
+            ? state.draft.tags
+            : action.replacement.tags,
+        },
+        sequence: state.sequence + 1,
+        undo: null,
+        error: "",
+        notice: "文章信息已填入空白处，请核对后保存文章。",
+      };
     case "assistant_apply":
       if (
         state.session !== action.session ||

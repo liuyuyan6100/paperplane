@@ -43,7 +43,7 @@ const groups = {
   all: "全部",
   active: "执行中",
   attention: "需处理",
-  review: "待处理",
+  review: "待确认",
   done: "已结束",
 };
 const errors: Record<string, string> = {
@@ -75,21 +75,56 @@ export function TasksButton({
   onOpenArticle: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [articleOnly, setArticleOnly] = useState(false);
   const summary = useQuery({
     queryKey: ["tasks", "summary"],
     queryFn: ({ signal }) => request<Page>("/tasks?limit=1", undefined, signal),
     refetchInterval: 5000,
   });
   const count = summary.data?.counts.attention ?? 0;
+  const current = useQuery({
+    queryKey: ["tasks", "article-summary", articleId],
+    queryFn: ({ signal }) =>
+      request<Page>(`/tasks?post_id=${articleId}&limit=1`, undefined, signal),
+    enabled: !!articleId,
+    refetchInterval: 3000,
+  });
+  const counts = current.data?.counts;
+  const label = counts?.attention
+    ? `本篇：${counts.attention} 项需处理`
+    : counts?.active
+      ? `本篇：${counts.active} 项处理中`
+      : counts?.review
+        ? `本篇：${counts.review} 项待确认`
+        : "";
   return (
     <>
-      <button aria-label="任务中心" onClick={() => setOpen(true)}>
+      {label && (
+        <button
+          className="article-tasks"
+          onClick={() => {
+            setArticleOnly(true);
+            setOpen(true);
+          }}
+        >
+          {label}
+        </button>
+      )}
+      <button
+        aria-label="任务中心"
+        title="查看 AI 处理进度、待确认结果与失败记录"
+        onClick={() => {
+          setArticleOnly(false);
+          setOpen(true);
+        }}
+      >
         任务中心{" "}
         {count > 0 && <span className="task-count">{count} 需处理</span>}
       </button>
       {open && (
         <TaskCenter
           articleId={articleId}
+          initialCurrentOnly={articleOnly}
           onClose={() => setOpen(false)}
           onOpenArticle={(id) => {
             setOpen(false);
@@ -133,10 +168,12 @@ function VerifiedMissing({
 
 export function TaskCenter({
   articleId,
+  initialCurrentOnly = false,
   onClose,
   onOpenArticle,
 }: {
   articleId: string | null;
+  initialCurrentOnly?: boolean;
   onClose: () => void;
   onOpenArticle: (id: string) => void;
 }) {
@@ -144,7 +181,7 @@ export function TaskCenter({
   const [group, setGroup] = useState("all");
   const [kind, setKind] = useState("");
   const [query, setQuery] = useState("");
-  const [currentOnly, setCurrentOnly] = useState(false);
+  const [currentOnly, setCurrentOnly] = useState(initialCurrentOnly);
   const [offset, setOffset] = useState(0);
   const [selected, setSelected] = useState<{ kind: string; id: string } | null>(
     null,
@@ -280,7 +317,11 @@ export function TaskCenter({
         <div>
           <span className="milestone">M3 · 本机任务</span>
           <h2 id="task-center-heading">任务中心</h2>
-          <p>查看同一验证库的任务、阶段与历史，按原任务继续处理。</p>
+          <p>AI 有没有做完、哪里需要你确认、失败后怎么继续，都在这里查看。</p>
+          <p className="task-purpose">
+            写文章不必一直打开。发送 AI
+            请求后会自动留下记录；“待确认”是等你审阅建议，“需处理”是失败、中断或结果待核对。这里不会自动采用或发布文章。
+          </p>
         </div>
         <button autoFocus onClick={onClose}>
           关闭任务中心
@@ -517,14 +558,16 @@ export function TaskCenter({
                       打开所属文章
                     </button>
                   )}
-                  <a
-                    className="task-owner-link"
-                    href={task.legacy_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    到原工作台处理 ↗
-                  </a>
+                  {task.legacy_url && (
+                    <a
+                      className="task-owner-link"
+                      href={task.legacy_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      到原工作台处理 ↗
+                    </a>
+                  )}
                   {task.actions
                     .filter((action) => action !== "not_received")
                     .map((action) => (

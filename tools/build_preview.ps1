@@ -44,8 +44,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Upgrade helper compilation failed.' }
     & $iscc.Source "/DSourcePath=$packageSource" "/DOutputPath=$packageOutput" "/DUpgradeHelperPath=$helperLibrary" preview-installer.iss
     if ($LASTEXITCODE -ne 0) { throw 'Preview installer build failed.' }
-    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-Setup-0.3.0.1.exe'
-    $checksum = (Get-FileHash -LiteralPath $package -Algorithm SHA256).Hash.ToLowerInvariant()
+    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-Setup-0.3.0.2.exe'
+    $hashAlgorithm = [Security.Cryptography.SHA256]::Create()
+    $packageStream = [IO.File]::OpenRead($package)
+    try {
+        $checksum = [BitConverter]::ToString($hashAlgorithm.ComputeHash($packageStream)).Replace('-', '').ToLowerInvariant()
+    } finally {
+        $packageStream.Dispose()
+        $hashAlgorithm.Dispose()
+    }
     [IO.File]::WriteAllText("$package.sha256", "$checksum  $([IO.Path]::GetFileName($package))`n", [Text.Encoding]::ASCII)
     Write-Output $package
 } finally { Pop-Location }

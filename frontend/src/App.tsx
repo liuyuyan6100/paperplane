@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import { TasksButton } from "./features/tasks/TaskCenter";
+import { MetadataAssistant } from "./features/editor/MetadataAssistant";
 import { AssistantPanel } from "./features/assistant/AssistantPanel";
 import {
   EditorSplit,
@@ -301,6 +302,7 @@ export function App() {
             <TasksButton
               articleId={state.articleId}
               onOpenArticle={(id) => {
+                setFields(true);
                 if (id !== current.current.articleId) void navigate(id);
               }}
             />
@@ -441,9 +443,16 @@ export function App() {
                 </div>
                 {fields && (
                   <div className="extra-fields">
+                    <MetadataAssistant
+                      key={state.session}
+                      state={state}
+                      getCurrent={() => current.current}
+                      dispatch={dispatch}
+                    />
                     <label>
                       摘要
                       <textarea
+                        aria-label="摘要"
                         value={state.draft.summary}
                         maxLength={300}
                         onChange={(e) => edit({ summary: e.target.value })}

@@ -12,6 +12,30 @@ class LegacyAssistant:
     def get(self, article_id):
         return self.studio.editor_assistant.get("post", article_id)
 
+    def metadata(self, article_id):
+        return self.studio.editor_assistant.get("metadata", article_id)
+
+    def suggest_metadata(self, article_id, values):
+        if not values["draft"]["body"].strip():
+            raise Problem("请先写好正文，再补齐文章信息")
+        return self.studio.editor_assistant.send(
+            "metadata",
+            article_id,
+            {
+                **values,
+                "mode": "edit",
+                "message": "补齐空白的摘要、署名和标签",
+            },
+        )
+
+    def accept_metadata(self, article_id, turn_id, values):
+        row = self.studio.db.one(
+            "SELECT kind,target_id FROM editor_assistant_turns WHERE id=?", (turn_id,)
+        )
+        if not row or row["kind"] != "metadata" or row["target_id"] != article_id:
+            raise Problem("这条文章信息建议不属于当前文章", 404)
+        return self.studio.editor_assistant.accept(turn_id, values)
+
     def send(self, article_id, values):
         return self.studio.editor_assistant.send("post", article_id, values)
 
