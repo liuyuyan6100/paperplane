@@ -2,7 +2,7 @@
 
 一个面向个人创作者的 AI 内容工作台，把素材、账号画像、提纲、正文修改、配图、平台改编和送稿记录放在同一处。
 
-本分支为 **架构验证分支**。M1、M2已由用户安装验收通过，当前M3候选 `0.3.0-m3.2` 增加任务中心：查询状态、按原任务恢复、保留确认点和未知送稿防重复保护。保留文章编辑、侧边AI、原数据与配置，固定名称覆盖安装。[M3实施记录](docs/architecture/milestones/03-tasks-implementation.md)与[验收步骤](docs/architecture/milestones/03-tasks-acceptance.md)记录交付状态；M3用户验收待确认，M4未开始。参见[架构计划](docs/architecture/README.md)与[项目Wiki](docs/wiki/README.md)。下方原有启动命令继续打开兼容工作台。
+本分支为 **架构验证分支**。M1–M3已由用户安装验收通过，当前M4.1候选 `0.4.0-m4.1` 接通“素材 → 提纲确认 → 正文待审 → 采用保存”的完整链路。已有编辑器、侧边AI、任务中心、数据配置与原工作台入口保留。见[M4.1实施记录](docs/architecture/milestones/04-creation-implementation.md)及[安装验收步骤](docs/architecture/milestones/04-creation-acceptance.md)。本轮只完成M4首个迁移单元，其他功能和M5正式升级尚未完成；候选安装与用户体验待确认。参见[架构计划](docs/architecture/README.md)和[项目Wiki](docs/wiki/README.md)。下方原有启动命令继续打开兼容工作台。
 
 验证新编辑器需安装 `requirements-preview.txt`，在 `frontend/` 执行 `npm ci`、`npm run build`，再在仓库根运行 `python preview.py --serve --open --data-dir ./data-preview`。Windows 独立安装包由 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_preview.ps1` 构建。验证版默认使用 `%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，与正式版独立。
 
@@ -87,4 +87,4 @@ Easel 的官方介绍强调以 OpenClaw Agent 串联发现、策划、创作、�
 本项目原创代码采用 [MIT](LICENSE) 许可证。第三方依赖保留各自的许可证，参见 [致谢与第三方说明](NOTICE.md)。
 
 
-2026-10-19 M3.2补充：文章信息区提供AI补齐空白摘要/署名/标签，先审阅再填入，保留手动信息；任务中心增加用途解释及本篇状态入口。M3用户验收仍待确认，详见M3验收单。
+2026-10-19 M3.2补充：文章信息区提供AI补齐空白摘要/署名/标签，先审阅再填入，保留手动信息；任务中心增加用途解释及本篇状态入口。M3现已用户确认通过，详见M3验收单。

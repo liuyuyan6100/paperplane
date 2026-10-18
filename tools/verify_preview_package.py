@@ -41,6 +41,10 @@ def verify(package, output):
     archive = CArchiveReader(str(exe))
     pyz = archive.open_embedded_archive(next(k for k in archive.toc if k.endswith(".pyz")))
     modules = [
+        "studio.api.creation",
+        "studio.application.creation",
+        "studio.domain.creation",
+        "studio.infrastructure.legacy_creation",
         "studio.article_metadata",
         "studio.api.tasks",
         "studio.application.tasks",
@@ -132,7 +136,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.3.0-m3.2" and session["milestone"] == "M3"
+                assert session["version"] == "0.4.0-m4.1" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -142,6 +146,11 @@ def verify(package, output):
                 assert response.status_code == 200
                 article = response.json()
                 assert article["stage"] == "draft"
+                material_values = {"request_id": "b" * 32, "title": "成品素材", "body": "保留的素材内容", "source": "https://example.com/source"}
+                material = client.post('/api/v2/creation/materials', json=material_values).json()
+                assert material['id'] == client.post('/api/v2/creation/materials', json=material_values).json()['id']
+                assert client.get('/api/v2/creation/materials').status_code == 200
+                assert client.get(f"/api/v2/articles/{article['id']}/creation").json()['workflows'] == []
                 assistant = client.get(f"/api/v2/articles/{article['id']}/assistant")
                 assert assistant.status_code == 200 and assistant.json()["turns"] == []
                 assert assistant.json()["content"]["body"] == article["body"]
@@ -180,6 +189,11 @@ def verify(package, output):
                 }
             )
             with sqlite3.connect(data / "studio.sqlite3") as db:
+                workflow_id = 'c' * 32
+                db.execute("INSERT INTO workflows(id,post_id,post_title,post_version,reference_ids,instruction,snapshot,status,stage,result,outline,outline_version,confirmed_outline_version,created_at,updated_at) VALUES(?,?,?,?,?,?,?,'review','review',?,'成品确认提纲',1,1,?,?)",
+                           (workflow_id, article['id'], article['title'], 1, json.dumps([material['id']]), '成品创作验收',
+                            json.dumps({'post': article, 'references': [material], 'profile': None}),
+                            json.dumps({'title': article['title'], 'body': '成品审阅后的正文😀', 'review': {'warnings': []}}), stamp, stamp))
                 db.execute(
                     "INSERT INTO editor_assistant_turns(id,kind,target_id,message,mode,status,snapshot,created_at,updated_at) VALUES(?, 'post', ?, '成品中断恢复验证', 'discuss', 'running', ?, ?, ?)",
                     (task_id, article["id"], snapshot, stamp, stamp),
@@ -198,6 +212,17 @@ def verify(package, output):
                 assert task["status"] == "interrupted" and task["post_id"] == article["id"]
                 assert "run_token" not in task and "snapshot" not in task
                 assert client.get("/api/v2/tasks?group=attention").json()["total"] == 1
+                session = client.get('/api/v2/session').json()
+                client.headers['X-Studio-Token'] = session['token']
+                route = f"/api/v2/articles/{article['id']}/creation/{workflow_id}"
+                workflow = client.get(route).json()
+                assert workflow['status'] == 'review' and workflow['references'][0]['id'] == material['id']
+                adopt_values = {'version': 1, 'result_signature': workflow['result_signature'], 'resolution': 'unchanged'}
+                adopted = client.post(route + '/adopt', json=adopt_values)
+                assert adopted.status_code == 200, adopted.text
+                assert adopted.json()['post']['body'] == '成品审阅后的正文😀'
+                assert client.post(route + '/adopt', json=adopt_values).json()['post']['version'] == 2
+                assert client.get('/api/state').json()['jobs'] == []
                 assert (
                     client.post(
                         f"/api/v2/tasks/assistant/{task_id}/commands",
@@ -224,7 +249,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.3.0-m3.2",
+        "version": "0.4.0-m4.1",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -235,6 +260,9 @@ def verify(package, output):
             "save",
             "assistant_routes",
             "metadata_routes",
+            "creation_material_idempotency",
+            "pending_body_restart",
+            "atomic_adoption_without_delivery",
             "task_routes",
             "interrupted_task_persists_without_replay",
             "unfinished_command_not_replayed",

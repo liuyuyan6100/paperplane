@@ -11,16 +11,19 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 
 from studio.api.articles import article_router
 from studio.api.assistant import assistant_router
+from studio.api.creation import creation_router
 from studio.api.tasks import task_router
 from studio.application.articles import ArticleService
 from studio.application.assistant import AssistantService
+from studio.application.creation import CreationService
 from studio.application.tasks import TaskService
 from studio.infrastructure.legacy_articles import LegacyArticleRepository
 from studio.infrastructure.legacy_assistant import LegacyAssistant
+from studio.infrastructure.legacy_creation import LegacyCreation
 from studio.infrastructure.legacy_tasks import LegacyTasks
 from studio.service import Problem
 
-PREVIEW_VERSION = "0.3.0-m3.2"
+PREVIEW_VERSION = "0.4.0-m4.1"
 CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self'; "
     "img-src 'self' https: http: data:; media-src 'self'; connect-src 'self'; "
@@ -106,6 +109,7 @@ def create_app(studio, legacy_url, token, port, frontend=None):
         return JSONResponse({"error": "输入格式或长度不正确，请检查文章字段"}, status_code=422)
 
     app.include_router(task_router(TaskService(LegacyTasks(studio))))
+    app.include_router(creation_router(CreationService(LegacyCreation(studio))))
     app.include_router(article_router(ArticleService(LegacyArticleRepository(studio))))
     app.include_router(assistant_router(AssistantService(LegacyAssistant(studio))))
 
@@ -114,7 +118,7 @@ def create_app(studio, legacy_url, token, port, frontend=None):
         return {
             "token": token,
             "version": PREVIEW_VERSION,
-            "milestone": "M3",
+            "milestone": "M4",
             "data_dir": str(studio.db.data_dir),
             "legacy_url": "/",
         }

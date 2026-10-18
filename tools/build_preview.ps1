@@ -1,4 +1,4 @@
-param([switch]$SkipDependencies, [switch]$OpenInstaller, [string]$OutputRoot)
+param([switch]$SkipDependencies, [switch]$SkipFrontendBuild, [switch]$OpenInstaller, [string]$OutputRoot)
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 if (-not $OutputRoot) { $OutputRoot = $projectRoot }
@@ -12,6 +12,8 @@ if (-not $SkipDependencies) {
     & $python -m pip install -r (Join-Path $projectRoot 'requirements-preview.txt')
     if ($LASTEXITCODE -ne 0) { throw 'Preview dependencies could not be installed.' }
 }
+if ($SkipFrontendBuild -and -not (Test-Path -LiteralPath (Join-Path $projectRoot 'frontend\dist\index.html'))) { throw 'A verified frontend build is required.' }
+if (-not $SkipFrontendBuild) {
 Push-Location (Join-Path $projectRoot 'frontend')
 try {
     & npm.cmd ci
@@ -19,6 +21,7 @@ try {
     & npm.cmd run build
     if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed.' }
 } finally { Pop-Location }
+}
 & $python (Join-Path $PSScriptRoot 'make_desktop_icon.py')
 if ($LASTEXITCODE -ne 0) { throw 'Icon generation failed.' }
 $distRoot = Join-Path $OutputRoot 'dist'
@@ -44,7 +47,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Upgrade helper compilation failed.' }
     & $iscc.Source "/DSourcePath=$packageSource" "/DOutputPath=$packageOutput" "/DUpgradeHelperPath=$helperLibrary" preview-installer.iss
     if ($LASTEXITCODE -ne 0) { throw 'Preview installer build failed.' }
-    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-Setup-0.3.0.2.exe'
+    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-Setup-0.4.0.1.exe'
     $hashAlgorithm = [Security.Cryptography.SHA256]::Create()
     $packageStream = [IO.File]::OpenRead($package)
     try {
@@ -56,4 +59,4 @@ try {
     [IO.File]::WriteAllText("$package.sha256", "$checksum  $([IO.Path]::GetFileName($package))`n", [Text.Encoding]::ASCII)
     Write-Output $package
 } finally { Pop-Location }
-if ($OpenInstaller) { Start-Process -FilePath $package }
+if ($OpenInstaller) { & (Join-Path $PSScriptRoot 'start_preview_installer.ps1') -Installer $package }

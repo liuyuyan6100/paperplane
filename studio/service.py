@@ -3,6 +3,7 @@ import json
 import re
 import sqlite3
 import threading
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -145,8 +146,9 @@ class Studio:
             raise Problem("文章不存在", 404)
         return decode_post(row)
 
-    def save_post(self, values, post_id=None):
-        with self.db.connect(immediate=True) as db:
+    def save_post(self, values, post_id=None, *, connection=None):
+        # A caller may include the same version/history write in its own transaction.
+        with (nullcontext(connection) if connection is not None else self.db.connect(immediate=True)) as db:
             old = db.execute("SELECT * FROM posts WHERE id=?", (post_id,)).fetchone() if post_id else None
             if post_id and not old:
                 raise Problem("文章不存在", 404)
