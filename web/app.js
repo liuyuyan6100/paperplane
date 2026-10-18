@@ -175,7 +175,8 @@ async function refresh(render = true) {
   state=latest;
   $("#service-state").innerHTML =
     `<span class="status-dot ${state.worker.alive && !state.worker.error ? "" : "offline"}"></span>${state.worker.error ? "调度异常，请检查服务" : state.worker.alive ? (deployment === "cloud" ? "云端服务运行中" : "本地服务运行中") : "调度器未启动"}`;
-  if (render && !$("#job-quick-menu")?.matches(":popover-open") && !(view === "queue" && $("#modal").open)) draw();
+  const shouldRender = typeof render === "function" ? render() : render;
+  if (shouldRender && !$("#job-quick-menu")?.matches(":popover-open") && !(view === "queue" && $("#modal").open)) draw();
   else drawNav();
 }
 function drawNav() {
@@ -1753,7 +1754,11 @@ async function syncVisibleState(){
   if(pollBusy||document.hidden||modalBusy)return;
   pollBusy=true;
   try{
-    const safe=!['edit','profile','settings','assets','library','chat','workflows','repurpose','illustrations','reviews','topics','analytics'].includes(view)&&!$('#modal').open&&!document.activeElement?.matches('input,textarea,select');
+    const route=location.hash, startedView=view;
+    // A response may arrive after navigation or after the user starts editing.
+    const safe=()=>location.hash===route&&view===startedView&&!document.hidden&&!modalBusy
+      &&!['edit','profile','settings','assets','library','chat','workflows','repurpose','illustrations','reviews','topics','analytics'].includes(view)
+      &&!$('dialog[open]')&&!document.activeElement?.matches('input,textarea,select')&&!document.activeElement?.isContentEditable;
     await refresh(safe);syncEditorState();await refreshArticleFlow();
   }catch{$('#service-state').innerHTML='<span class="status-dot offline"></span>连接中断，正在重连';}
   finally{pollBusy=false;}
