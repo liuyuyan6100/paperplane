@@ -18,6 +18,7 @@
 - [回归与交付](../architecture/validation-and-release.md)
 - [M0 框架基线](../architecture/milestones/00-foundation.md)
 - [M1 文章编辑验收](../architecture/milestones/01-editor-acceptance.md)
+- [M1 实现与交付](../architecture/milestones/01-editor-implementation.md)
 
 ## 每轮更新什么
 

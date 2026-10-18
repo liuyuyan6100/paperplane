@@ -19,9 +19,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt
+      - run: python -m pip install -r requirements-preview.txt -r requirements-cloud.txt -r requirements-preview-test.txt
       - run: npm ci
       - run: npx playwright install chromium
+      - run: npm ci --prefix frontend
+      - run: npm run lint --prefix frontend
+      - run: npm test --prefix frontend
+      - run: npm run build --prefix frontend
+      - run: python -m ruff check studio/api studio/application studio/domain studio/infrastructure studio/preview_runtime.py preview.py tests/test_preview_editor.py
       - run: python -m pytest -q -o faulthandler_timeout=90 --junitxml=test-results/pytest.xml
       - uses: actions/upload-artifact@v4
         if: always()

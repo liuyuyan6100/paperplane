@@ -2,7 +2,9 @@
 
 一个面向个人创作者的 AI 内容工作台，把素材、账号画像、提纲、正文修改、配图、平台改编和送稿记录放在同一处。
 
-本分支为 **架构验证分支**，当前完成框架与阶段基线，运行代码仍沿用公开版本。[查看架构计划](docs/architecture/README.md)与[项目 Wiki](docs/wiki/README.md)。新的验证版安装包尚未提供，不能把本分支当作已经完成重构的版本。
+本分支为 **架构验证分支**，M1 已接通 React/FastAPI 文章编辑链路，候选版本 `0.2.0-m1.1`，安装和用户验收状态见 [M1 实施记录](docs/architecture/milestones/01-editor-implementation.md)。[架构计划](docs/architecture/README.md)与[项目 Wiki](docs/wiki/README.md)记录后续阶段。下方原有启动命令继续打开兼容工作台。
+
+验证新编辑器需安装 `requirements-preview.txt`，在 `frontend/` 执行 `npm ci`、`npm run build`，再在仓库根运行 `python preview.py --serve --open --data-dir ./data-preview`。Windows 独立安装包由 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_preview.ps1` 构建。验证版默认使用 `%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，与正式版独立。
 
 当前开源快照：**0.1.76，早期版本，持续改进中**。适合希望在自己的电脑上管理文章，并接入自己的模型 API 的创作者与开发者。
 

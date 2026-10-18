@@ -3,9 +3,11 @@
 普通使用不需要 Node.js。以下开发回归在仓库根目录运行；建议先按根 README 建立独立虚拟环境，下面的 python 必须指向该环境。需要 Python 3.13、Node.js 22 和可下载 Chromium 的网络。
 
 ```sh
-python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt
+python -m pip install -r requirements-preview.txt -r requirements-cloud.txt -r requirements-preview-test.txt
 npm ci
 npx playwright install chromium
+npm ci --prefix frontend
+npm run build --prefix frontend
 python -m pytest -q
 python -m pytest tests/verify_f10.py -q
 ```
@@ -25,3 +27,5 @@ python -m pytest tests/test_skill_pipeline.py tests/test_skills.py tests/test_pr
 test_public_documentation.py 会实际执行两个开发文档中的完整 Python 示例，检查公开 Markdown 的相对链接和风格包校验和。Windows 目录联接、文件符号链接会受权限影响；报告中跳过必须与通过分开说明。
 
 所有模型响应和平台回执均使用合成测试边界；通过不代表真实模型质量、公众号权限或其他平台发表已验通。最近核验范围和未实测项目见 [公开文档核验表](../docs/VERIFICATION.md)。GitHub Actions 的每次运行单独记录结果。
+
+架构分支还需安装 `requirements-preview.txt` 与 `requirements-preview-test.txt`，执行 `npm ci --prefix frontend`、`npm run build --prefix frontend` 后再运行完整 pytest。M1 专项为 `python -m pytest tests/test_preview_editor.py -q`；其中真实浏览器通过临时验证服务访问新旧界面。新前端检查为 `npm run lint --prefix frontend`、`npm test --prefix frontend` 与 `npm run build --prefix frontend`。详见 [M1 实施记录](../docs/architecture/milestones/01-editor-implementation.md)。

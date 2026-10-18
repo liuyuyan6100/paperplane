@@ -36,3 +36,4 @@ storage-state*.json
 web/icon.ico
 
 node_modules/
+frontend/dist/

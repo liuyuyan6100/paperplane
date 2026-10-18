@@ -1,0 +1,15 @@
+.preview-return {
+  display: block;
+  position: fixed;
+  bottom: 18px;
+  right: 24px;
+  z-index: 90;
+  padding: 10px 16px;
+  border: 1px solid #2563eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1d4ed8;
+  font: 13px/1.5 "Segoe UI", "Microsoft YaHei", sans-serif;
+  text-decoration: none;
+  box-shadow: 0 2px 10px #26374a15;
+}

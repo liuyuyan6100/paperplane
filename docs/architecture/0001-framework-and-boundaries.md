@@ -1,6 +1,6 @@
 # 框架与模块边界
 
-日期：2026-10-18。状态：技术方向选定，逐阶段实现。目标是减少功能修改的影响范围，同时保留现有创作流程与数据兼容性。
+日期：2026-10-18。状态：M1 编辑链路已接通前后端，剩余部分逐阶段实现。目标是减少功能修改的影响范围，同时保留现有创作流程与数据兼容性。
 
 ## 技术选择
 
@@ -17,7 +17,7 @@
 | Windows | 现有 pywebview/WebView2、pystray、PyInstaller、Inno Setup | 验证版独立 AppId、程序名、目录与实例锁；沿用已有桌面壳能力，先不更换 Electron/Tauri |
 | 检查 | pytest、Playwright；新前端增加 Vitest、TypeScript 检查与 ESLint；新 Python 模块增加 Ruff | 保留既有测试，按迁入范围增加契约、状态及组件测试；Windows 安装包单独验证 |
 
-M1 落地时在分支内锁定经兼容性验证的依赖版本并提交锁文件。现阶段没有为了选框架而改动旧运行环境。Node.js 仅用于开发构建，普通使用者不需要额外安装。
+M1 已在独立虚拟环境验证并锁定运行依赖与 npm 包，见 `requirements-preview.txt` 和 `frontend/package-lock.json`。旧运行环境保持原样。Node.js 仅用于开发构建，普通使用者不需要额外安装。SQLAlchemy/Alembic 与统一任务协议尚未接入，M1 通过兼容 Repository 复用原保存事务。
 
 SQLite 继续作为本地存储；目前不增加 PostgreSQL、Redis、Celery、微服务或云端新服务。调度器保留业务所需的持久化与防重复规则，不追求实现通用分布式工作流平台。
 
