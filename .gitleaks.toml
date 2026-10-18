@@ -1,0 +1,15 @@
+title = "PaperPlane public-source secret checks"
+
+[extend]
+useDefault = true
+
+# These two exact values exercise redaction, never authenticate a request.
+# Keep all default rules; neither tests/ nor this file is globally excluded.
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+description = "Only the two synthetic redaction fixtures in their original test"
+condition = "AND"
+regexTarget = "secret"
+paths = ['''(^|/)tests/test_f05_sanitization\.py$''']
+regexes = ['''^(MySecretPass123|sk-1234567890)$''']

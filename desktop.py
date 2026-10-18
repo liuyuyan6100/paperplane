@@ -41,8 +41,7 @@ def server_prompt(current="", first=False):
         title = "首次设置服务器" if first else "服务器连接"
         hint = ("本机可直接使用，点“取消”跳过服务器设置。\n\n"
                 "服务器地址请填完整 HTTPS 首页网址，不要只填 IP。\n"
-                "你的 VPS 纸飞机地址：https://studio.example.com/\n"
-                "其他服务器示例：https://studio.example.com\n\n"
+                "服务器地址示例：https://studio.example.com\n\n"
                 "保存地址后，在“运行位置 → 服务器”连接，并完成服务器登录。\n"
                 "账号画像可在“画像管理 → 云端同步”连接后双向同步。文章、素材各自保存。\n"
                 "以后可在“设置 → 服务器连接”修改地址。")
