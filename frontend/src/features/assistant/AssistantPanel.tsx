@@ -72,6 +72,7 @@ export function AssistantPanel({
   const [reviewedId, setReviewedId] = useState<string | null>(null);
   const [chosenModels, setChosenModels] = useState({ discuss: "", edit: "" });
   const scroller = useRef<HTMLDivElement>(null);
+  const composerInput = useRef<HTMLTextAreaElement>(null);
   const followConversation = useRef(true);
   const active = useRef(false);
   const pendingSend = useRef<{ signature: string; id: string } | null>(null);
@@ -226,13 +227,21 @@ export function AssistantPanel({
       setFragment(null);
     });
   }
+  const isStale = (turn: Turn) =>
+    !!turn.source_changed ||
+    !turn.draft ||
+    turn.draft.title !== state.draft.title ||
+    turn.draft.body !== state.draft.body;
+  function continueFrom(turn: Turn) {
+    setReference(turn.id);
+    setMode("edit");
+    setFragment(null);
+    setError("");
+    composerInput.current?.focus();
+    composerInput.current?.scrollIntoView({ block: "nearest" });
+  }
   const reviewed = history.data?.turns.find((turn) => turn.id === reviewedId);
-  const reviewStale =
-    !!reviewed &&
-    (!!reviewed.source_changed ||
-      !reviewed.draft ||
-      reviewed.draft.title !== state.draft.title ||
-      reviewed.draft.body !== state.draft.body);
+  const reviewStale = !!reviewed && isStale(reviewed);
   return (
     <aside className="assistant-panel" aria-label="侧边 AI">
       <header>
@@ -331,7 +340,13 @@ export function AssistantPanel({
             </small>
             {turn.result.reply && <p>{turn.result.reply}</p>}
             {turn.error && <p role="alert">{turn.error}</p>}
-            {turn.source_changed && <p>原稿已变化，旧建议仍保留供参考。</p>}
+            {turn.result.replacement && isStale(turn) && (
+              <p className="assistant-history-note">
+                {turn.status === "accepted"
+                  ? "这条建议已有取用记录。继续修改请基于当前稿生成新建议。"
+                  : "文章或写作依据已变化，这条旧建议仅供参考。可基于当前稿生成新建议。"}
+              </p>
+            )}
             {turn.result.replacement && (
               <>
                 <button
@@ -344,20 +359,16 @@ export function AssistantPanel({
                   查看修改对比 <span aria-hidden="true">↗</span>
                 </button>
                 <div className="assistant-actions">
-                  <button
-                    disabled={busy || !!state.saving || !!turn.source_changed}
-                    onClick={() => void adopt(turn)}
-                  >
-                    填入编辑区
-                  </button>
-                  <button
-                    disabled={busy}
-                    onClick={() => {
-                      setReference(turn.id);
-                      setMode("edit");
-                    }}
-                  >
-                    继续调整
+                  {!isStale(turn) && (
+                    <button
+                      disabled={busy || !!state.saving}
+                      onClick={() => void adopt(turn)}
+                    >
+                      填入编辑区
+                    </button>
+                  )}
+                  <button disabled={busy} onClick={() => continueFrom(turn)}>
+                    基于当前稿继续修改
                   </button>
                 </div>
               </>
@@ -429,7 +440,7 @@ export function AssistantPanel({
         )}
         {reference && (
           <p>
-            基于上次建议继续调整，使用当前编辑稿。
+            参考这条历史建议，基于{fragment ? "当前选区" : "当前编辑稿全文"}继续。请填写新的修改要求。
             <button type="button" onClick={() => setReference(null)}>
               取消承接
             </button>
@@ -442,6 +453,7 @@ export function AssistantPanel({
           </p>
         )}
         <textarea
+          ref={composerInput}
           aria-label="给 AI 的要求"
           placeholder={
             mode === "discuss"
@@ -482,6 +494,7 @@ export function AssistantPanel({
           busy={busy || !!state.saving}
           error={error}
           onClose={() => setReviewedId(null)}
+          onContinue={() => continueFrom(reviewed)}
           onAdopt={() =>
             void adopt(reviewed).then((applied) => {
               if (applied) setReviewedId(null);

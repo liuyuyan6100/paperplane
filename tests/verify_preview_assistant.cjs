@@ -121,6 +121,9 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     assert.equal(await body.inputValue(),'开始😀\n\n片段已改😀\n\n## 结束');
     await panel.getByRole('button',{name:'撤销填入',exact:true}).click();
     assert.equal(await body.inputValue(),'开始😀\n\n旧段落\n\n## 结束');
+    // Leave a selection that becomes invalid while the accept response is delayed.
+    await body.evaluate(el=>{let i=el.value.indexOf('旧段落'); el.focus(); el.setSelectionRange(i,i+3);});
+    await panel.getByRole('button',{name:'使用选中片段',exact:true}).click();
     // Delay only delivery of the real accept response, then type before it arrives.
     await page.route('**/assistant/*/accept', async route=>{ const response=await route.fetch(); await new Promise(r=>setTimeout(r,400)); await route.fulfill({response}); });
     const acceptStarted=page.waitForRequest(r=>r.url().endsWith('/accept'));
@@ -132,10 +135,24 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     await view.click();
     await review.getByText('当前文章已变化', {exact:false}).waitFor();
     assert.equal(await review.getByRole('region',{name:'修改前'}).locator('.prose').innerText(),'开始😀\n\n旧段落\n\n结束');
-    assert(await review.getByRole('button',{name:'填入编辑区',exact:true}).isDisabled());
-    await page.keyboard.press('Escape');
-    await panel.getByRole('button',{name:'继续调整',exact:true}).click();
+    assert.equal(await review.getByRole('button',{name:'填入编辑区',exact:true}).count(),0);
+    await review.getByRole('button',{name:'基于当前稿继续修改',exact:true}).click();
+    await review.waitFor({state:'hidden'});
+    assert(await input.evaluate(el=>document.activeElement===el),'modal continuation should focus the composer');
+    assert.equal(await panel.getByRole('button',{name:'填入编辑区',exact:true}).count(),0,'stale history must not offer a dead fill button');
+    await panel.getByRole('button',{name:'基于当前稿继续修改',exact:true}).click();
+    assert(await input.evaluate(el=>document.activeElement===el),'continue should focus the composer');
+    assert.equal(await input.inputValue(),'','ask for a new instruction rather than replaying an obsolete selection request');
+    assert.equal(await panel.getByText('清除范围',{exact:true}).count(),0,'continuation starts with current full draft');
+    await input.fill('已写好但尚未发送的新要求');
+    await panel.getByRole('button',{name:'基于当前稿继续修改',exact:true}).click();
+    assert.equal(await input.inputValue(),'已写好但尚未发送的新要求','never overwrite unsent input');
+    const refined=page.waitForRequest(r=>r.method()==='POST'&&r.url().endsWith('/assistant'));
     await send('基于当前手写内容继续调整',3);
+    const refinement=(await refined).postDataJSON();
+    assert.equal(refinement.draft.body,'等待时手写的内容');
+    assert.equal(refinement.selection,undefined);
+    assert(refinement.reference_turn_id);
     await panel.getByRole('button',{name:'填入编辑区',exact:true}).last().click();
     await page.getByText('建议已填入编辑区，尚未保存。',{exact:true}).waitFor();
     assert.equal(await body.inputValue(),'等待时手写的内容\nAI建议');
@@ -146,6 +163,9 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     assert.equal(await body.inputValue(),'等待时手写的内容\nAI建议');
     assert(Math.abs((await panel.boundingBox()).width-chosenWidth)<2,'pane width survives reload');
     await page.waitForFunction(()=>document.querySelectorAll('.assistant-turn').length===3);
+    await panel.getByText('这条建议已有取用记录。继续修改请基于当前稿生成新建议。',{exact:true}).first().waitFor();
+    assert.equal(await panel.getByRole('button',{name:'填入编辑区',exact:true}).count(),0);
+    await page.screenshot({path:path.join(f.output,'historical-suggestion.png'),fullPage:true});
     await send('模拟失败',4);
     await panel.getByText('合成失败，原稿保留',{exact:true}).waitFor();
     await panel.getByRole('button',{name:'重试本次请求',exact:true}).waitFor();
@@ -164,6 +184,6 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     await page.keyboard.press('Escape');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     assert.deepEqual(errors,[]);
-    fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['discuss','unicode-selection','diff','fill','undo','late-response','refine-current-draft','save-reopen-history','failure','mobile','short-window-controls-visible','ctrl-enter-send','plain-enter-newline','ime-no-send','catalog-selection-sent','settings-preserve-editor','settings-full-catalog','manual-model-preserved','model-inheritance','resize-drag-keyboard','collapse-keeps-input','width-persists','modal-formatted-review','changed-block-highlights','review-no-save','modal-focus-trap','stale-snapshot-no-adopt','mobile-review-stacks']},null,2));
+    fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['discuss','unicode-selection','diff','fill','undo','late-response','refine-current-draft','save-reopen-history','failure','mobile','short-window-controls-visible','ctrl-enter-send','plain-enter-newline','ime-no-send','catalog-selection-sent','settings-preserve-editor','settings-full-catalog','manual-model-preserved','model-inheritance','resize-drag-keyboard','collapse-keeps-input','width-persists','modal-formatted-review','changed-block-highlights','review-no-save','modal-focus-trap','stale-snapshot-no-adopt','mobile-review-stacks','history-continuation-focus','history-keeps-unsent-input','history-current-full-draft','history-clears-expired-selection','accepted-history-read-only']},null,2));
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

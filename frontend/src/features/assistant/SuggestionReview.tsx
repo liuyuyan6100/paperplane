@@ -36,6 +36,7 @@ export function SuggestionReview({
   busy,
   error,
   onClose,
+  onContinue,
   onAdopt,
 }: {
   before?: Content;
@@ -44,6 +45,7 @@ export function SuggestionReview({
   busy: boolean;
   error: string;
   onClose: () => void;
+  onContinue: () => void;
   onAdopt: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -70,7 +72,12 @@ export function SuggestionReview({
     element?.showModal();
     return () => {
       element?.close();
-      if (previous instanceof HTMLElement && previous.isConnected)
+      if (
+        previous instanceof HTMLElement &&
+        previous.isConnected &&
+        (document.activeElement === document.body ||
+          element?.contains(document.activeElement))
+      )
         previous.focus();
     };
   }, []);
@@ -202,13 +209,27 @@ export function SuggestionReview({
             <span>查看和关闭对比不会改动文章。</span>
           )}
         </div>
-        <button
-          className="primary"
-          disabled={busy || stale || !before || !preview.data}
-          onClick={onAdopt}
-        >
-          {busy ? "正在填入…" : "填入编辑区"}
-        </button>
+        {stale ? (
+          <button
+            className="primary"
+            disabled={busy}
+            onClick={() => {
+              dialog.current?.close();
+              onClose();
+              onContinue();
+            }}
+          >
+            基于当前稿继续修改
+          </button>
+        ) : (
+          <button
+            className="primary"
+            disabled={busy || !before || !preview.data}
+            onClick={onAdopt}
+          >
+            {busy ? "正在填入…" : "填入编辑区"}
+          </button>
+        )}
       </footer>
     </dialog>
   );
