@@ -18,7 +18,7 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
   try {
     await page.goto(f.url+'/editor/');
     await page.getByLabel('文章标题',{exact:true}).fill('M2浏览器合成验收');
-    await body.fill('开始😀\n旧段落\n结束');
+    await body.fill('开始😀\n\n旧段落\n\n## 结束');
     await page.getByRole('button',{name:'保存文章',exact:true}).click();
     await page.getByText('已保存为第 1 版',{exact:true}).waitFor();
     await page.getByLabel('本次使用模型').selectOption('synthetic-alternate');
@@ -38,6 +38,21 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
       assert(bounds.pageHeight<=bounds.height+1,JSON.stringify(bounds));
     }
     await page.setViewportSize({width:1440,height:900});
+    // Resize with mouse and keyboard; hiding the pane preserves its live draft.
+    const divider=page.getByRole('separator',{name:'调整 AI 侧栏宽度'});
+    const oldWidth=(await panel.boundingBox()).width;
+    const grip=await divider.boundingBox();
+    await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2);
+    await page.mouse.down(); await page.mouse.move(grip.x-80,grip.y+grip.height/2,{steps:8}); await page.mouse.up();
+    assert((await panel.boundingBox()).width>oldWidth+60);
+    await divider.focus(); await divider.press('ArrowLeft');
+    const chosenWidth=(await panel.boundingBox()).width;
+    await page.getByRole('button',{name:'收起 AI',exact:true}).click();
+    assert(!(await panel.isVisible()));
+    await page.getByRole('button',{name:'展开 AI',exact:true}).click();
+    assert.equal(await input.inputValue(),'键盘输入\n');
+    assert(Math.abs((await panel.boundingBox()).width-chosenWidth)<2);
+    await page.screenshot({path:path.join(f.output,'resizable-sidebar.png'),fullPage:true});
     await panel.getByRole('button',{name:'模型与生图设置',exact:true}).click();
     const settings=page.getByRole('dialog',{name:'模型与生图设置'});
     await settings.getByLabel('默认生图模型',{exact:true}).waitFor();
@@ -46,7 +61,7 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     const popupStarted=page.waitForEvent('popup');
     await settings.getByRole('link',{name:'管理账号画像与风格 ↗'}).click();
     const popup=await popupStarted; await popup.waitForURL('**/#profiles'); await popup.close();
-    assert.equal(await body.inputValue(),'开始😀\n旧段落\n结束');
+    assert.equal(await body.inputValue(),'开始😀\n\n旧段落\n\n## 结束');
     await page.screenshot({path:path.join(f.output,'model-settings.png'),fullPage:true});
     for (const label of ['默认文字模型','讨论默认模型','修改默认模型','默认生图模型','封面模型','正文插图模型']) {
       const control=settings.getByLabel(label,{exact:true});
@@ -69,7 +84,7 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     assert.equal(await settings.getByLabel('修改默认模型',{exact:true}).inputValue(),'');
     assert((await settings.getByLabel('修改默认模型',{exact:true}).locator('option').allTextContents()).some(text=>text.includes('synthetic-alternate')));
     await settings.getByRole('button',{name:'关闭设置',exact:true}).click();
-    assert.equal(await body.inputValue(),'开始😀\n旧段落\n结束');
+    assert.equal(await body.inputValue(),'开始😀\n\n旧段落\n\n## 结束');
     const sent=page.waitForRequest(r=>r.method()==='POST'&&r.url().endsWith('/assistant'));
     await send('讨论表达是否清楚',1);
     assert.equal((await sent).postDataJSON().model,'synthetic-alternate');
@@ -80,14 +95,32 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     await panel.getByRole('button',{name:'使用选中片段',exact:true}).click();
     await send('只修改选中片段',2);
     await panel.getByText('合成修改回复',{exact:true}).waitFor();
-    await panel.getByText('查看建议与差异',{exact:true}).click();
+    const review=page.getByRole('dialog',{name:'审阅修改对比'});
+    const view=panel.getByRole('button',{name:'查看修改对比',exact:true});
+    let articleWrites=0;
+    page.on('request', r=>{if(r.method()==='POST' && /\/api\/v2\/articles(?:\/[^/]+)?$/.test(new URL(r.url()).pathname)) articleWrites++;});
+    await view.click();
+    await review.locator('.review-columns').waitFor();
+    assert.equal(await review.getByRole('region',{name:'修改前'}).locator('[data-review-change="removed"]').count(),1);
+    assert.equal(await review.getByRole('region',{name:'建议稿'}).locator('[data-review-change="added"]').count(),1);
+    assert.equal(await review.getByRole('region',{name:'建议稿'}).getByRole('heading',{name:'结束',exact:true}).count(),1);
+    await page.screenshot({path:path.join(f.output,'suggestion-review-desktop.png'),fullPage:true});
+    await review.getByLabel('突出改动').uncheck();
+    assert(!(await review.getAttribute('class')).includes('show-changes'));
+    await review.getByLabel('突出改动').check();
+    for(let i=0;i<6;i++) {await page.keyboard.press('Tab'); assert(await review.evaluate(el=>el.contains(document.activeElement)));}
+    await page.keyboard.press('Escape'); await review.waitFor({state:'hidden'});
+    assert.equal(articleWrites,0,'viewing and closing must not save an article');
+    assert.equal(await body.inputValue(),'开始😀\n\n旧段落\n\n## 结束');
     await page.screenshot({path:path.join(f.output,'assistant-desktop.png'),fullPage:true});
     const fill = panel.getByRole('button',{name:'填入编辑区',exact:true});
-    await fill.click();
+    await view.click();
+    await review.getByRole('button',{name:'填入编辑区',exact:true}).click();
+    await review.waitFor({state:'hidden'});
     await page.getByText('建议已填入编辑区，尚未保存。',{exact:true}).waitFor();
-    assert.equal(await body.inputValue(),'开始😀\n片段已改😀\n结束');
+    assert.equal(await body.inputValue(),'开始😀\n\n片段已改😀\n\n## 结束');
     await panel.getByRole('button',{name:'撤销填入',exact:true}).click();
-    assert.equal(await body.inputValue(),'开始😀\n旧段落\n结束');
+    assert.equal(await body.inputValue(),'开始😀\n\n旧段落\n\n## 结束');
     // Delay only delivery of the real accept response, then type before it arrives.
     await page.route('**/assistant/*/accept', async route=>{ const response=await route.fetch(); await new Promise(r=>setTimeout(r,400)); await route.fulfill({response}); });
     const acceptStarted=page.waitForRequest(r=>r.url().endsWith('/accept'));
@@ -96,6 +129,11 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     await panel.getByRole('alert').filter({hasText:'等待期间文章已变化'}).waitFor();
     assert.equal(await body.inputValue(),'等待时手写的内容');
     await page.unroute('**/assistant/*/accept');
+    await view.click();
+    await review.getByText('当前文章已变化', {exact:false}).waitFor();
+    assert.equal(await review.getByRole('region',{name:'修改前'}).locator('.prose').innerText(),'开始😀\n\n旧段落\n\n结束');
+    assert(await review.getByRole('button',{name:'填入编辑区',exact:true}).isDisabled());
+    await page.keyboard.press('Escape');
     await panel.getByRole('button',{name:'继续调整',exact:true}).click();
     await send('基于当前手写内容继续调整',3);
     await panel.getByRole('button',{name:'填入编辑区',exact:true}).last().click();
@@ -106,6 +144,7 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     await page.reload();
     await page.getByRole('button').filter({hasText:'M2浏览器合成验收'}).click();
     assert.equal(await body.inputValue(),'等待时手写的内容\nAI建议');
+    assert(Math.abs((await panel.boundingBox()).width-chosenWidth)<2,'pane width survives reload');
     await page.waitForFunction(()=>document.querySelectorAll('.assistant-turn').length===3);
     await send('模拟失败',4);
     await panel.getByText('合成失败，原稿保留',{exact:true}).waitFor();
@@ -115,8 +154,16 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
     assert(await input.isVisible());
     const mobile=await input.boundingBox();assert(mobile.y>=0&&mobile.y+mobile.height<=844);
     await page.screenshot({path:path.join(f.output,'assistant-mobile.png'),fullPage:true});
+    await panel.getByRole('button',{name:'查看修改对比',exact:true}).first().click();
+    await review.locator('.review-columns').waitFor();
+    const columns=await review.locator('.review-columns > section').evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};}));
+    assert(columns[1].y>=columns[0].y+columns[0].height-1,'mobile review stacks full drafts');
+    const footer=await review.locator('.review-footer').boundingBox(); assert(footer.y+footer.height<=844);
+    assert(await review.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
+    await page.screenshot({path:path.join(f.output,'suggestion-review-mobile.png'),fullPage:true});
+    await page.keyboard.press('Escape');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     assert.deepEqual(errors,[]);
-    fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['discuss','unicode-selection','diff','fill','undo','late-response','refine-current-draft','save-reopen-history','failure','mobile','short-window-controls-visible','ctrl-enter-send','plain-enter-newline','ime-no-send','catalog-selection-sent','settings-preserve-editor','settings-full-catalog','manual-model-preserved','model-inheritance']},null,2));
+    fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['discuss','unicode-selection','diff','fill','undo','late-response','refine-current-draft','save-reopen-history','failure','mobile','short-window-controls-visible','ctrl-enter-send','plain-enter-newline','ime-no-send','catalog-selection-sent','settings-preserve-editor','settings-full-catalog','manual-model-preserved','model-inheritance','resize-drag-keyboard','collapse-keeps-input','width-persists','modal-formatted-review','changed-block-highlights','review-no-save','modal-focus-trap','stale-snapshot-no-adopt','mobile-review-stacks']},null,2));
   } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

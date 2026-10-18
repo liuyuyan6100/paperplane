@@ -9,7 +9,7 @@ import {
   type ModelSettingsData,
 } from "./ModelSettings";
 
-type Content = { title: string; body: string };
+import { SuggestionReview, type Content } from "./SuggestionReview";
 interface Turn {
   id: string;
   message: string;
@@ -17,6 +17,7 @@ interface Turn {
   status: string;
   error?: string;
   source_changed?: boolean;
+  draft?: Content;
   result: {
     reply?: string;
     replacement?: Content;
@@ -68,6 +69,7 @@ export function AssistantPanel({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [reviewedId, setReviewedId] = useState<string | null>(null);
   const [chosenModels, setChosenModels] = useState({ discuss: "", edit: "" });
   const scroller = useRef<HTMLDivElement>(null);
   const followConversation = useRef(true);
@@ -134,7 +136,7 @@ export function AssistantPanel({
       scroller.current.scrollTop = scroller.current.scrollHeight;
   }, [history.data]);
   async function mutation(operation: () => Promise<unknown>) {
-    if (active.current) return;
+    if (active.current) return false;
     active.current = true;
     setBusy(true);
     setError("");
@@ -143,8 +145,10 @@ export function AssistantPanel({
       await client.invalidateQueries({
         queryKey: ["assistant", state.articleId],
       });
+      return true;
     } catch (failure) {
       setError((failure as Error).message);
+      return false;
     } finally {
       active.current = false;
       setBusy(false);
@@ -200,7 +204,7 @@ export function AssistantPanel({
   }
   async function adopt(turn: Turn) {
     const before = getCurrent();
-    await mutation(async () => {
+    return mutation(async () => {
       const result = await request<{ replacement: Content }>(
         `/articles/${before.articleId}/assistant/${turn.id}/accept`,
         { draft: content(before) },
@@ -222,6 +226,13 @@ export function AssistantPanel({
       setFragment(null);
     });
   }
+  const reviewed = history.data?.turns.find((turn) => turn.id === reviewedId);
+  const reviewStale =
+    !!reviewed &&
+    (!!reviewed.source_changed ||
+      !reviewed.draft ||
+      reviewed.draft.title !== state.draft.title ||
+      reviewed.draft.body !== state.draft.body);
   return (
     <aside className="assistant-panel" aria-label="侧边 AI">
       <header>
@@ -323,16 +334,15 @@ export function AssistantPanel({
             {turn.source_changed && <p>原稿已变化，旧建议仍保留供参考。</p>}
             {turn.result.replacement && (
               <>
-                <details>
-                  <summary>查看建议与差异</summary>
-                  <pre className="assistant-diff">
-                    {turn.result.diff}
-                    {turn.result.diff_truncated &&
-                      "\n差异较长，已截断；下面保留完整建议。"}
-                  </pre>
-                  <strong>{turn.result.replacement.title}</strong>
-                  <pre>{turn.result.replacement.body}</pre>
-                </details>
+                <button
+                  className="review-open"
+                  onClick={() => {
+                    setError("");
+                    setReviewedId(turn.id);
+                  }}
+                >
+                  查看修改对比 <span aria-hidden="true">↗</span>
+                </button>
                 <div className="assistant-actions">
                   <button
                     disabled={busy || !!state.saving || !!turn.source_changed}
@@ -464,6 +474,21 @@ export function AssistantPanel({
           </button>
         </div>
       </form>
+      {reviewed?.result.replacement && (
+        <SuggestionReview
+          before={reviewed.draft}
+          after={reviewed.result.replacement}
+          stale={reviewStale}
+          busy={busy || !!state.saving}
+          error={error}
+          onClose={() => setReviewedId(null)}
+          onAdopt={() =>
+            void adopt(reviewed).then((applied) => {
+              if (applied) setReviewedId(null);
+            })
+          }
+        />
+      )}
       {settingsOpen && (
         <ModelSettings
           onClose={() => {

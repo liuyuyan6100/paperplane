@@ -1,5 +1,10 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import { AssistantPanel } from "./features/assistant/AssistantPanel";
+import {
+  EditorSplit,
+  readLayoutPreference,
+  saveLayoutPreference,
+} from "./features/editor/EditorSplit";
 import { capture } from "./features/assistant/selection";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -64,6 +69,9 @@ export function App() {
   const [fields, setFields] = useState(false);
   const [mobileAI, setMobileAI] = useState(false);
   const [mobileLibrary, setMobileLibrary] = useState(false);
+  const [aiCollapsed, setAiCollapsed] = useState(
+    () => !!readLayoutPreference("paperplane.ai.collapsed", 0),
+  );
   const dirty = isDirty(state);
 
   useEffect(() => {
@@ -289,6 +297,19 @@ export function App() {
             >
               {mobileAI ? "返回文章" : "显示 AI"}
             </button>
+            <button
+              className="desktop-ai-toggle"
+              aria-expanded={!aiCollapsed}
+              onClick={() => {
+                setAiCollapsed(!aiCollapsed);
+                saveLayoutPreference(
+                  "paperplane.ai.collapsed",
+                  aiCollapsed ? 0 : 1,
+                );
+              }}
+            >
+              {aiCollapsed ? "展开 AI" : "收起 AI"}
+            </button>
             <span role="status" className={dirty ? "dirty" : "saved"}>
               {state.saving
                 ? "正在保存…"
@@ -338,7 +359,27 @@ export function App() {
             正在读取文章…
           </p>
         ) : (
-          <div className={"editing-layout" + (mobileAI ? " mobile-ai" : "")}>
+          <EditorSplit
+            collapsed={aiCollapsed}
+            mobileAI={mobileAI}
+            assistant={
+              <AssistantPanel
+                key={state.session}
+                state={state}
+                getCurrent={() => current.current}
+                getSelection={() =>
+                  bodyInput.current
+                    ? capture(
+                        current.current.draft.body,
+                        bodyInput.current.selectionStart,
+                        bodyInput.current.selectionEnd,
+                      )
+                    : null
+                }
+                dispatch={dispatch}
+              />
+            }
+          >
             <div className="editing-document">
               <section className="document-meta">
                 <label className="title-label">
@@ -479,22 +520,7 @@ export function App() {
                 )}
               </section>
             </div>
-            <AssistantPanel
-              key={state.session}
-              state={state}
-              getCurrent={() => current.current}
-              getSelection={() =>
-                bodyInput.current
-                  ? capture(
-                      current.current.draft.body,
-                      bodyInput.current.selectionStart,
-                      bodyInput.current.selectionEnd,
-                    )
-                  : null
-              }
-              dispatch={dispatch}
-            />
-          </div>
+          </EditorSplit>
         )}
         <footer>
           <details>
