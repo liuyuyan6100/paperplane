@@ -596,3 +596,283 @@ footer p {
     font-size: 23px;
   }
 }
+/* The viewport owns the shell; only documents and conversation history scroll. */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+.workspace {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+.library {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+.article-list {
+  min-height: 0;
+}
+.editor-main {
+  height: 100%;
+  min-height: 0;
+}
+.toolbar {
+  flex: 0 0 auto;
+  padding: 16px 28px;
+}
+.editor-notices {
+  flex: 0 0 auto;
+  max-height: 22dvh;
+  overflow: auto;
+}
+.editing-layout {
+  flex: 1 1 0;
+  min-height: 0;
+  align-items: stretch;
+  overflow: hidden;
+}
+.editing-document {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}
+.assistant-panel {
+  position: static;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.assistant-panel > header,
+.assistant-configuration {
+  flex: 0 0 auto;
+}
+.assistant-panel > header {
+  align-items: center;
+  padding: 12px 14px 8px;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.assistant-panel > header small {
+  font-size: 10px;
+}
+.assistant-configuration {
+  padding: 0 14px 9px;
+}
+.assistant-configuration label {
+  display: grid;
+  gap: 4px;
+}
+.assistant-configuration select {
+  width: 100%;
+  min-width: 0;
+  font-size: 12px;
+  padding: 6px;
+}
+.assistant-model-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.assistant-model-tools button {
+  padding: 3px 6px;
+  font-size: 10px;
+  margin: 4px 0;
+}
+.assistant-history {
+  min-height: 0;
+  overscroll-behavior: contain;
+}
+.assistant-composer {
+  flex: 0 0 auto;
+  max-height: 48%;
+  overflow: auto;
+}
+.assistant-composer textarea {
+  height: clamp(55px, 9dvh, 100px);
+  min-height: 45px;
+  max-height: 120px;
+  resize: none;
+  margin: 8px 0;
+}
+.assistant-composer p {
+  margin: 6px 0;
+  font-size: 11px;
+}
+.editor-main > footer {
+  flex: 0 0 auto;
+  max-height: 25dvh;
+  overflow: auto;
+  padding: 10px 28px;
+}
+.mobile-control {
+  display: none;
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: #172b4d55;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+.settings-dialog {
+  width: min(760px, 100%);
+  max-height: 100%;
+  height: min(850px, 100%);
+  background: white;
+  box-shadow: 0 15px 70px #10284844;
+  border-radius: 14px;
+  overflow: hidden;
+  color: #26374a;
+}
+.settings-dialog > form {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.settings-dialog header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e6ee;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.settings-dialog h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+.settings-dialog p {
+  line-height: 1.7;
+  margin: 6px 0;
+}
+.settings-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 20px;
+}
+.settings-dialog fieldset {
+  border: 1px solid #dce5ef;
+  border-radius: 10px;
+  margin: 0 0 18px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-width: 0;
+}
+.settings-dialog legend {
+  padding: 0 8px;
+  font-weight: 600;
+}
+.settings-dialog label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  min-width: 0;
+}
+.settings-dialog input,
+.settings-dialog select {
+  width: 100%;
+  min-width: 0;
+}
+.settings-dialog fieldset > p,
+.settings-dialog fieldset > small,
+.settings-dialog details {
+  grid-column: 1/-1;
+}
+.settings-dialog details {
+  padding: 10px;
+  background: #f6f8fb;
+  border-radius: 8px;
+}
+.settings-dialog details p {
+  white-space: pre-wrap;
+}
+.settings-dialog summary {
+  cursor: pointer;
+}
+.settings-dialog footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  padding: 12px 20px;
+  color: #65768d;
+}
+
+@media (max-width: 850px) {
+  .workspace {
+    display: flex;
+  }
+  .library {
+    display: none;
+  }
+  .library-open .library {
+    display: flex;
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(300px, 80vw);
+    height: 100dvh;
+    z-index: 30;
+    box-shadow: 6px 0 25px #18325633;
+  }
+  .mobile-control {
+    display: inline-block;
+  }
+  .editing-layout {
+    display: flex;
+  }
+  .editing-document {
+    width: 100%;
+  }
+  .assistant-panel {
+    display: none;
+    margin: 0;
+    border-radius: 0;
+    border: 0;
+    width: 100%;
+  }
+  .mobile-ai .editing-document {
+    display: none;
+  }
+  .mobile-ai .assistant-panel {
+    display: flex;
+  }
+  .toolbar {
+    padding: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .toolbar-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 6px;
+  }
+  .toolbar-actions > span {
+    width: auto;
+    text-align: left;
+  }
+  .assistant-panel > header {
+    flex-wrap: nowrap;
+  }
+  .assistant-composer {
+    max-height: 48%;
+  }
+  .modal-backdrop {
+    padding: 8px;
+  }
+  .settings-dialog fieldset {
+    grid-template-columns: 1fr;
+  }
+}

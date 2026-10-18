@@ -21,3 +21,12 @@ class AssistantService:
 
     def configuration(self):
         return self.port.configuration()
+
+    def settings(self):
+        return self.port.settings()
+
+    def save_settings(self, values):
+        return self.port.save_settings(values)
+
+    def models(self, kind):
+        return self.port.models(kind)

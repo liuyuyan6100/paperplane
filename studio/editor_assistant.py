@@ -165,12 +165,17 @@ class EditorAssistant:
         mode = values.get('mode', 'edit')
         if mode not in ('edit', 'discuss') or kind == 'image' and mode != 'edit':
             fail('请选择有效的修改模式')
+        selected_model = values.get('model') or None
+        if selected_model is not None and (not isinstance(selected_model, str) or len(selected_model) > 200 or not selected_model.strip() or any(ord(c) < 32 for c in selected_model)):
+            fail('请选择有效的模型名称')
+        if selected_model and kind == 'image':
+            fail('改图模型请在图片模型设置中选择')
         with self.lock:
             with self.db.connect(immediate=True) as db:
                 prior = db.execute('SELECT * FROM editor_assistant_turns WHERE id=?', (request_id,)).fetchone()
                 if prior:
                     snapshot = json.loads(prior['snapshot'])
-                    if (prior['kind'], prior['target_id'], prior['message'], prior['mode'], snapshot['revision'], snapshot['draft'], snapshot.get('selection'),(snapshot.get('reference') or {}).get('id')) != (kind, target_id, message, mode, values.get('revision'), values.get('draft'), values.get('selection'),values.get('reference_turn_id')):
+                    if (prior['kind'], prior['target_id'], prior['message'], prior['mode'], snapshot['revision'], snapshot['draft'], snapshot.get('selection'),(snapshot.get('reference') or {}).get('id'),snapshot.get('selected_model')) != (kind, target_id, message, mode, values.get('revision'), values.get('draft'), values.get('selection'),values.get('reference_turn_id'),selected_model):
                         fail('请求编号已用于其他修改', 409)
                 else:
                     source = self.source(kind, target_id, db)
@@ -208,10 +213,12 @@ class EditorAssistant:
                             fail('这份建议不属于当前工作项或尚未完成，请选择本篇已有建议',409)
                         reference={'id':ref['id'],'message':ref['message'],**json.loads(ref['result'])}
                         reference.pop('diff',None)
-                    snapshot = {**source, 'draft': draft, 'selection': selection, 'profile': profile,'reference':reference}
+                    snapshot = {**source, 'draft': draft, 'selection': selection, 'profile': profile,'reference':reference, 'selected_model':selected_model}
                     if len(dumps(snapshot)) > 240000:
                         fail('上下文过长，请缩小素材或工作项内容后重试')
                     route = route_for(self.app.config, 'chat' if mode == 'discuss' else TASKS.get(kind, 'chat'), owner_kind='editor_assistant_turns', owner_id=request_id)
+                    if selected_model:
+                        route['model'] = selected_model
                     db.execute('INSERT INTO editor_assistant_turns(id,kind,target_id,message,mode,status,snapshot,route,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)',
                                (request_id, kind, target_id, message, mode, 'queued', dumps(snapshot), dumps(route), now(), now()))
                     from .profile_learning import enqueue, explicit_longterm

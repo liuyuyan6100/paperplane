@@ -56,6 +56,9 @@ def verify(package, output):
         "studio.service",
         "studio.db",
         "studio.profiles",
+        "studio.models",
+        "studio.model_routing",
+        "studio.image_provider",
         "studio.editor_assistant",
         "studio.workflows",
         "studio.markdown",
@@ -123,7 +126,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.2.0-m2.1"
+                assert session["version"] == "0.2.0-m2.2"
                 client.headers["X-Studio-Token"] = session["token"]
                 response = client.post(
                     "/api/v2/articles", json={"title": "成品保存验收", "body": "成品原始内容😀"}
@@ -137,6 +140,9 @@ def verify(package, output):
                 configuration = client.get("/api/v2/assistant/configuration").json()
                 assert configuration["reuse"]["status"] == "not_requested"
                 assert "AI_API_KEY" not in configuration
+                settings = client.get("/api/v2/assistant/settings")
+                assert settings.status_code == 200 and settings.json()["profiles"] == []
+                assert "key_set" in settings.json()["image"]
                 state = client.get("/api/state").json()
                 assert (
                     next(p for p in state["posts"] if p["id"] == article["id"])["body"]
@@ -165,7 +171,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.2.0-m2.1",
+        "version": "0.2.0-m2.2",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,

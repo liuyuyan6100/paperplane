@@ -1,8 +1,13 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { request } from "../../api";
 import type { Action, EditorState } from "../editor/session";
 import { rebase, type Fragment } from "./selection";
+import {
+  ModelSettings,
+  type Catalog,
+  type ModelSettingsData,
+} from "./ModelSettings";
 
 type Content = { title: string; body: string };
 interface Turn {
@@ -28,6 +33,7 @@ interface Configuration {
   configured: boolean;
   discussion_model: string;
   editing_model: string;
+  image_model: string;
   reuse: { status: string };
 }
 const names: Record<string, string> = {
@@ -61,6 +67,10 @@ export function AssistantPanel({
   const [reference, setReference] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [chosenModels, setChosenModels] = useState({ discuss: "", edit: "" });
+  const scroller = useRef<HTMLDivElement>(null);
+  const followConversation = useRef(true);
   const active = useRef(false);
   const pendingSend = useRef<{ signature: string; id: string } | null>(null);
   const history = useQuery({
@@ -73,13 +83,56 @@ export function AssistantPanel({
   const configuration = useQuery({
     queryKey: ["assistant-configuration"],
     queryFn: () => request<Configuration>("/assistant/configuration"),
+    refetchInterval: 5000,
   });
+  const catalog = useQuery({
+    queryKey: ["model-catalog", "text"],
+    queryFn: () => request<Catalog>("/assistant/models"),
+    retry: false,
+    staleTime: 60000,
+  });
+  const settings = useQuery({
+    queryKey: ["model-settings"],
+    queryFn: () => request<ModelSettingsData>("/assistant/settings"),
+    staleTime: 5000,
+  });
+  const model = chosenModels[mode];
+  const defaultModel =
+    mode === "discuss"
+      ? configuration.data?.discussion_model
+      : configuration.data?.editing_model;
+  const knownModels = [
+    ...new Set(
+      [
+        ...(catalog.data?.models ?? []),
+        configuration.data?.discussion_model,
+        configuration.data?.editing_model,
+        model,
+      ].filter((id): id is string => !!id),
+    ),
+  ];
+  const visual = settings.data?.profiles.find(
+    (profile) => profile.id === state.draft.profile_id,
+  );
   const selection = fragment ? rebase(fragment, state.draft.body) : null;
   const invalidSelection = !!fragment && !selection;
   const running = history.data?.turns.some((t) =>
     ["queued", "running"].includes(t.status),
   );
   const profileChanged = state.draft.profile_id !== state.saved.profile_id;
+  const canSend =
+    !!state.articleId &&
+    !!history.data &&
+    !busy &&
+    !running &&
+    !profileChanged &&
+    !invalidSelection &&
+    !state.saving &&
+    !!message.trim();
+  useEffect(() => {
+    if (followConversation.current && scroller.current)
+      scroller.current.scrollTop = scroller.current.scrollHeight;
+  }, [history.data]);
   async function mutation(operation: () => Promise<unknown>) {
     if (active.current) return;
     active.current = true;
@@ -99,6 +152,7 @@ export function AssistantPanel({
   }
   async function send() {
     if (
+      !canSend ||
       !history.data ||
       !state.articleId ||
       !message.trim() ||
@@ -117,6 +171,7 @@ export function AssistantPanel({
       content(value),
       selection,
       reference,
+      model,
     ]);
     if (pendingSend.current?.signature !== signature)
       pendingSend.current = {
@@ -130,6 +185,7 @@ export function AssistantPanel({
         revision: history.data!.revision,
         message: text,
         mode,
+        ...(model ? { model } : {}),
         draft: content(value),
         ...(selection
           ? { selection: { start: selection.start, end: selection.end } }
@@ -139,6 +195,7 @@ export function AssistantPanel({
       setMessage((current) => (current === text ? "" : current));
       setReference(null);
       pendingSend.current = null;
+      followConversation.current = true;
     });
   }
   async function adopt(turn: Turn) {
@@ -172,6 +229,7 @@ export function AssistantPanel({
           <strong>侧边 AI</strong>
           <small>基于当前编辑区讨论或修改</small>
         </div>
+        <button onClick={() => setSettingsOpen(true)}>模型与生图设置</button>
         {state.undo && (
           <button
             disabled={busy || !!state.saving}
@@ -182,17 +240,60 @@ export function AssistantPanel({
         )}
       </header>
       <div className="assistant-configuration">
-        <span>讨论：{configuration.data?.discussion_model || "读取中"}</span>
-        <span>修改：{configuration.data?.editing_model || "读取中"}</span>
+        <label>
+          本次{mode === "discuss" ? "讨论" : "修改"}模型
+          <select
+            aria-label="本次使用模型"
+            value={model}
+            onChange={(event) =>
+              setChosenModels({ ...chosenModels, [mode]: event.target.value })
+            }
+          >
+            <option value="">跟随默认：{defaultModel || "读取中"}</option>
+            {knownModels.map((id) => (
+              <option value={id} key={id}>
+                {id}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="assistant-model-tools">
+          <small>
+            {catalog.isFetching
+              ? "正在识别模型目录…"
+              : catalog.error
+                ? "目录读取失败，仍可用已有配置"
+                : `已识别 ${catalog.data?.models.length ?? 0} 个模型`}
+          </small>
+          <button
+            onClick={() => void catalog.refetch()}
+            disabled={catalog.isFetching}
+          >
+            刷新目录
+          </button>
+        </div>
+        <small>
+          生图：{configuration.data?.image_model || "未配置"} · 风格：
+          {visual?.visual_style ? visual.name : "选择文章画像后应用"}
+        </small>
         <small>
           {configuration.data?.reuse.status === "imported"
             ? "已复用原纸飞机设置"
             : configuration.data?.configured
               ? "沿用已有模型设置"
-              : "尚未读取到模型配置，可从原工作台设置检查"}
+              : "配置尚未齐全，点击“模型与生图设置”补齐"}
         </small>
       </div>
-      <div className="assistant-history" aria-live="polite">
+      <div
+        ref={scroller}
+        className="assistant-history"
+        aria-live="polite"
+        onScroll={(event) => {
+          const node = event.currentTarget;
+          followConversation.current =
+            node.scrollHeight - node.scrollTop - node.clientHeight < 60;
+        }}
+      >
         {!state.articleId && (
           <p className="assistant-hint">
             先保存文章一次，即可开始对话。之后未保存的文字也会随本次请求提交。
@@ -340,29 +441,41 @@ export function AssistantPanel({
           maxLength={4000}
           value={message}
           onChange={(event) => setMessage(event.target.value)}
+          onKeyDown={(event) => {
+            if (
+              event.key === "Enter" &&
+              (event.ctrlKey || event.metaKey) &&
+              !event.nativeEvent.isComposing &&
+              !event.repeat
+            ) {
+              event.preventDefault();
+              if (canSend) void send();
+            }
+          }}
         />
         <div className="assistant-actions">
           <small>
-            {running ? "请求处理中，可继续编辑文章" : "填入后需自行保存文章"}
+            {running
+              ? "请求处理中，可继续编辑文章"
+              : "Ctrl+Enter 发送 · 填入后自行保存"}
           </small>
-          <button
-            className="primary"
-            disabled={
-              !state.articleId ||
-              !history.data ||
-              busy ||
-              running ||
-              profileChanged ||
-              invalidSelection ||
-              !!state.saving ||
-              !message.trim()
-            }
-            type="submit"
-          >
+          <button className="primary" disabled={!canSend} type="submit">
             {busy ? "提交中…" : "发送"}
           </button>
         </div>
       </form>
+      {settingsOpen && (
+        <ModelSettings
+          onClose={() => {
+            setSettingsOpen(false);
+            void client.invalidateQueries({ queryKey: ["profiles"] });
+            void client.invalidateQueries({ queryKey: ["model-settings"] });
+            void client.invalidateQueries({
+              queryKey: ["assistant-configuration"],
+            });
+          }}
+        />
+      )}
     </aside>
   );
 }

@@ -62,6 +62,8 @@ export function App() {
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewError, setPreviewError] = useState("");
   const [fields, setFields] = useState(false);
+  const [mobileAI, setMobileAI] = useState(false);
+  const [mobileLibrary, setMobileLibrary] = useState(false);
   const dirty = isDirty(state);
 
   useEffect(() => {
@@ -114,6 +116,7 @@ export function App() {
     )
       return;
     const key = crypto.randomUUID();
+    setMobileLibrary(false);
     dispatch({ type: "navigate", session: key, articleId: id });
     if (id) {
       try {
@@ -213,7 +216,7 @@ export function App() {
     );
 
   return (
-    <div className="workspace">
+    <div className={"workspace" + (mobileLibrary ? " library-open" : "")}>
       <aside className="library">
         <a className="brand" href="/editor/">
           <span className="brand-mark">↗</span>
@@ -274,6 +277,18 @@ export function App() {
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
+            <button
+              className="mobile-control"
+              onClick={() => setMobileLibrary(!mobileLibrary)}
+            >
+              文章列表
+            </button>
+            <button
+              className="mobile-control"
+              onClick={() => setMobileAI(!mobileAI)}
+            >
+              {mobileAI ? "返回文章" : "显示 AI"}
+            </button>
             <span role="status" className={dirty ? "dirty" : "saved"}>
               {state.saving
                 ? "正在保存…"
@@ -323,7 +338,7 @@ export function App() {
             正在读取文章…
           </p>
         ) : (
-          <div className="editing-layout">
+          <div className={"editing-layout" + (mobileAI ? " mobile-ai" : "")}>
             <div className="editing-document">
               <section className="document-meta">
                 <label className="title-label">

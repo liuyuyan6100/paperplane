@@ -2,9 +2,11 @@
 
 import argparse
 import hashlib
+import json
 import time
 from pathlib import Path
 
+from studio.config import Config
 from studio.db import dumps, uid
 from studio.infrastructure.configuration_reuse import (
     finish_configuration,
@@ -14,7 +16,7 @@ from studio.infrastructure.configuration_reuse import (
 from studio.service import Studio
 
 
-def verify(data, output):
+def verify(data, output, selected_models=False):
     source = stable_settings_dir() / "private.json"
     original = hashlib.sha256(source.read_bytes()).hexdigest()
     prepare_configuration(data)
@@ -43,9 +45,23 @@ def verify(data, output):
                     "revision": source_state["revision"],
                     "message": message,
                     "mode": mode,
+                    **(
+                        {"model": app.config.get("AI_BODY_MODEL") or app.config.get("AI_MODEL")}
+                        if selected_models and mode == "discuss"
+                        else {}
+                    ),
                     "draft": source_state["content"],
                 },
             )
+            if selected_models and mode == "discuss":
+                route = json.loads(
+                    app.db.one("SELECT route FROM editor_assistant_turns WHERE id=?", (turn_id,))[
+                        "route"
+                    ]
+                )
+                assert route["model"] == (
+                    app.config.get("AI_BODY_MODEL") or app.config.get("AI_MODEL")
+                )
             started = time.monotonic()
             assert app.editor_assistant.tick()
             turn = app.editor_assistant.get("post", article["id"])["turns"][-1]
@@ -73,6 +89,10 @@ def verify(data, output):
                     "original_unchanged": True,
                     "saved_article_unchanged": True,
                     "publishing_jobs": 0,
+                    "selected_model_verified": selected_models,
+                    "imported_profile_count": receipt.get("profiles_imported", 0),
+                    "image_model_matches_original": app.config.get("IMAGE_MODEL")
+                    == Config(stable_settings_dir()).get("IMAGE_MODEL"),
                 }
             ),
             encoding="utf-8",
@@ -85,8 +105,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--isolated-data", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--verify-selection", action="store_true")
     args = parser.parse_args()
     if args.isolated_data.exists():
         parser.error("Use a fresh isolated data directory.")
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    verify(args.isolated_data, args.output)
+    verify(args.isolated_data, args.output, args.verify_selection)

@@ -27,6 +27,7 @@ class Message(BaseModel):
     revision: str = Field(pattern=r"^[a-f0-9]{64}$")
     message: str = Field(min_length=1, max_length=4000)
     mode: Literal["discuss", "edit"]
+    model: str | None = Field(default=None, max_length=200, pattern=r"^[^\x00-\x1f]*$")
     draft: Content
     selection: Selection | None = None
     reference_turn_id: str | None = Field(default=None, pattern=r"^[a-f0-9]{32}$")
@@ -37,12 +38,56 @@ class Adoption(BaseModel):
     draft: Content
 
 
+class Connection(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    mode: Literal["api"] = "api"
+    base_url: str | None = Field(default=None, max_length=2000)
+    api_key: str | None = Field(default=None, max_length=2000)
+    model: str | None = Field(default=None, max_length=200)
+
+
+class TextModels(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    chat: str | None = Field(default=None, max_length=200)
+    body: str | None = Field(default=None, max_length=200)
+
+
+class ImageConnection(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    use_shared: bool | None = None
+    base_url: str | None = Field(default=None, max_length=2000)
+    api_key: str | None = Field(default=None, max_length=2000)
+    model: str | None = Field(default=None, max_length=200)
+    cover_model: str | None = Field(default=None, max_length=200)
+    illustration_model: str | None = Field(default=None, max_length=200)
+    references: Literal["edits", "none"] | None = None
+
+
+class Settings(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    connection: Connection | None = None
+    text_models: TextModels | None = None
+    image: ImageConnection | None = None
+
+
 def assistant_router(service: AssistantService):
     router = APIRouter(prefix="/api/v2")
 
     @router.get("/assistant/configuration")
     def configuration():
         return service.configuration()
+
+    @router.get("/assistant/settings")
+    def settings():
+        return service.settings()
+
+    @router.post("/assistant/settings")
+    def save_settings(values: Settings):
+        return service.save_settings(values.model_dump(exclude_unset=True, exclude_none=True))
+
+    @router.get("/assistant/models")
+    def models(kind: Literal["text", "image"] = "text"):
+        return service.models(kind)
 
     @router.get("/articles/{article_id}/assistant")
     def get(article_id: ArticleId):
