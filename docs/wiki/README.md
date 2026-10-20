@@ -9,6 +9,7 @@
 - [与Easel的应用场景对比](../PROJECT_COMPARISON.md)：重点任务、共同能力与官方来源。
 
 - [功能使用与验收指南](../feature-guides/README.md)：按步骤学习与测试，包含截图、问题记录和后续验收模板。
+- [Windows 测试预发布版 M4.2.2](https://github.com/liuyuyan6100/paperplane/releases/tag/v0.4.0-m4.2.2)：安装包、SHA256校验文件与测试说明。
 - [M4.2体验修正与复验](../feature-guides/records/m4.2.1-feedback-2026-10-20.md)：永久删除、点击直接执行、封面后的下一步、独立图文成品预览与生图失败卡片。
 - [关闭习惯与文章列表管理](../feature-guides/m4.1.2-desktop-and-library.md)：一次选择记住、设置更改，以及归档、回收站和恢复。
 - [使用指南](../USER_GUIDE.md)：素材、画像、提纲、正文、侧边改稿与公众号草稿。

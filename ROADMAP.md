@@ -25,7 +25,7 @@
 | M4.1 | 素材导入/选用、提纲保存与确认、待审正文、对照与采用保存 | 已验收 | [M4.1](docs/feature-guides/m4.1-text-creation.md) |
 | M4.1使用补齐 | 关闭习惯与设置、归档、回收站及恢复 | 随M4.1整体验收 | [使用补齐](docs/feature-guides/m4.1.2-desktop-and-library.md) |
 | M4.2.1 | 画像风格/参考图、封面和正文配图计划、候选生成/上传、定位与采用、整篇图文预览、永久删除和独占文件释放 | 已实现、回归及安装核验，用户复验待确认 | [M4.2.1问题与复验](docs/feature-guides/records/m4.2.1-feedback-2026-10-20.md) |
-| M4.2.2 | 生图失败不再占候选卡片，最近一次失败在本页生成入口提示；任务记录和已采用图片保留 | 已打包，用户安装复验待确认 | [M4.2配图验收](docs/architecture/milestones/04-images-acceptance.md) |
+| M4.2.2 | 生图失败不再占候选卡片，最近一次失败在本页生成入口提示；任务记录和已采用图片保留 | 已发布测试预发布版，用户安装复验待确认 | [M4.2配图验收](docs/architecture/milestones/04-images-acceptance.md) |
 
 ## 接下来规划哪些功能
 
