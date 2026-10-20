@@ -1,0 +1,9 @@
+"""Port for the small editorial profile editor in the preview workspace."""
+
+from typing import Protocol
+
+
+class ProfilePort(Protocol):
+    def listing(self) -> list[dict]: ...
+    def get(self, profile_id: str) -> dict: ...
+    def save(self, values: dict, profile_id: str | None = None) -> dict: ...

@@ -64,6 +64,10 @@ def verify(package, output):
         "studio.infrastructure.delivery_execution",
         "studio.api.preview",
         "studio.api.articles",
+        "studio.api.profiles",
+        "studio.application.profiles",
+        "studio.domain.profiles",
+        "studio.infrastructure.legacy_profiles",
         "studio.api.assistant",
         "studio.application.assistant",
         "studio.domain.assistant",
@@ -152,7 +156,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.4.0-m4.2.2" and session["milestone"] == "M4"
+                assert session["version"] == "0.4.0-m4.3.1" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -162,6 +166,14 @@ def verify(package, output):
                 assert response.status_code == 200
                 article = response.json()
                 assert article["stage"] == "draft"
+                profile_fields = {"name": "成品合成画像", "direction": "教程", "audience": "入门读者", "goal": "清晰表达"}
+                profile_response = client.post("/api/v2/profiles", json=profile_fields)
+                assert profile_response.status_code == 200, profile_response.text
+                profile = profile_response.json()
+                assert client.get("/api/v2/profiles").json()["profiles"][0]["id"] == profile["id"]
+                updated = client.post("/api/v2/profiles/" + profile["id"], json={**profile_fields, "goal": "完成成品", "version": 1})
+                assert updated.status_code == 200 and updated.json()["version"] == 2
+                assert client.post("/api/v2/profiles/" + profile["id"], json={**profile_fields, "version": 1}).status_code == 409
                 material_values = {"request_id": "b" * 32, "title": "成品素材", "body": "保留的素材内容", "source": "https://example.com/source"}
                 material = client.post('/api/v2/creation/materials', json=material_values).json()
                 assert material['id'] == client.post('/api/v2/creation/materials', json=material_values).json()['id']
@@ -178,7 +190,7 @@ def verify(package, output):
                 assert configuration["reuse"]["status"] == "not_requested"
                 assert "AI_API_KEY" not in configuration
                 settings = client.get("/api/v2/assistant/settings")
-                assert settings.status_code == 200 and settings.json()["profiles"] == []
+                assert settings.status_code == 200 and len(settings.json()["profiles"]) == 1
                 assert "key_set" in settings.json()["image"]
                 state = client.get("/api/state").json()
                 assert (
@@ -305,7 +317,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.4.0-m4.2.2",
+        "version": "0.4.0-m4.3.1",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -314,6 +326,7 @@ def verify(package, output):
             "worker_alive",
             "frontend",
             "save",
+            "profile_create_update_version",
             "assistant_routes",
             "metadata_routes",
             "creation_material_idempotency",

@@ -4,6 +4,7 @@ import { ArticlePreview } from "./features/editor/ArticlePreview";
 import { DesktopSettings } from "./features/editor/DesktopSettings";
 import { CreationPanel } from "./features/creation/CreationPanel";
 import { IllustrationPanel } from "./features/illustrations/IllustrationPanel";
+import { ProfilePanel } from "./features/profiles/ProfilePanel";
 import { TasksButton } from "./features/tasks/TaskCenter";
 import { MetadataAssistant } from "./features/editor/MetadataAssistant";
 import { AssistantPanel } from "./features/assistant/AssistantPanel";
@@ -75,6 +76,10 @@ export function App() {
   const creationDirty = useRef(false);
   const creationUnsavedAreas = useRef<string[]>([]);
   const illustrationDirty = useRef(false);
+  const profileDirty = useRef(false);
+  const setProfileDirty = useCallback((value: boolean) => {
+    profileDirty.current = value;
+  }, []);
   const illustrationUnsavedAreas = useRef<string[]>([]);
   const setIllustrationDirty = useCallback(
     (value: boolean, areas: string[] = []) => {
@@ -106,7 +111,8 @@ export function App() {
       isDirty(current.current) ||
       !!current.current.saving ||
       creationDirty.current ||
-      illustrationDirty.current;
+      illustrationDirty.current ||
+      profileDirty.current;
     const getUnsavedAreas = () => [
       ...(isDirty(current.current) ? ["文章编辑区"] : []),
       ...(current.current.saving ? ["文章正在保存，请等待完成"] : []),
@@ -116,6 +122,7 @@ export function App() {
           : ["素材与创作"]
         : []),
       ...(illustrationDirty.current ? illustrationUnsavedAreas.current : []),
+      ...(profileDirty.current ? ["账号画像"] : []),
     ];
     window.PaperPlaneDesktop = { hasUnsaved: dirtyNow, getUnsavedAreas };
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -136,7 +143,8 @@ export function App() {
       (isDirty(current.current) ||
         current.current.saving ||
         creationDirty.current ||
-        illustrationDirty.current) &&
+        illustrationDirty.current ||
+        profileDirty.current) &&
       !confirm(
         "当前文章有未保存修改或正在保存。离开会放弃本页未保存内容，是否继续？",
       )
@@ -208,7 +216,8 @@ export function App() {
       (dirty ||
         state.saving ||
         creationDirty.current ||
-        illustrationDirty.current) &&
+        illustrationDirty.current ||
+        profileDirty.current) &&
       !confirm(
         "请先保存需要保留的修改。现在离开新编辑器并打开同一验证库的原工作台？",
       )
@@ -273,7 +282,8 @@ export function App() {
               same &&
               (isDirty(value) ||
                 creationDirty.current ||
-                illustrationDirty.current);
+                illustrationDirty.current ||
+                profileDirty.current);
             if (
               unsaved &&
               !confirm(
@@ -561,6 +571,12 @@ export function App() {
                       ))}
                     </select>
                   </label>
+                  <ProfilePanel
+                    key={state.session + ":profile"}
+                    selectedId={state.draft.profile_id}
+                    profiles={profiles.data?.profiles ?? []}
+                    onDirty={setProfileDirty}
+                  />
                   <button
                     aria-expanded={fields}
                     onClick={() => setFields(!fields)}

@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-**2026-10-20最新：M1–M4.1已用户验收；M4.2已安装体验并反馈问题，M4.2.1修正永久删除、重复确认、配图下一步与整篇图文预览，待复验。** [实施](milestones/04-images-implementation.md)与[反馈记录](../feature-guides/records/m4.2.1-feedback-2026-10-20.md)分别记录。下方保留先前交付事实。
+**2026-10-21最新：用户明确确认P0/M4.2完成；P1从新版编辑器中的画像四个核心字段开始，形成M4.3.1窄范围候选，安装与用户验收待完成。** [画像指南](../feature-guides/m4.3.1-profiles.md)与[本轮记录](../feature-guides/records/m4.3.1-profiles-2026-10-21.md)分别记录。下方保留先前交付事实。
 
 **M1–M3已由用户安装验收通过。M4.1首条创作链候选已完成完整回归与成品核验，待用户安装体验。** 用户2026-10-19明确授权先完成素材、提纲到正文采用，保留数据和功能，回归后提供安装包。本轮复用原业务状态机与唯一worker，采用在同一事务中保存文章修订和任务完成标记，保留旧工作台入口。候选 `0.4.0-m4.1.2`、安装版本 `0.4.0.3` 的验证结果与已知边界见[M4.1实施记录](milestones/04-creation-implementation.md)，用户安装与体验按[验收步骤](milestones/04-creation-acceptance.md)单独确认。M4其他功能、整体数据访问迁移与M5正式交付仍待完成。
 
@@ -28,6 +28,7 @@
 | [M3安装验收](milestones/03-tasks-acceptance.md) | 任务中心的逐步验证 |
 | [M4.1 素材到正文采用](milestones/04-creation-implementation.md) | 首个M4迁移单元的实现与证据 |
 | [M4.1 安装验收](milestones/04-creation-acceptance.md) | 完整创作链操作与用户确认 |
+| [M4.3.1 画像核心字段](../feature-guides/m4.3.1-profiles.md) | P1第一小单元使用与验收 |
 | [Wiki 入口](../wiki/README.md) | 使用、开发、阶段记录的统一索引 |
 
 ## 维护约定

@@ -2232,6 +2232,28 @@ body,
   border: 1px solid #dce5f2;
   border-radius: 8px;
 }
+.profile-panel {
+  width: min(760px, calc(100vw - 36px));
+  height: min(840px, calc(100dvh - 36px));
+}
+.profile-editor {
+  flex: 1;
+  min-height: 0;
+}
+.profile-editor fieldset label {
+  display: block;
+}
+.profile-editor select {
+  display: block;
+  margin-top: 8px;
+  width: 100%;
+}
+.profile-editor textarea {
+  min-height: 84px;
+}
+.profile-editor .primary {
+  margin-top: 8px;
+}
 @media (max-width: 700px) {
   .creation-panel {
     width: calc(100vw - 12px);

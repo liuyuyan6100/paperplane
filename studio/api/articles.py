@@ -43,10 +43,6 @@ def article_router(service: ArticleService):
     def listing(scope: Literal["active", "archived", "trash"] = "active"):
         return {"articles": service.listing(scope)}
 
-    @router.get("/profiles")
-    def profiles():
-        return {"profiles": service.profiles()}
-
     @router.get("/articles/trash-storage")
     def storage():
         return service.storage()

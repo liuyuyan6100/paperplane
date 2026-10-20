@@ -1,6 +1,6 @@
 # 纸飞机与 Easel：应用场景和产品侧重
 
-核对日期：2026-10-21。纸飞机以本仓库M4.2.1源码及[Roadmap](../ROADMAP.md)为依据；Easel以[官方README固定提交8d08b21](https://github.com/ZJU-REAL/Easel/blob/8d08b216105bd7c7057c84c97cd637cec44db609/README.md)及[人工发布说明](https://github.com/ZJU-REAL/Easel/blob/8d08b216105bd7c7057c84c97cd637cec44db609/docs/manual-publishing.md)为依据。对方介绍属于官方陈述，本轮没有操作对方账号或进行对照性能测试。
+核对日期：2026-10-21。纸飞机以本仓库M4.2.2及P1.1开发候选源码和[Roadmap](../ROADMAP.md)为依据；Easel以[官方README固定提交8d08b21](https://github.com/ZJU-REAL/Easel/blob/8d08b216105bd7c7057c84c97cd637cec44db609/README.md)及[人工发布说明](https://github.com/ZJU-REAL/Easel/blob/8d08b216105bd7c7057c84c97cd637cec44db609/docs/manual-publishing.md)为依据。对方介绍属于官方陈述，本轮没有操作对方账号或进行对照性能测试。
 
 ## 从实际任务区分
 
@@ -28,7 +28,7 @@ Easel列同时依据[官方README](https://github.com/ZJU-REAL/Easel/blob/8d08b2
 
 画像、素材、长文、多平台适配和经验沉淀都存在交集，不能写成纸飞机独有。Easel也提供Windows原生安装和Web工作台；本机使用及人工审核不是唯一分界。[安装与使用说明](https://github.com/ZJU-REAL/Easel/blob/8d08b216105bd7c7057c84c97cd637cec44db609/README.md)
 
-纸飞机日常创作通过自选模型API，不要求使用者先登录厂商Agent；当前M1–M4.1已验收，M4.2.1已回归并安装核验，功能复验待确认。平台改编、送稿与部分运营能力保留原入口，不把“代码存在”写成“新工作台全部迁入”。也不把Easel简单描述为只能自动发布，或用未做过的实验声称速度、质量、成本、成功率更好。
+纸飞机日常创作通过自选模型API，不要求使用者先登录厂商Agent；用户已确认P0/M4.2完成，P1.1的画像核心字段入口仍待安装验收。平台改编、送稿与部分运营能力保留原入口，不把“代码存在”写成“新工作台全部迁入”。也不把Easel简单描述为只能自动发布，或用未做过的实验声称速度、质量、成本、成功率更好。
 
 ## 致谢
 

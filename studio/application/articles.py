@@ -21,6 +21,3 @@ class ArticleService:
 
     def save(self, values, article_id=None):
         return self.repository.save(values, article_id)
-
-    def profiles(self):
-        return self.repository.profiles()

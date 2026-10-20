@@ -1,6 +1,5 @@
 """Compatibility adapter; retains existing SQLite transactions and revision history."""
 
-from studio import profiles
 from studio.db import now
 from studio.infrastructure.article_cleanup import ArticleCleanup
 from studio.service import Problem
@@ -56,6 +55,3 @@ class LegacyArticleRepository:
 
     def save(self, values, article_id=None):
         return self.studio.save_post(values, article_id)
-
-    def profiles(self):
-        return [{"id": row["id"], "name": row["name"]} for row in profiles.listing(self.studio)]
