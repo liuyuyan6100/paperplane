@@ -28,7 +28,7 @@
 | 已验收 · M4.1 | 素材→可编辑提纲→确认后生成待审正文→采用保存；关闭习惯与文章归档/回收站 | [完整练习](docs/feature-guides/m4.1-text-creation.md) |
 | 已验收 · M4.2 | 封面与正文插图计划、生成/上传、位置预览、采用保存、独立图文预览、回收站永久删除、失败生成不占候选卡片 | [配图与管理操作](docs/feature-guides/m4.2-images.md) |
 | 已验收 · M4.3.1 | 新编辑器管理画像名称、内容方向、目标读者和运营目标 | [画像操作指南](docs/feature-guides/m4.3.1-profiles.md) |
-| 开发候选 · M4.3.2 | 一段想法与画像生成三个候选选题，人工选择后创建空白文章 | [选题操作指南](docs/feature-guides/m4.3.2-topics.md) |
+| 开发候选 · M4.3.2 | 一段想法与画像生成三个候选选题，人工选择后创建空白文章 | [选题操作指南](docs/feature-guides/m4.3.2-topics.md)、[新手入门](docs/feature-guides/quick-start.md) |
 | 兼容入口保留 | 画像与已确认经验、选题、平台改编、送稿准备及回执、已有媒体、备份恢复等原功能 | [功能保留清单](docs/architecture/feature-parity.md) |
 | 规划中 | 剩余能力逐项迁入、统一数据访问与迁移、完整升级/回退、正式Windows稳定交付 | [Roadmap](ROADMAP.md) |
 
