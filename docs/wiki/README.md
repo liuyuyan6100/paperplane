@@ -44,4 +44,4 @@ M2.5用户已确认当前验证无问题，M2验收通过。后续操作沿用[M
 
 ## M4.1 素材到正文采用
 
-M3已由用户明确验收，M4首轮按[素材、提纲与正文采用实施记录](../architecture/milestones/04-creation-implementation.md)推进。[M4.1安装与逐步验证](../architecture/milestones/04-creation-acceptance.md)说明如何选择素材、确认提纲、审阅正文和处理采用冲突。原功能与数据保留；本轮完整回归、成品、真实模型合成链与升级回退均已通过，0.4.0.1候选安装和用户体验待确认，其他M4能力尚未整体迁移。
+M3已由用户明确验收，M4首轮按[素材、提纲与正文采用实施记录](../architecture/milestones/04-creation-implementation.md)推进。[M4.1安装与逐步验证](../architecture/milestones/04-creation-acceptance.md)说明如何选择素材、确认提纲、审阅正文和处理采用冲突。用户已反馈采用成功、关闭提示矛盾，原图及修正复验见[功能指南](../feature-guides/records/m4.1-close-feedback-2026-10-20.md)。当前0.4.0.2修正候选待用户复验，M4.1尚未整体验收，其他M4能力尚未整体迁移。

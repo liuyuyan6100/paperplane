@@ -361,7 +361,8 @@ def test_restart_keeps_materials_pending_body_and_no_automatic_model(tmp_path, m
         second.stop()
 
 
-def test_creation_browser_materials_outline_review_conflict_and_adoption(tmp_path, monkeypatch):
+@pytest.mark.parametrize("mode", ["merge", "direct"])
+def test_creation_browser_materials_outline_review_conflict_and_adoption(tmp_path, monkeypatch, mode):
     monkeypatch.setenv("PAPERPLANE_USE_SKILLS", "0")
     calls = []
     seed = {}
@@ -395,6 +396,7 @@ def test_creation_browser_materials_outline_review_conflict_and_adoption(tmp_pat
             {
                 "url": service.origin,
                 "post_id": seed["id"],
+                "mode": mode,
                 "output": str(ROOT / "test-results/m4.1-browser"),
             },
             ensure_ascii=False,
@@ -413,7 +415,10 @@ def test_creation_browser_materials_outline_review_conflict_and_adoption(tmp_pat
         )
         assert result.returncode == 0, result.stdout + result.stderr
         assert len(calls) == 2
-        assert service.app.post(seed["id"])["body"] == "手动合并保留当前稿与候选😀"
+        assert service.app.post(seed["id"])["body"] == (
+            "手动合并保留当前稿与候选😀" if mode == "merge"
+            else "合成完整正文😀\n\n确认提纲之后生成的内容。"
+        )
         assert not service.app.jobs()
     finally:
         service.stop()

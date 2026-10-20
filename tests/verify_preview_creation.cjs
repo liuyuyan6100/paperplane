@@ -31,6 +31,32 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   await panel.getByRole('button',{name:'确认提纲并生成正文',exact:true}).click();
   const pending=panel.getByLabel('修改待审稿',{exact:true});await pending.waitFor();
   assert((await pending.inputValue()).includes('合成完整正文'));
+  if(f.mode==='direct'){
+   await panel.getByRole('button',{name:'确认采用并保存文章',exact:true}).click();
+   await panel.getByText('本次正文已采用为文章 v2。之后的文章修改不影响此历史记录。',{exact:true}).waitFor();
+   await panel.getByRole('button',{name:'返回文章',exact:true}).click();
+   assert.equal(await page.evaluate(()=>window.PaperPlaneDesktop.hasUnsaved()),false,'direct adoption must allow closing');
+   await page.getByRole('button',{name:'保存文章',exact:true}).click();
+   await page.getByText('已保存为第 3 版',{exact:true}).waitFor();
+   assert.equal(await page.evaluate(()=>window.PaperPlaneDesktop.hasUnsaved()),false,'saved article must allow closing');
+   await open();await panel.getByRole('navigation',{name:'创作历史',exact:true}).getByRole('button').filter({hasText:'已采用'}).click();
+   assert.equal(await panel.getByRole('button',{name:'保存待审稿修改',exact:true}).count(),0,'applied history has no editable candidate');
+   assert.equal(await page.evaluate(()=>window.PaperPlaneDesktop.hasUnsaved()),false,'viewing applied history must remain clean');
+   assert.deepEqual(await page.evaluate(()=>window.PaperPlaneDesktop.getUnsavedAreas()),[]);
+   await panel.getByRole('button',{name:'＋ 准备一次创作',exact:true}).click();
+   await panel.getByText('新增文字素材 / 导入文件',{exact:true}).click();
+   await panel.getByLabel('素材标题',{exact:true}).fill('尚未提交的素材');
+   await panel.getByRole('button',{name:'返回文章',exact:true}).click();
+   await page.getByText('创作有未保存输入',{exact:true}).waitFor();
+   assert.deepEqual(await page.evaluate(()=>window.PaperPlaneDesktop.getUnsavedAreas()),['素材与创作：尚未保存的新素材']);
+   await page.getByRole('button',{name:'保存文章',exact:true}).click();
+   await page.getByText('已保存为第 4 版',{exact:true}).waitFor();
+   assert(await page.evaluate(()=>window.PaperPlaneDesktop.hasUnsaved()),'article save must not discard unsaved material');
+   await open();await panel.getByLabel('素材标题',{exact:true}).fill('');
+   await panel.getByRole('button',{name:'返回文章',exact:true}).click();
+   assert.equal(await page.evaluate(()=>window.PaperPlaneDesktop.hasUnsaved()),false);
+   assert.deepEqual(errors,[]);return;
+  }
   await pending.fill('作者手工审阅后的候选正文😀');await panel.getByRole('button',{name:'保存待审稿修改',exact:true}).click();
   await panel.getByRole('button',{name:'保存待审稿修改',exact:true}).waitFor();
   await page.waitForFunction(()=>[...document.querySelectorAll('.creation-content button')].find(b=>b.textContent==='保存待审稿修改')?.disabled);

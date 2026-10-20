@@ -59,7 +59,7 @@ export function CreationPanel({
   state: EditorState;
   getCurrent: () => EditorState;
   onAdopt: (id: string, values: Adoption) => Promise<void>;
-  onDirty: (dirty: boolean) => void;
+  onDirty: (dirty: boolean, areas?: string[]) => void;
 }) {
   const [open, setOpen] = useState(false),
     dialog = useRef<HTMLDialogElement>(null);
@@ -129,13 +129,14 @@ export function CreationPanel({
     references.length > 0 ||
     instruction !== "根据所选素材扩写正文，区分有依据的事实与待核实内容。";
   useEffect(() => {
-    onDirty(
-      detailDirty ||
-        !!materialTitle ||
-        !!materialBody ||
-        !!source ||
-        composerDirty,
-    );
+    const areas = [
+      ...(detailDirty ? ["素材与创作：提纲、待审稿或合并编辑"] : []),
+      ...(materialTitle || materialBody || source
+        ? ["素材与创作：尚未保存的新素材"]
+        : []),
+      ...(composerDirty ? ["素材与创作：尚未提交的素材选择或写作要求"] : []),
+    ];
+    onDirty(areas.length > 0, areas);
   }, [
     detailDirty,
     materialTitle,
@@ -232,6 +233,9 @@ export function CreationPanel({
   return (
     <>
       <button onClick={() => setOpen(true)}>素材与创作</button>
+      {(detailDirty || materialTitle || materialBody || source || composerDirty) && (
+        <span role="status" className="dirty">创作有未保存输入</span>
+      )}
       <dialog
         ref={dialog}
         className="creation-panel"
@@ -899,6 +903,9 @@ function WorkflowView({
           ))}
           {task.status === "review" && (
             <>
+              <p className="creation-hint">
+                不修改待审稿时，可直接在下方确认采用；只有编辑了标题或正文，才需要先点“保存待审稿修改”。采用会同时保存文章，无需再点“保存文章”。
+              </p>
               <label>
                 待审稿标题
                 <input

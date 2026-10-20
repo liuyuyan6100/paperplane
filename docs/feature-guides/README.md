@@ -11,7 +11,7 @@
 | M1 文章编辑 | [新建、预览、保存、重开与版本保护](../architecture/milestones/01-editor-acceptance.md) | 用户整体验收通过；逐项证据以原记录为准 |
 | M2 侧边 AI | [讨论、修改对照、选区与历史建议](../architecture/milestones/02-assistant-acceptance.md) | M2.5用户整体验收通过；保留早期问题与复验步骤 |
 | M3 任务中心 | [操作验收单](../architecture/milestones/03-tasks-acceptance.md)、[用户截图与历史问题](m3-task-history.md) | 用户整体验收通过；截图本身为问题反馈 |
-| M4.1 素材到正文 | [完整练习与检查表](m4.1-text-creation.md)、[本轮验收记录](records/m4.1-2026-10-20.md) | 开发方回归通过；用户最终验收待确认 |
+| M4.1 素材到正文 | [完整练习与检查表](m4.1-text-creation.md)、[本轮验收记录](records/m4.1-2026-10-20.md)、[关闭问题与复验](records/m4.1-close-feedback-2026-10-20.md) | 已反馈采用成功、关闭提示矛盾；修正候选待用户复验 |
 
 M1–M3沿用已有权威验收单，通过此目录统一索引，避免复制后状态不一致。当前M4.1指南为操作步骤的统一正文，原架构验收入口保留安装和范围说明。
 

@@ -14,6 +14,49 @@ from studio.preview_runtime import PreviewService, preview_data_dir
 TITLE = "纸飞机 · 架构验证版"
 
 
+def read_close_state(window):
+    """Keep an unreadable bridge distinct from an actual unsaved draft."""
+    try:
+        value = window.evaluate_js(
+            "(() => { const bridge = window.PaperPlaneDesktop; "
+            "if (!bridge || typeof bridge.hasUnsaved !== 'function') return null; "
+            "return {dirty: bridge.hasUnsaved(), "
+            "areas: bridge.getUnsavedAreas?.() ?? []}; })()"
+        )
+    except Exception:
+        return None
+    if not isinstance(value, dict) or type(value.get("dirty")) is not bool:
+        return None
+    areas = value.get("areas")
+    return {
+        "dirty": value["dirty"],
+        "areas": [item[:120] for item in areas[:8] if isinstance(item, str)]
+        if isinstance(areas, list) else [],
+    }
+
+
+def close_message(state, active_tasks=False):
+    if state is None:
+        message = (
+            "暂时无法读取页面的保存状态，不能据此判断文章未保存。\n"
+            "已保存的文章会保留；完全退出可能丢失尚未保存的输入。\n"
+            "点“是”缩到托盘保留当前页面；点“否”仍然完全退出；点“取消”返回检查。"
+        )
+    elif state["dirty"]:
+        areas = state["areas"] or ["当前页面输入（位置未提供）"]
+        message = (
+            "仍有未保存或未完成提交的内容：\n• " + "\n• ".join(areas)
+            + "\n已保存的文章会保留。\n"
+            "点“是”缩到托盘保留当前输入；点“否”放弃尚未保存的输入并完全退出；"
+            "点“取消”返回检查。"
+        )
+    else:
+        message = "点“是”缩到托盘继续运行；点“否”完全退出；点“取消”返回工作台。"
+    if active_tasks:
+        message += "\n本机任务尚未完成，完全退出会中断任务。"
+    return message
+
+
 def desktop(service):
     from tkinter import Tk, messagebox
 
@@ -42,27 +85,13 @@ def desktop(service):
 
     def resolve_close():
         try:
-            try:
-                dirty = window.evaluate_js("window.PaperPlaneDesktop?.hasUnsaved?.() ?? null")
-            except Exception:
-                dirty = None
-            if dirty is not False:
-                tk = Tk()
-                tk.withdraw()
-                try:
-                    messagebox.showinfo(TITLE, "请先保存当前修改，再关闭验证版。", parent=tk)
-                finally:
-                    tk.destroy()
-                return
+            state = read_close_state(window)
             tk = Tk()
             tk.withdraw()
             try:
                 choice = messagebox.askyesnocancel(
                     TITLE,
-                    "点“是”缩到托盘继续运行；点“否”完全退出。"
-                    + (
-                        "\n本机任务尚未完成，完全退出会中断任务。" if service.active_tasks() else ""
-                    ),
+                    close_message(state, bool(service.active_tasks())),
                     parent=tk,
                 )
             finally:

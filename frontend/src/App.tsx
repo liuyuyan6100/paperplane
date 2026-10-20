@@ -27,7 +27,10 @@ import {
 
 declare global {
   interface Window {
-    PaperPlaneDesktop?: { hasUnsaved: () => boolean };
+    PaperPlaneDesktop?: {
+      hasUnsaved: () => boolean;
+      getUnsavedAreas: () => string[];
+    };
   }
 }
 const stageNames = {
@@ -66,8 +69,10 @@ export function App() {
   current.current = state;
   const saveBusy = useRef(false);
   const creationDirty = useRef(false);
-  const setCreationDirty = useCallback((value: boolean) => {
+  const creationUnsavedAreas = useRef<string[]>([]);
+  const setCreationDirty = useCallback((value: boolean, areas: string[] = []) => {
     creationDirty.current = value;
+    creationUnsavedAreas.current = value ? areas : [];
   }, []);
   const [search, setSearch] = useState("");
   const [preview, setPreview] = useState(false);
@@ -86,7 +91,16 @@ export function App() {
       isDirty(current.current) ||
       !!current.current.saving ||
       creationDirty.current;
-    window.PaperPlaneDesktop = { hasUnsaved: dirtyNow };
+    const getUnsavedAreas = () => [
+      ...(isDirty(current.current) ? ["文章编辑区"] : []),
+      ...(current.current.saving ? ["文章正在保存，请等待完成"] : []),
+      ...(creationDirty.current
+        ? creationUnsavedAreas.current.length
+          ? creationUnsavedAreas.current
+          : ["素材与创作"]
+        : []),
+    ];
+    window.PaperPlaneDesktop = { hasUnsaved: dirtyNow, getUnsavedAreas };
     const beforeUnload = (event: BeforeUnloadEvent) => {
       if (dirtyNow()) {
         event.preventDefault();
