@@ -152,6 +152,8 @@ class Studio:
             old = db.execute("SELECT * FROM posts WHERE id=?", (post_id,)).fetchone() if post_id else None
             if post_id and not old:
                 raise Problem("文章不存在", 404)
+            if post_id and db.execute("SELECT 1 FROM preview_article_trash WHERE post_id=?", (post_id,)).fetchone():
+                raise Problem("文章在回收站中，请先恢复后再保存", 409)
             if old and values.get("version") != old["version"]:
                 raise Problem("文章已在其他页面修改。请复制当前内容后重新打开，避免覆盖新版本。", 409)
             current = decode_post(old) if old else {"title": "", "body": "", "summary": "", "author": "", "cover": "", "tags": [], "source": "", "stage": "idea", "archived": 0}
@@ -193,8 +195,10 @@ class Studio:
         self.wake.set()  # Recheck an explicitly requested draft after saved corrections.
         return current
 
-    def archive(self, post_id, archived):
-        with self.db.connect(immediate=True) as db:
+    def archive(self, post_id, archived, *, connection=None):
+        with (nullcontext(connection) if connection is not None else self.db.connect(immediate=True)) as db:
+            if db.execute("SELECT 1 FROM preview_article_trash WHERE post_id=?", (post_id,)).fetchone():
+                raise Problem("文章在回收站中，请先恢复", 409)
             if not db.execute("SELECT 1 FROM posts WHERE id=?", (post_id,)).fetchone():
                 raise Problem("文章不存在", 404)
             if archived and db.execute("SELECT 1 FROM jobs WHERE post_id=? AND deleted_at IS NULL AND status IN ('queued','running','manual','draft','uncertain')", (post_id,)).fetchone():

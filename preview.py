@@ -57,6 +57,24 @@ def close_message(state, active_tasks=False):
     return message
 
 
+def choose_close(preferences, state, active_tasks, ask, *, exit_only=False):
+    behavior = "exit" if exit_only else preferences.get()["close_behavior"]
+    if behavior == "tray":
+        return "tray"
+    if behavior == "exit" and state is not None and not state["dirty"] and not active_tasks:
+        return "exit"
+    message = close_message(state, active_tasks)
+    if behavior == "ask":
+        message += "\n这次选择会被记住，之后可在“设置 → 关闭窗口行为”修改。"
+    choice = ask(message)
+    if choice is None:
+        return "cancel"
+    result = "tray" if choice else "exit"
+    if behavior == "ask":
+        preferences.update(result)
+    return result
+
+
 def desktop(service):
     from tkinter import Tk, messagebox
 
@@ -83,22 +101,32 @@ def desktop(service):
     exiting = threading.Event()
     closing = threading.Lock()
 
-    def resolve_close():
+    def resolve_close(exit_only=False):
         try:
             state = read_close_state(window)
-            tk = Tk()
-            tk.withdraw()
+            def ask(message):
+                tk = Tk()
+                tk.withdraw()
+                try:
+                    return messagebox.askyesnocancel(TITLE, message, parent=tk)
+                finally:
+                    tk.destroy()
             try:
-                choice = messagebox.askyesnocancel(
-                    TITLE,
-                    close_message(state, bool(service.active_tasks())),
-                    parent=tk,
+                choice = choose_close(
+                    service.preferences, state, bool(service.active_tasks()), ask,
+                    exit_only=exit_only,
                 )
-            finally:
-                tk.destroy()
-            if choice is None:
+            except Exception:
+                tk = Tk()
+                tk.withdraw()
+                try:
+                    messagebox.showerror(TITLE, "关闭习惯设置未能读取或保存，当前页面保留，请稍后重试。", parent=tk)
+                finally:
+                    tk.destroy()
                 return
-            if choice:
+            if choice == "cancel":
+                window.show()
+            elif choice == "tray":
                 window.hide()
             else:
                 exiting.set()
@@ -106,11 +134,11 @@ def desktop(service):
         finally:
             closing.release()
 
-    def close():
+    def close(exit_only=False):
         if exiting.is_set():
             return True
         if closing.acquire(False):
-            threading.Thread(target=resolve_close, daemon=True).start()
+            threading.Thread(target=resolve_close, args=(exit_only,), daemon=True).start()
         return False
 
     window.events.closing += close
@@ -120,7 +148,7 @@ def desktop(service):
         TITLE,
         pystray.Menu(
             pystray.MenuItem("打开纸飞机架构验证版", lambda *_: window.show(), default=True),
-            pystray.MenuItem("退出验证版", lambda *_: close()),
+            pystray.MenuItem("退出验证版", lambda *_: close(exit_only=True)),
         ),
     )
     threading.Thread(target=tray.run, name="preview-tray", daemon=True).start()

@@ -30,12 +30,18 @@ class PreviewInput(BaseModel):
     body: str = Field(max_length=200000)
 
 
+class ArticleAction(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    action: Literal["archive", "unarchive", "trash", "restore"]
+    version: int = Field(ge=1)
+
+
 def article_router(service: ArticleService):
     router = APIRouter(prefix="/api/v2")
 
     @router.get("/articles")
-    def listing():
-        return {"articles": service.listing()}
+    def listing(scope: Literal["active", "archived", "trash"] = "active"):
+        return {"articles": service.listing(scope)}
 
     @router.get("/profiles")
     def profiles():
@@ -52,6 +58,10 @@ def article_router(service: ArticleService):
     @router.post("/articles/{article_id}")
     def save(article_id: ArticleId, values: ArticleInput):
         return service.save(values.model_dump(exclude_unset=True), article_id)
+
+    @router.post("/articles/{article_id}/manage")
+    def manage(article_id: ArticleId, values: ArticleAction):
+        return service.manage(article_id, values.action, values.version)
 
     @router.post("/preview")
     def preview(values: PreviewInput):

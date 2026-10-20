@@ -7,8 +7,11 @@ class ArticleService:
     def __init__(self, repository: ArticleRepository):
         self.repository = repository
 
-    def listing(self):
-        return self.repository.listing()
+    def listing(self, scope="active"):
+        return self.repository.listing(scope)
+
+    def manage(self, article_id, action, version):
+        return self.repository.manage(article_id, action, version)
 
     def get(self, article_id):
         return self.repository.get(article_id)

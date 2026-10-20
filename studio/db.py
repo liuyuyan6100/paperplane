@@ -27,6 +27,10 @@ CREATE TABLE IF NOT EXISTS posts (
  version INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
  archived INTEGER NOT NULL DEFAULT 0, legacy_key TEXT UNIQUE
 );
+CREATE TABLE IF NOT EXISTS preview_article_trash (
+ post_id TEXT PRIMARY KEY REFERENCES posts(id),
+ previous_archived INTEGER NOT NULL, trashed_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS revisions (
  id INTEGER PRIMARY KEY, post_id TEXT NOT NULL REFERENCES posts(id),
  version INTEGER NOT NULL, snapshot TEXT NOT NULL, created_at TEXT NOT NULL,

@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { ArticleLibrary } from "./features/editor/ArticleLibrary";
+import { DesktopSettings } from "./features/editor/DesktopSettings";
 import { CreationPanel } from "./features/creation/CreationPanel";
 import { TasksButton } from "./features/tasks/TaskCenter";
 import { MetadataAssistant } from "./features/editor/MetadataAssistant";
@@ -70,11 +72,14 @@ export function App() {
   const saveBusy = useRef(false);
   const creationDirty = useRef(false);
   const creationUnsavedAreas = useRef<string[]>([]);
-  const setCreationDirty = useCallback((value: boolean, areas: string[] = []) => {
-    creationDirty.current = value;
-    creationUnsavedAreas.current = value ? areas : [];
-  }, []);
-  const [search, setSearch] = useState("");
+  const setCreationDirty = useCallback(
+    (value: boolean, areas: string[] = []) => {
+      creationDirty.current = value;
+      creationUnsavedAreas.current = value ? areas : [];
+    },
+    [],
+  );
+  const [libraryBusy, setLibraryBusy] = useState(false);
   const [preview, setPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewError, setPreviewError] = useState("");
@@ -231,10 +236,6 @@ export function App() {
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 500);
   }
-  const list =
-    articles.data?.articles.filter((a) =>
-      (a.title + a.summary).toLowerCase().includes(search.toLowerCase()),
-    ) ?? [];
   const newer = articles.data?.articles.find(
     (a) => a.id === state.articleId && a.version > (state.version ?? 0),
   );
@@ -258,59 +259,66 @@ export function App() {
             纸飞机<small>架构验证版 · M4</small>
           </span>
         </a>
-        <button className="primary new" onClick={() => void navigate(null)}>
+        <button
+          disabled={libraryBusy}
+          className="primary new"
+          onClick={() => void navigate(null)}
+        >
           ＋ 新建文章
         </button>
-        <label className="search">
-          <span>搜索文章</span>
-          <input
-            placeholder="标题或摘要"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </label>
-        <div className="list-heading">
-          验证库文章 <span>{articles.data?.articles.length ?? 0}</span>
-        </div>
-        <div className="article-list">
-          {list.map((a) => (
-            <button
-              key={a.id}
-              className={
-                "article-item" + (state.articleId === a.id ? " selected" : "")
-              }
-              onClick={() => void navigate(a.id)}
-            >
-              <strong>{a.title}</strong>
-              <span>{a.summary || "暂无摘要"}</span>
-              <small>
-                {stageNames[a.stage]} · 第 {a.version} 版
-              </small>
-            </button>
-          ))}
-          {!list.length && (
-            <div className="empty-list">
-              <p>
-                {articles.error?.message || "还没有文章，从一篇测试稿开始。"}
-              </p>
-              <button onClick={() => void navigate(null, true)}>
-                创建验收样稿
-              </button>
-            </div>
-          )}
-        </div>
-        <button className="legacy" onClick={compatibility}>
+        <ArticleLibrary
+          rows={articles.data?.articles ?? []}
+          selected={state.articleId}
+          error={articles.error?.message}
+          onOpen={(id) => void navigate(id)}
+          onSample={() => void navigate(null, true)}
+          onBusy={setLibraryBusy}
+          beforeChange={(row, action) => {
+            const value = current.current;
+            const same = value.articleId === row.id;
+            if (same && (value.saving || value.loading || saveBusy.current))
+              throw new Error("文章正在读取或保存，请完成后再操作。");
+            const unsaved = same && (isDirty(value) || creationDirty.current);
+            if (
+              (action === "trash" || unsaved) &&
+              !confirm(
+                `将《${row.title}》${action === "trash" ? "移入回收站（可恢复）" : action === "archive" ? "归档" : "恢复"}？` +
+                  (unsaved
+                    ? "当前文章或创作有未保存输入，继续会放弃这些输入。"
+                    : "正文、修订与任务历史继续保留。"),
+              )
+            )
+              return null;
+            return same ? (value.version ?? row.version) : row.version;
+          }}
+          onRemoved={(id) => {
+            if (current.current.articleId === id) {
+              dispatch({
+                type: "navigate",
+                session: crypto.randomUUID(),
+                articleId: null,
+              });
+              setMobileLibrary(false);
+            }
+          }}
+        />
+        <button
+          disabled={libraryBusy}
+          className="legacy"
+          onClick={compatibility}
+        >
           打开原工作台 ↗
         </button>
         <p className="library-note">原功能连接当前验证库</p>
       </aside>
-      <main className="editor-main">
+      <main className="editor-main" inert={libraryBusy}>
         <header className="toolbar">
           <div>
             <span className="milestone">M4 · 素材、提纲与正文采用</span>
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
+            <DesktopSettings />
             <button
               className="mobile-control"
               onClick={() => setMobileLibrary(!mobileLibrary)}

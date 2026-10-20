@@ -5,6 +5,7 @@
 ## 使用与学习
 
 - [功能使用与验收指南](../feature-guides/README.md)：按步骤学习与测试，包含截图、问题记录和后续验收模板。
+- [关闭习惯与文章列表管理](../feature-guides/m4.1.2-desktop-and-library.md)：一次选择记住、设置更改，以及归档、回收站和恢复。
 - [使用指南](../USER_GUIDE.md)：素材、画像、提纲、正文、侧边改稿与公众号草稿。
 - [部署和安装](../DEPLOYMENT.md)：当前公开版的运行方式；架构验证版另按阶段交付。
 - [数据与安全](../DATA_AND_SECURITY.md)：数据位置、凭据和公开边界。
@@ -44,4 +45,4 @@ M2.5用户已确认当前验证无问题，M2验收通过。后续操作沿用[M
 
 ## M4.1 素材到正文采用
 
-M3已由用户明确验收，M4首轮按[素材、提纲与正文采用实施记录](../architecture/milestones/04-creation-implementation.md)推进。[M4.1安装与逐步验证](../architecture/milestones/04-creation-acceptance.md)说明如何选择素材、确认提纲、审阅正文和处理采用冲突。用户已反馈采用成功、关闭提示矛盾，原图及修正复验见[功能指南](../feature-guides/records/m4.1-close-feedback-2026-10-20.md)。当前0.4.0.2修正候选待用户复验，M4.1尚未整体验收，其他M4能力尚未整体迁移。
+M3已由用户明确验收，M4首轮按[素材、提纲与正文采用实施记录](../architecture/milestones/04-creation-implementation.md)推进。[M4.1安装与逐步验证](../architecture/milestones/04-creation-acceptance.md)说明如何选择素材、确认提纲、审阅正文和处理采用冲突。用户已反馈采用成功、关闭提示矛盾，原图及修正复验见[功能指南](../feature-guides/records/m4.1-close-feedback-2026-10-20.md)。当前0.4.0.3候选补齐关闭习惯和文章菜单，待用户复验；M4.1尚未整体验收，其他M4能力尚未整体迁移。

@@ -4,7 +4,9 @@
 
 边学边测试：[功能使用与验收指南](docs/feature-guides/README.md)集中收录操作步骤、预期结果、用户反馈截图和每轮验收记录；首次创作请先保存文章。
 
-本分支为 **架构验证分支**。M1–M3已由用户安装验收通过，当前M4.1候选 `0.4.0-m4.1.1` 接通“素材 → 提纲确认 → 正文待审 → 采用保存”的完整链路。已有编辑器、侧边AI、任务中心、数据配置与原工作台入口保留。见[M4.1实施记录](docs/architecture/milestones/04-creation-implementation.md)及[安装验收步骤](docs/architecture/milestones/04-creation-acceptance.md)。本轮只完成M4首个迁移单元，其他功能和M5正式升级尚未完成；候选安装与用户体验待确认。参见[架构计划](docs/architecture/README.md)和[项目Wiki](docs/wiki/README.md)。下方原有启动命令继续打开兼容工作台。
+当前M4.1.2补齐[关闭习惯、设置与文章菜单](docs/feature-guides/m4.1.2-desktop-and-library.md)：正常关闭选择一次后沿用，文章支持归档及可恢复的回收站；仍待用户安装复验。
+
+本分支为 **架构验证分支**。M1–M3已由用户安装验收通过，当前M4.1候选 `0.4.0-m4.1.2` 接通“素材 → 提纲确认 → 正文待审 → 采用保存”的完整链路。已有编辑器、侧边AI、任务中心、数据配置与原工作台入口保留。见[M4.1实施记录](docs/architecture/milestones/04-creation-implementation.md)及[安装验收步骤](docs/architecture/milestones/04-creation-acceptance.md)。本轮只完成M4首个迁移单元，其他功能和M5正式升级尚未完成；候选安装与用户体验待确认。参见[架构计划](docs/architecture/README.md)和[项目Wiki](docs/wiki/README.md)。下方原有启动命令继续打开兼容工作台。
 
 验证新编辑器需安装 `requirements-preview.txt`，在 `frontend/` 执行 `npm ci`、`npm run build`，再在仓库根运行 `python preview.py --serve --open --data-dir ./data-preview`。Windows 独立安装包由 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_preview.ps1` 构建。验证版默认使用 `%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，与正式版独立。
 

@@ -11,6 +11,7 @@ import uvicorn
 
 from run import InstanceLock
 from studio.api.preview import PREVIEW_VERSION, create_app
+from studio.preview_preferences import PreviewPreferences
 from studio.server import Server
 from studio.service import Studio
 
@@ -37,6 +38,7 @@ class PreviewService:
         self.legacy_thread = self.thread = None
         self.configure = None
         self.reuse_settings = reuse_settings
+        self.preferences = PreviewPreferences(self.data_dir)
 
     def start(self):
         self.lock = InstanceLock(self.data_dir)
@@ -71,6 +73,7 @@ class PreviewService:
                 self.server.token,
                 self.port,
                 self.frontend,
+                preferences=self.preferences,
             )
             self.http = uvicorn.Server(
                 uvicorn.Config(

@@ -41,6 +41,8 @@ def verify(package, output):
     archive = CArchiveReader(str(exe))
     pyz = archive.open_embedded_archive(next(k for k in archive.toc if k.endswith(".pyz")))
     modules = [
+        "studio.api.preferences",
+        "studio.preview_preferences",
         "studio.api.creation",
         "studio.application.creation",
         "studio.domain.creation",
@@ -106,13 +108,17 @@ def verify(package, output):
                 creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
             )
             deadline = time.monotonic() + 40
-            while not marker.exists():
+            while True:
                 assert process.poll() is None, f"packaged startup exit {process.returncode}"
+                try:
+                    info = json.loads(marker.read_text(encoding="utf-8"))
+                    runtime_pid = info["pid"]
+                    break
+                except (OSError, ValueError, KeyError):
+                    pass  # The runtime marker may still be in the middle of its first write.
                 if time.monotonic() > deadline:
                     raise TimeoutError("Packaged startup did not report readiness")
                 time.sleep(0.1)
-            info = json.loads(marker.read_text(encoding="utf-8"))
-            runtime_pid = info["pid"]
             assert Path(info["data_dir"]).resolve() == data.resolve()
             return info["url"].removesuffix("/editor/")
 
@@ -136,7 +142,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.4.0-m4.1.1" and session["milestone"] == "M4"
+                assert session["version"] == "0.4.0-m4.1.2" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -179,6 +185,10 @@ def verify(package, output):
                     == 403
                 )
             stop()
+            # Persist a close habit before the next actual frozen-process restart.
+            settings = data / "preview-preferences.json"
+            assert not settings.exists()
+            settings.write_text(json.dumps({"close_behavior": "exit"}), encoding="utf-8")
             # Simulate an interrupted request and an unacknowledged recovery command.
             task_id = "f" * 32
             stamp = "2026-01-01T00:00:00+00:00"
@@ -214,6 +224,15 @@ def verify(package, output):
                 assert client.get("/api/v2/tasks?group=attention").json()["total"] == 1
                 session = client.get('/api/v2/session').json()
                 client.headers['X-Studio-Token'] = session['token']
+                assert client.get('/api/v2/preferences').json()['close_behavior'] == 'exit'
+                assert client.post('/api/v2/preferences', json={'close_behavior': 'tray'}).status_code == 200
+                managed = client.post('/api/v2/articles', json={'title': '成品管理样稿', 'body': '可恢复正文'}).json()
+                manage_route = f"/api/v2/articles/{managed['id']}/manage"
+                for index, action in enumerate(['archive', 'trash', 'restore', 'unarchive'], 1):
+                    response = client.post(manage_route, json={'action': action, 'version': index})
+                    assert response.status_code == 200, response.text
+                restored = client.get('/api/v2/articles/' + managed['id']).json()
+                assert restored['body'] == '可恢复正文' and restored['version'] == 5
                 route = f"/api/v2/articles/{article['id']}/creation/{workflow_id}"
                 workflow = client.get(route).json()
                 assert workflow['status'] == 'review' and workflow['references'][0]['id'] == material['id']
@@ -249,7 +268,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.4.0-m4.1.1",
+        "version": "0.4.0-m4.1.2",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -271,6 +290,8 @@ def verify(package, output):
             "mutation_security",
             "compatibility_return_link",
             "restart",
+            "close_preference_restart_and_save",
+            "reversible_archive_trash_restore",
             "sqlite_integrity",
         ],
         "exe_sha256": hashlib.sha256(exe.read_bytes()).hexdigest(),

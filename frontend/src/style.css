@@ -252,6 +252,18 @@ select:focus {
   flex: 1;
   overflow: auto;
 }
+.article-row { position: relative; }
+.article-row .article-item { padding-right: 42px; }
+.article-more { position: absolute; right: 5px; top: 9px; padding: 3px 7px; font-size: 22px; }
+.article-actions { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 4px 10px; }
+.article-actions button, .library-scopes button { font-size: 12px; padding: 7px; }
+.library-scopes { display: flex; gap: 4px; margin-top: 12px; }
+.library-scopes [aria-pressed="true"] { background: #e8f0ff; color: #1d4ed8; border-color: #93b5fb; }
+.library-feedback { font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.desktop-settings, .library-preview { width: min(760px, 94vw); max-height: 85vh; overflow: auto; border: 1px solid #d7e0e8; border-radius: 12px; padding: 22px; }
+.desktop-settings header, .library-preview header { display: flex; justify-content: space-between; gap: 20px; align-items: center; }
+.desktop-settings select { display: block; width: 100%; margin-top: 10px; }
+.desktop-settings p, .library-preview p { line-height: 1.8; }
 .article-item {
   display: block;
   text-align: left;
