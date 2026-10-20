@@ -9,3 +9,7 @@ Read docs/architecture/README.md and the active milestone before implementation.
 Keep the sanitized public history and source security checks. Do not merge private development history or bulk-copy a private checkout. Review newer feature patches against docs/architecture/feature-parity.md before migration.
 
 Each installable milestone requires automated regression, a separately identified preview installer and isolated data, then explicit user installation acceptance before the next milestone. Do not claim a proposed framework is implemented, a launched installer is an installed version, or passing synthetic tests prove real platform behavior. Update the milestone record and docs/wiki/README.md links as evidence arrives.
+
+## Feature usage and acceptance guides
+
+The user requested a cumulative teaching and testing guide on 2026-10-20. Maintain docs/feature-guides/README.md for each subsequent acceptance round. Follow its TEMPLATE.md: versioned operating steps with stable IDs and observable expectations, dated records of actual feedback/failures/fixes/retests, and reviewed screenshots with provenance. Keep existing milestone entry links valid; link to authoritative instructions rather than duplicate them. Distinguish synthetic developer evidence, user screenshots, installation, and explicit user acceptance. Never infer whole-stage acceptance from one step. Preserve private runtime evidence outside Git.
