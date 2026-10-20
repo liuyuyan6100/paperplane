@@ -20,6 +20,10 @@ WINDOWS_HOME = re.compile(r"(?i)\b[a-z]:[\\/]+Users[\\/]+([A-Za-z0-9_.@ -]+)")
 UNIX_HOME = re.compile(r"/(?:home|Users)/([A-Za-z0-9_.@-]+)")
 ROOT_HOME = re.compile(r"/root/(?:[A-Za-z0-9_.-]+)")
 OWNER_DOMAIN = re.compile(r"(?i)\b(?:[a-z0-9-]+\.)*" + "aiclawonline" + r"\.website\b")
+# The author explicitly requested this public contact line on the project homepage.
+# Match the entire line and path; other service URLs and query strings stay blocked.
+PUBLIC_AUTHOR_LINK = ("作者：**Aiclaw** · [个人博客](https://blog." + "aiclawonline"
+                      + ".website/) · [微信公众号](#微信公众号)")
 # Explicit documentation examples, the container account and hosted CI accounts.
 GENERIC_USERS = {"user", "username", "example", "public", "default", "all users",
                  "archive", "runner", "runneradmin", "runner~1"}
@@ -71,7 +75,7 @@ def check_content(path: str, data: bytes, revision: str = "") -> list[Finding]:
         text = data.decode("utf-8", errors="replace")
     for number, line in enumerate(text.splitlines(), 1):
         kinds = set()
-        if OWNER_DOMAIN.search(line):
+        if OWNER_DOMAIN.search(line) and not (path == "README.md" and line == PUBLIC_AUTHOR_LINK):
             kinds.add("owner-service-domain")
         for rule, kind in ((WINDOWS_HOME, "personal-windows-home"),
                            (UNIX_HOME, "personal-unix-home")):

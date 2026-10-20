@@ -57,6 +57,20 @@ class PublicSourceSecurityTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertFalse(guard.forbidden_path(path))
 
+    def test_public_author_link_is_allowed_only_as_exact_homepage_contact(self):
+        contact = guard.PUBLIC_AUTHOR_LINK
+        self.assertEqual(guard.check_content("README.md", contact.encode()), [])
+        cases = [
+            ("notes.md", contact),
+            ("nested/README.md", contact),
+            ("README.md", contact.replace(".website/)", ".website/?token=fixture)")),
+            ("README.md", contact + " https://private." + "aiclawonline" + ".website/"),
+        ]
+        for path, text in cases:
+            with self.subTest(path=path, case=cases.index((path, text))):
+                findings = guard.check_content(path, text.encode())
+                self.assertIn("owner-service-domain", [finding.kind for finding in findings])
+
     def test_renamed_database_is_detected_by_header(self):
         self.assertEqual(guard.check_content("innocent.bin", b"SQLite format 3\0")[0].kind,
                          "sqlite-database-content")

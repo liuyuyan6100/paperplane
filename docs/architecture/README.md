@@ -12,7 +12,7 @@
 
 ## 阅读顺序
 
-项目介绍与功能进度从[Roadmap](../../ROADMAP.md)进入；当前框架可查看[Archify生成图](../diagrams/README.md)。下表继续维护工程决定及阶段证据。
+项目介绍与功能进度从[Roadmap](../../ROADMAP.md)进入；当前框架可查看[应用框架图](../diagrams/README.md)。下表继续维护工程决定及阶段证据。
 
 | 内容 | 用途 |
 | --- | --- |

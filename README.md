@@ -4,6 +4,8 @@
 
 [功能与 Roadmap](ROADMAP.md) · [操作与测试指南](docs/feature-guides/README.md) · [应用框架](docs/diagrams/README.md) · [与 Easel 的场景对比](docs/PROJECT_COMPARISON.md)
 
+作者：**Aiclaw** · [个人博客](https://blog.aiclawonline.website/) · [微信公众号](#微信公众号)
+
 ## 适合怎样的创作
 
 - **技术实践与知识长文**：从自己的笔记、参考资料和实际经历出发，先确认结构，再写正文；让 AI 讨论或修改指定段落，作者审阅后采用。
@@ -30,9 +32,9 @@
 
 ## 应用框架
 
-![Archify生成的纸飞机当前应用框架](docs/diagrams/paperplane-framework.svg)
+![纸飞机当前应用框架](docs/diagrams/paperplane-framework.svg)
 
-图由 **Archify** 从本仓库源码关系生成，附[JSON源图、可交互HTML与校验记录](docs/diagrams/README.md)。GitHub中展示静态SVG；下载HTML后可在浏览器中查看节点来源、切换主题并导出图片。
+框架图对应当前源码，附[源图、可交互HTML与校验记录](docs/diagrams/README.md)。GitHub中展示静态SVG；下载HTML后可在浏览器中查看节点来源、切换主题并导出图片。
 
 当前采用 **React + TypeScript、FastAPI、Python模块化单体、SQLite，以及Windows WebView2桌面壳**。新功能通过窄接口复用原业务与唯一后台worker；本地草稿不被后台刷新覆盖，生成结果经审阅采用后才更新原稿。SQLAlchemy/Alembic等数据访问整理仍是后续工作，图中不把规划当成已接入。
 
@@ -110,6 +112,12 @@ python run.py --data-dir ./data --open
 
 问题和建议请提交到[Issues](https://github.com/liuyuyan6100/paperplane/issues)，使用合成稿并移除Key、Cookie、个人文章与运行数据库。
 
+## 微信公众号
+
+扫码关注，阅读 Aiclaw 的 AI 学习笔记、工程实践与项目更新。二维码取自作者博客的“联系与订阅”。
+
+<a href="docs/assets/wechat-official-account.jpg"><img src="docs/assets/wechat-official-account.jpg" alt="Aiclaw 微信公众号二维码" width="192" /></a>
+
 ## 许可证与致谢
 
-原创代码采用[MIT](LICENSE)；第三方依赖保留各自许可。感谢[Easel](https://github.com/ZJU-REAL/Easel)的产品灵感与[Archify](https://github.com/tt-a1i/archify)的图表工具，详见[第三方说明](NOTICE.md)。
+原创代码采用[MIT](LICENSE)；第三方依赖保留各自许可。感谢[Easel](https://github.com/ZJU-REAL/Easel)的产品灵感，详见[第三方说明](NOTICE.md)。
