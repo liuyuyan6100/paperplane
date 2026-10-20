@@ -11,7 +11,7 @@
 - [功能使用与验收指南](../feature-guides/README.md)：按步骤学习与测试，包含截图、问题记录和后续验收模板。
 - [Windows 测试预发布版 M4.2.2](https://github.com/liuyuyan6100/paperplane/releases/tag/v0.4.0-m4.2.2)：安装包、SHA256校验文件与测试说明。
 - [M4.2体验修正与复验](../feature-guides/records/m4.2.1-feedback-2026-10-20.md)：永久删除、点击直接执行、封面后的下一步、独立图文成品预览与生图失败卡片。
-- [M4.3.1画像核心字段指南](../feature-guides/m4.3.1-profiles.md)：新版编辑器管理画像名称、内容方向、目标读者和运营目标；开发候选待安装验收。
+- [M4.3.1画像核心字段指南](../feature-guides/m4.3.1-profiles.md)：新版编辑器管理画像名称、内容方向、目标读者和运营目标；用户确认测试通过。
 - [关闭习惯与文章列表管理](../feature-guides/m4.1.2-desktop-and-library.md)：一次选择记住、设置更改，以及归档、回收站和恢复。
 - [使用指南](../USER_GUIDE.md)：素材、画像、提纲、正文、侧边改稿与公众号草稿。
 - [部署和安装](../DEPLOYMENT.md)：当前公开版的运行方式；架构验证版另按阶段交付。
@@ -60,4 +60,4 @@ M3已由用户明确验收，M4首轮按[素材、提纲与正文采用实施记
 
 [M4.2封面与正文配图使用与测试](../feature-guides/m4.2-images.md) · [实施证据](../architecture/milestones/04-images-implementation.md) · [安装验收](../architecture/milestones/04-images-acceptance.md)。
 
-2026-10-21用户确认P0/M4.2完成；P1按窄范围从[画像四个核心字段](../feature-guides/m4.3.1-profiles.md)开始，开发候选与用户安装验收分别记录。
+2026-10-21用户确认P0/M4.2完成，并反馈P1首个窄范围单元[画像四个核心字段](../feature-guides/m4.3.1-profiles.md)“测试验证通过”；单项结果以原记录为准。

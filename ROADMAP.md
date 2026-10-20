@@ -25,7 +25,7 @@
 | M4.1 | 素材导入/选用、提纲保存与确认、待审正文、对照与采用保存 | 已验收 | [M4.1](docs/feature-guides/m4.1-text-creation.md) |
 | M4.1使用补齐 | 关闭习惯与设置、归档、回收站及恢复 | 随M4.1整体验收 | [使用补齐](docs/feature-guides/m4.1.2-desktop-and-library.md) |
 | M4.2 | 封面与正文配图、整篇图文预览、主动永久删除；失败生成不占候选卡片 | 用户2026-10-21明确确认“P0完成”；各特殊分支以原反馈记录为准 | [M4.2配图验收](docs/architecture/milestones/04-images-acceptance.md) |
-| M4.3.1 / P1.1 | 新编辑器管理画像名称、内容方向、目标读者和运营目标，保留其余画像字段及历史 | 开发候选；用户安装验收待完成 | [画像指南](docs/feature-guides/m4.3.1-profiles.md) |
+| M4.3.1 / P1.1 | 新编辑器管理画像名称、内容方向、目标读者和运营目标，保留其余画像字段及历史 | 用户2026-10-21确认“测试验证通过”；逐项结果以原记录为准 | [画像指南](docs/feature-guides/m4.3.1-profiles.md) |
 
 ## 接下来规划哪些功能
 
