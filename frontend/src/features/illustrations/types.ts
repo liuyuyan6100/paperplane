@@ -66,6 +66,14 @@ export const imageStatus: Record<string, string> = {
   failed: "失败",
   interrupted: "已中断",
 };
+export function pageCandidateDisplay(candidates: Candidate[], pageIndex: number) {
+  const attempts = candidates.filter((candidate) => candidate.page_index === pageIndex);
+  const latest = attempts.at(-1);
+  return {
+    visible: attempts.filter((candidate) => !["failed", "interrupted"].includes(candidate.status)),
+    latestFailure: latest && ["failed", "interrupted"].includes(latest.status) ? latest : null,
+  };
+}
 export const editablePages = (pages: ImagePage[]): ImagePage[] =>
   pages.map((p) => ({
     title: p.title,

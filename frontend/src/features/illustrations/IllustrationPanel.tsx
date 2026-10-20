@@ -5,6 +5,7 @@ import { isDirty, type EditorState } from "../editor/session";
 import {
   editablePages,
   imageStatus,
+  pageCandidateDisplay,
   type ImageAdoption,
   type ImagePage,
   type ImagePreview,
@@ -350,6 +351,10 @@ function PlanEditor({
     ["queued", "running"].includes(plan.status);
   const page = pages[index],
     candidate = plan.candidates.find((c) => c.id === chosen);
+  const { visible: pageCandidates, latestFailure } = pageCandidateDisplay(
+    plan.candidates,
+    index,
+  );
   const changed =
     plan.source_changed || plan.profile_changed || !!candidate?.plan_changed;
   const values: ImageAdoption = {
@@ -744,11 +749,16 @@ function PlanEditor({
             <p className="image-fee-note">
               点击生成即调用所选图片模型生成一张，可能产生费用。AI完善计划使用文字模型额度。
             </p>
+            {latestFailure && (
+              <p role="alert" className="error">
+                本页{imageStatus[latestFailure.status] ?? latestFailure.status}：
+                {latestFailure.error || "没有生成图片。请检查图片模型后重新生成。"}
+              </p>
+            )}
             {planDirty && <p>请先保存配图计划。</p>}
           </fieldset>
-          <div className="image-candidates" aria-label="本页候选图片">
-            {plan.candidates
-              .filter((c) => c.page_index === index)
+          {pageCandidates.length > 0 && <div className="image-candidates" aria-label="本页候选图片">
+            {pageCandidates
               .map((c) => (
                 <article
                   key={c.id}
@@ -797,7 +807,7 @@ function PlanEditor({
                   )}
                 </article>
               ))}
-          </div>
+          </div>}
           {candidate && (
             <fieldset disabled={locked || planDirty} className="image-adoption">
               <legend>采用前核对 · {candidate.id.slice(0, 8)}</legend>

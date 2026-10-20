@@ -11,14 +11,14 @@
 [Setup]
 AppId={{9F197ED9-BE3C-4823-BEB0-693353517D05}
 AppName={#AppName}
-AppVersion=0.4.0.5
-AppVerName={#AppName} 0.4.0-m4.2.1
+AppVersion=0.4.0.6
+AppVerName={#AppName} 0.4.0-m4.2.2
 DefaultDirName={localappdata}\Programs\PaperPlaneStudioPreview
 DisableDirPage=yes
 DefaultGroupName={#AppName}
 PrivilegesRequired=lowest
 OutputDir={#OutputPath}
-OutputBaseFilename=PaperPlaneStudioPreview-Setup-0.4.0.5
+OutputBaseFilename=PaperPlaneStudioPreview-Setup-0.4.0.6
 SetupIconFile=web\icon.ico
 UninstallDisplayIcon={app}\PaperPlaneStudioPreview.exe
 Compression=lzma2

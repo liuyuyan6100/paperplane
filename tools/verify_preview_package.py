@@ -152,7 +152,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.4.0-m4.2.1" and session["milestone"] == "M4"
+                assert session["version"] == "0.4.0-m4.2.2" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -305,7 +305,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.4.0-m4.2.1",
+        "version": "0.4.0-m4.2.2",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,

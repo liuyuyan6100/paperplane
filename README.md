@@ -4,7 +4,9 @@
 
 [功能与 Roadmap](ROADMAP.md) · [操作与测试指南](docs/feature-guides/README.md) · [应用框架](docs/diagrams/README.md) · [与 Easel 的场景对比](docs/PROJECT_COMPARISON.md)
 
-作者：**Aiclaw** · [个人博客](https://blog.aiclawonline.website/) · [微信公众号](#微信公众号)
+作者：**Aiclaw** · [个人博客](https://blog.aiclawonline.website/) · [微信公众号：沐沐ai专题](#微信公众号)
+
+[下载 Windows 测试预发布版 M4.2.2](https://github.com/liuyuyan6100/paperplane/releases/tag/v0.4.0-m4.2.2) · 安装版本 `0.4.0.6` · [更新说明](docs/releases/v0.4.0-m4.2.2.md)
 
 ## 适合怎样的创作
 
@@ -16,7 +18,7 @@
 
 ## 当前做到了哪里
 
-截至 **2026-10-21**，当前开发候选为 **`0.4.0-m4.2.1`**，Windows 安装版本 `0.4.0.5`。M1–M4.1已完成用户验收；M4.2.1已实现、回归并安装核验，用户功能复验待确认。当前分支是仓库开发基线，仍处于架构整理阶段，M5稳定交付尚未完成。历史`0.1.76`是本轮整理的公开起点。
+截至 **2026-10-21**，当前开发候选为 **`0.4.0-m4.2.2`**，Windows 安装版本 `0.4.0.6`。M1–M4.1已完成用户验收；M4.2.1已安装，M4.2.2修正生图失败卡片并完成打包，用户功能复验待确认。当前分支是仓库开发基线，仍处于架构整理阶段，M5稳定交付尚未完成。历史`0.1.76`是本轮整理的公开起点。
 
 | 状态 | 已有内容 | 证据或入口 |
 | --- | --- | --- |
@@ -24,7 +26,7 @@
 | 已验收 · M2 | 侧边AI讨论、全文/选区修改、对照、采用与撤销、历史建议继续修改 | [侧边AI](docs/architecture/milestones/02-assistant-acceptance.md) |
 | 已验收 · M3 | 任务中心、本篇筛选、失败/中断恢复、未知送稿先核对 | [任务中心](docs/architecture/milestones/03-tasks-acceptance.md) |
 | 已验收 · M4.1 | 素材→可编辑提纲→确认后生成待审正文→采用保存；关闭习惯与文章归档/回收站 | [完整练习](docs/feature-guides/m4.1-text-creation.md) |
-| 已实现，待用户复验 · M4.2.1 | 封面与正文插图计划、生成/上传、位置预览、采用保存、独立图文预览、回收站永久删除及独占文件清理 | [配图与管理操作](docs/feature-guides/m4.2-images.md) |
+| 已实现，待用户复验 · M4.2.2 | 封面与正文插图计划、生成/上传、位置预览、采用保存、独立图文预览、回收站永久删除、失败生成不占候选卡片 | [配图与管理操作](docs/feature-guides/m4.2-images.md) |
 | 兼容入口保留 | 画像与已确认经验、选题、平台改编、送稿准备及回执、已有媒体、备份恢复等原功能 | [功能保留清单](docs/architecture/feature-parity.md) |
 | 规划中 | 剩余能力逐项迁入、统一数据访问与迁移、完整升级/回退、正式Windows稳定交付 | [Roadmap](ROADMAP.md) |
 
@@ -44,7 +46,7 @@
 | --- | --- | --- |
 | M0–M3 | 框架基线、文章编辑、侧边AI与任务恢复 | M0完成；M1–M3已用户验收 |
 | M4.1 | 打通素材、提纲确认与正文采用 | 已用户验收 |
-| M4.2 | 打通封面、正文配图与图文预览 | M4.2.1已安装，待用户复验 |
+| M4.2 | 打通封面、正文配图与图文预览 | M4.2.2已打包，待用户安装复验 |
 | M4其余单元 | 画像/经验、选题/改编、媒体/平台/复盘的逐项迁入；数据访问及完整兼容核对 | 保留原入口，分组推进；具体拆分顺序待确认 |
 | M5 | 稳定安装升级、正式数据迁移及回退、完整Windows使用链 | 规划中，需独立验收 |
 
@@ -106,7 +108,7 @@ python run.py --data-dir ./data --open
 
 公众号接口需要对应权限；送入草稿箱后在微信后台核对并公开发表。公众号原生图文视频仍需按对应流程人工上传和关联，API菜单/回复视频素材不能冒充图文视频。本机与服务器的文章、素材各自保存，当前不自动同步。其他平台的适配与真实可用性以各自回执和验收为准。
 
-最近一次应用回归：**1162通过、6环境跳过、0失败，另347个子测试通过**；前端14项，成品与升级/回退核验通过。该结果不等于所有外部平台或生成质量均已验收，详见[M4.2.1实施与验证](docs/architecture/milestones/04-images-implementation.md)。开发方式与依赖见[测试说明](tests/README.md)，历史文档核验见[核验表](docs/VERIFICATION.md)。
+最近一次应用回归：**1162通过、6环境跳过、0失败，另358个子测试通过**；前端16项，成品40模块及71资源核验通过。该结果不等于所有外部平台或生成质量均已验收，详见[M4.2.2实施与验证](docs/architecture/milestones/04-images-implementation.md)。开发方式与依赖见[测试说明](tests/README.md)，历史文档核验见[核验表](docs/VERIFICATION.md)。
 
 目录：`frontend/`当前React工作台，`studio/`后端与业务适配，`web/`兼容前端，`library/`共享资料库服务，`skills/`与`agents/`内容技能和提示词，`tests/`隔离测试，`tools/`构建与维护工具。
 
@@ -114,9 +116,9 @@ python run.py --data-dir ./data --open
 
 ## 微信公众号
 
-扫码关注，阅读 Aiclaw 的 AI 学习笔记、工程实践与项目更新。二维码取自作者博客的“联系与订阅”。
+公众号：**沐沐ai专题**。扫码阅读 AI 学习笔记、工程实践与项目更新。二维码取自作者博客的“联系与订阅”。
 
-<a href="docs/assets/wechat-official-account.jpg"><img src="docs/assets/wechat-official-account.jpg" alt="Aiclaw 微信公众号二维码" width="192" /></a>
+<a href="docs/assets/wechat-official-account.jpg"><img src="docs/assets/wechat-official-account.jpg" alt="沐沐ai专题 微信公众号二维码" width="192" /></a>
 
 ## 许可证与致谢
 

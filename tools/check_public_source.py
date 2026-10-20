@@ -23,7 +23,7 @@ OWNER_DOMAIN = re.compile(r"(?i)\b(?:[a-z0-9-]+\.)*" + "aiclawonline" + r"\.webs
 # The author explicitly requested this public contact line on the project homepage.
 # Match the entire line and path; other service URLs and query strings stay blocked.
 PUBLIC_AUTHOR_LINK = ("作者：**Aiclaw** · [个人博客](https://blog." + "aiclawonline"
-                      + ".website/) · [微信公众号](#微信公众号)")
+                      + ".website/) · [微信公众号：沐沐ai专题](#微信公众号)")
 # Explicit documentation examples, the container account and hosted CI accounts.
 GENERIC_USERS = {"user", "username", "example", "public", "default", "all users",
                  "archive", "runner", "runneradmin", "runner~1"}
