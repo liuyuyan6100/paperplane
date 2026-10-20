@@ -5,6 +5,7 @@ import { DesktopSettings } from "./features/editor/DesktopSettings";
 import { CreationPanel } from "./features/creation/CreationPanel";
 import { IllustrationPanel } from "./features/illustrations/IllustrationPanel";
 import { ProfilePanel } from "./features/profiles/ProfilePanel";
+import { TopicPanel } from "./features/topics/TopicPanel";
 import { TasksButton } from "./features/tasks/TaskCenter";
 import { MetadataAssistant } from "./features/editor/MetadataAssistant";
 import { AssistantPanel } from "./features/assistant/AssistantPanel";
@@ -77,8 +78,12 @@ export function App() {
   const creationUnsavedAreas = useRef<string[]>([]);
   const illustrationDirty = useRef(false);
   const profileDirty = useRef(false);
+  const topicDirty = useRef(false);
   const setProfileDirty = useCallback((value: boolean) => {
     profileDirty.current = value;
+  }, []);
+  const setTopicDirty = useCallback((value: boolean) => {
+    topicDirty.current = value;
   }, []);
   const illustrationUnsavedAreas = useRef<string[]>([]);
   const setIllustrationDirty = useCallback(
@@ -112,7 +117,8 @@ export function App() {
       !!current.current.saving ||
       creationDirty.current ||
       illustrationDirty.current ||
-      profileDirty.current;
+      profileDirty.current ||
+      topicDirty.current;
     const getUnsavedAreas = () => [
       ...(isDirty(current.current) ? ["文章编辑区"] : []),
       ...(current.current.saving ? ["文章正在保存，请等待完成"] : []),
@@ -123,6 +129,7 @@ export function App() {
         : []),
       ...(illustrationDirty.current ? illustrationUnsavedAreas.current : []),
       ...(profileDirty.current ? ["账号画像"] : []),
+      ...(topicDirty.current ? ["选题策划"] : []),
     ];
     window.PaperPlaneDesktop = { hasUnsaved: dirtyNow, getUnsavedAreas };
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -144,7 +151,8 @@ export function App() {
         current.current.saving ||
         creationDirty.current ||
         illustrationDirty.current ||
-        profileDirty.current) &&
+        profileDirty.current ||
+        topicDirty.current) &&
       !confirm(
         "当前文章有未保存修改或正在保存。离开会放弃本页未保存内容，是否继续？",
       )
@@ -217,7 +225,8 @@ export function App() {
         state.saving ||
         creationDirty.current ||
         illustrationDirty.current ||
-        profileDirty.current) &&
+        profileDirty.current ||
+        topicDirty.current) &&
       !confirm(
         "请先保存需要保留的修改。现在离开新编辑器并打开同一验证库的原工作台？",
       )
@@ -283,7 +292,8 @@ export function App() {
               (isDirty(value) ||
                 creationDirty.current ||
                 illustrationDirty.current ||
-                profileDirty.current);
+                profileDirty.current ||
+                topicDirty.current);
             if (
               unsaved &&
               !confirm(
@@ -319,11 +329,18 @@ export function App() {
       <main className="editor-main" inert={libraryBusy}>
         <header className="toolbar">
           <div>
-            <span className="milestone">M4.2 · 封面与正文配图</span>
+            <span className="milestone">M4.3 · 图文创作与选题</span>
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
             <DesktopSettings />
+            <TopicPanel
+              key={state.session + ":topics"}
+              articleProfileId={state.draft.profile_id}
+              profiles={profiles.data?.profiles ?? []}
+              onDirty={setTopicDirty}
+              onOpenArticle={(id) => void navigate(id)}
+            />
             <button
               className="mobile-control"
               onClick={() => setMobileLibrary(!mobileLibrary)}

@@ -2254,6 +2254,63 @@ body,
 .profile-editor .primary {
   margin-top: 8px;
 }
+.topic-panel {
+  width: min(1120px, calc(100vw - 36px));
+}
+.topic-content {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 16px 24px;
+  align-items: start;
+}
+.topic-composer select {
+  width: 100%;
+  display: block;
+  margin-top: 8px;
+}
+.topic-composer textarea {
+  min-height: 132px;
+}
+.topic-history {
+  grid-column: 1;
+}
+.topic-history button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  white-space: normal;
+}
+.topic-history button.selected {
+  border-color: #9ebcff;
+  background: #e8f0ff;
+}
+.topic-history strong,
+.topic-history small {
+  display: block;
+}
+.topic-result {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-width: 0;
+}
+.topic-candidates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.topic-candidates article {
+  padding: 16px;
+  border: 1px solid #dce5f2;
+  border-radius: 10px;
+}
+.topic-candidates h4 {
+  margin: 8px 0;
+}
+.topic-candidates p {
+  white-space: pre-wrap;
+}
 @media (max-width: 700px) {
   .creation-panel {
     width: calc(100vw - 12px);
@@ -2279,6 +2336,13 @@ body,
   .creation-content {
     overflow: visible;
     padding: 14px;
+  }
+  .topic-content {
+    display: block;
+    overflow: auto;
+  }
+  .topic-candidates {
+    grid-template-columns: minmax(0, 1fr);
   }
   .creation-compare {
     grid-template-columns: minmax(0, 1fr);

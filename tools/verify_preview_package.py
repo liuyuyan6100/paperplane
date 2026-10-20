@@ -68,6 +68,10 @@ def verify(package, output):
         "studio.application.profiles",
         "studio.domain.profiles",
         "studio.infrastructure.legacy_profiles",
+        "studio.api.topics",
+        "studio.application.topics",
+        "studio.domain.topics",
+        "studio.infrastructure.legacy_topics",
         "studio.api.assistant",
         "studio.application.assistant",
         "studio.domain.assistant",
@@ -156,7 +160,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.4.0-m4.3.1" and session["milestone"] == "M4"
+                assert session["version"] == "0.4.0-m4.3.2" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -171,6 +175,7 @@ def verify(package, output):
                 assert profile_response.status_code == 200, profile_response.text
                 profile = profile_response.json()
                 assert client.get("/api/v2/profiles").json()["profiles"][0]["id"] == profile["id"]
+                assert client.get("/api/v2/topics").json()["plans"] == []
                 updated = client.post("/api/v2/profiles/" + profile["id"], json={**profile_fields, "goal": "完成成品", "version": 1})
                 assert updated.status_code == 200 and updated.json()["version"] == 2
                 assert client.post("/api/v2/profiles/" + profile["id"], json={**profile_fields, "version": 1}).status_code == 409
@@ -317,7 +322,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.4.0-m4.3.1",
+        "version": "0.4.0-m4.3.2",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,

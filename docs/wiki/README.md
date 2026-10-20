@@ -12,6 +12,7 @@
 - [Windows 测试预发布版 M4.2.2](https://github.com/liuyuyan6100/paperplane/releases/tag/v0.4.0-m4.2.2)：安装包、SHA256校验文件与测试说明。
 - [M4.2体验修正与复验](../feature-guides/records/m4.2.1-feedback-2026-10-20.md)：永久删除、点击直接执行、封面后的下一步、独立图文成品预览与生图失败卡片。
 - [M4.3.1画像核心字段指南](../feature-guides/m4.3.1-profiles.md)：新版编辑器管理画像名称、内容方向、目标读者和运营目标；用户确认测试通过。
+- [M4.3.2选题策划指南](../feature-guides/m4.3.2-topics.md)：一段想法与画像生成三个候选，人工选择后创建空白文章；开发候选待安装验收。
 - [关闭习惯与文章列表管理](../feature-guides/m4.1.2-desktop-and-library.md)：一次选择记住、设置更改，以及归档、回收站和恢复。
 - [使用指南](../USER_GUIDE.md)：素材、画像、提纲、正文、侧边改稿与公众号草稿。
 - [部署和安装](../DEPLOYMENT.md)：当前公开版的运行方式；架构验证版另按阶段交付。
