@@ -4,9 +4,9 @@
 
 边学边测试：[功能使用与验收指南](docs/feature-guides/README.md)集中收录操作步骤、预期结果、用户反馈截图和每轮验收记录；首次创作请先保存文章。
 
-当前M4.1.2补齐[关闭习惯、设置与文章菜单](docs/feature-guides/m4.1.2-desktop-and-library.md)：正常关闭选择一次后沿用，文章支持归档及可恢复的回收站；仍待用户安装复验。
+M4.1已于2026-10-20由用户验收通过。当前M4.2新增[封面与正文配图](docs/feature-guides/m4.2-images.md)，安装与体验待验收。历史M4.1.2补齐[关闭习惯、设置与文章菜单](docs/feature-guides/m4.1.2-desktop-and-library.md)：正常关闭选择一次后沿用，文章支持归档及可恢复的回收站；仍待用户安装复验。
 
-本分支为 **架构验证分支**。M1–M3已由用户安装验收通过，当前M4.1候选 `0.4.0-m4.1.2` 接通“素材 → 提纲确认 → 正文待审 → 采用保存”的完整链路。已有编辑器、侧边AI、任务中心、数据配置与原工作台入口保留。见[M4.1实施记录](docs/architecture/milestones/04-creation-implementation.md)及[安装验收步骤](docs/architecture/milestones/04-creation-acceptance.md)。本轮只完成M4首个迁移单元，其他功能和M5正式升级尚未完成；候选安装与用户体验待确认。参见[架构计划](docs/architecture/README.md)和[项目Wiki](docs/wiki/README.md)。下方原有启动命令继续打开兼容工作台。
+本分支为 **架构验证分支**。M1–M4.1已由用户安装验收通过，当前M4.2候选`0.4.0-m4.2`在新编辑器接通封面与正文配图，待用户安装体验。素材、提纲确认、正文待审与采用、侧边AI、任务中心、设置和文章归档/回收站保留。见[M4.2实施记录](docs/architecture/milestones/04-images-implementation.md)、[操作指南](docs/feature-guides/m4.2-images.md)及[安装验收](docs/architecture/milestones/04-images-acceptance.md)。其他M4单元与M5稳定交付仍未整体完成；原工作台入口继续保留。
 
 验证新编辑器需安装 `requirements-preview.txt`，在 `frontend/` 执行 `npm ci`、`npm run build`，再在仓库根运行 `python preview.py --serve --open --data-dir ./data-preview`。Windows 独立安装包由 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_preview.ps1` 构建。验证版默认使用 `%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，与正式版独立。
 
@@ -94,3 +94,6 @@ Easel 的官方介绍强调以 OpenClaw Agent 串联发现、策划、创作、�
 2026-10-19 M3.2补充：文章信息区提供AI补齐空白摘要/署名/标签，先审阅再填入，保留手动信息；任务中心增加用途解释及本篇状态入口。M3现已用户确认通过，详见M3验收单。
 
 2026-10-20：用户反馈采用保存成功、关闭仍被提示先保存；当前修正候选区分保存状态和未提交输入，提供明确关闭选择。[截图与复验记录](docs/feature-guides/records/m4.1-close-feedback-2026-10-20.md)。整体仍待用户确认。
+
+
+2026-10-20最新验收：用户明确反馈“这次测试没问题了，M4.1验收通过”，M1–M4.1用户整体验收完成，包含本轮关闭习惯与文章管理补齐；未逐项反馈的特殊分支不补造人工实测。原失败、截图与修正记录保留。用户授权继续M4.2封面与正文配图，见[实施与交付](docs/architecture/milestones/04-images-implementation.md)。M4其他单元和M5仍未整体完成。

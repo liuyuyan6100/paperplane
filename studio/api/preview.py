@@ -12,20 +12,23 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from studio.api.articles import article_router
 from studio.api.assistant import assistant_router
 from studio.api.creation import creation_router
+from studio.api.illustrations import illustration_router
 from studio.api.preferences import preference_router
 from studio.api.tasks import task_router
 from studio.application.articles import ArticleService
 from studio.application.assistant import AssistantService
 from studio.application.creation import CreationService
+from studio.application.illustrations import IllustrationService
 from studio.application.tasks import TaskService
 from studio.infrastructure.legacy_articles import LegacyArticleRepository
 from studio.infrastructure.legacy_assistant import LegacyAssistant
 from studio.infrastructure.legacy_creation import LegacyCreation
+from studio.infrastructure.legacy_illustrations import LegacyIllustrations
 from studio.infrastructure.legacy_tasks import LegacyTasks
 from studio.preview_preferences import PreviewPreferences
 from studio.service import Problem
 
-PREVIEW_VERSION = "0.4.0-m4.1.2"
+PREVIEW_VERSION = "0.4.0-m4.2"
 CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self'; "
     "img-src 'self' https: http: data:; media-src 'self'; connect-src 'self'; "
@@ -113,6 +116,7 @@ def create_app(studio, legacy_url, token, port, frontend=None, *, preferences=No
     app.include_router(task_router(TaskService(LegacyTasks(studio))))
     app.include_router(preference_router(preferences or PreviewPreferences(studio.db.data_dir)))
     app.include_router(creation_router(CreationService(LegacyCreation(studio))))
+    app.include_router(illustration_router(IllustrationService(LegacyIllustrations(studio))))
     app.include_router(article_router(ArticleService(LegacyArticleRepository(studio))))
     app.include_router(assistant_router(AssistantService(LegacyAssistant(studio))))
 

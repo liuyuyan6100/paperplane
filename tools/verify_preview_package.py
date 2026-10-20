@@ -1,7 +1,9 @@
 """Verify frozen code/assets and a synthetic save/restart in the packaged service."""
 
 import argparse
+import base64
 import hashlib
+import io
 import json
 import marshal
 import os
@@ -14,6 +16,7 @@ from contextlib import nullcontext
 from pathlib import Path
 
 import httpx
+from PIL import Image
 from PyInstaller.archive.readers import CArchiveReader
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +44,12 @@ def verify(package, output):
     archive = CArchiveReader(str(exe))
     pyz = archive.open_embedded_archive(next(k for k in archive.toc if k.endswith(".pyz")))
     modules = [
+        "studio.api.illustrations",
+        "studio.application.illustrations",
+        "studio.domain.illustrations",
+        "studio.infrastructure.legacy_illustrations",
+        "studio.illustrations",
+        "studio.illustration_positions",
         "studio.api.preferences",
         "studio.preview_preferences",
         "studio.api.creation",
@@ -142,7 +151,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.4.0-m4.1.2" and session["milestone"] == "M4"
+                assert session["version"] == "0.4.0-m4.2" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -241,6 +250,24 @@ def verify(package, output):
                 assert adopted.status_code == 200, adopted.text
                 assert adopted.json()['post']['body'] == '成品审阅后的正文😀'
                 assert client.post(route + '/adopt', json=adopt_values).json()['post']['version'] == 2
+                image_route = f"/api/v2/articles/{article['id']}/illustrations"
+                image_plan = client.post(image_route, json={'request_id': '9' * 32, 'post_version': 2}).json()
+                assert image_plan['pages'][0]['slot'] == 'cover'
+                assert 'context' not in image_plan and 'snapshot' not in image_plan
+                image_route += '/' + image_plan['id']
+                stream = io.BytesIO()
+                Image.new('RGB', (64, 64), 'teal').save(stream, format='PNG')
+                uploaded = client.post('/api/v2/illustrations/upload', json={'data': base64.b64encode(stream.getvalue()).decode(), 'title': '成品合成原图'}).json()
+                imported = client.post(image_route + '/import-original', json={'request_id': '8' * 32, 'version': 1, 'page_index': 0, 'image_url': uploaded['url']})
+                assert imported.status_code == 200, imported.text
+                image_values = {'candidate_id': '8' * 32, 'post_version': 2}
+                assert client.post(image_route + '/preview', json=image_values).status_code == 200
+                assert client.get('/api/v2/articles/' + article['id']).json()['version'] == 2
+                image_result = client.post(image_route + '/adopt', json=image_values)
+                assert image_result.status_code == 200, image_result.text
+                assert image_result.json()['post']['cover'] == uploaded['url']
+                assert client.post(image_route + '/adopt', json=image_values).json()['post']['version'] == 3
+                assert client.get(uploaded['url']).content == stream.getvalue()
                 assert client.get('/api/state').json()['jobs'] == []
                 assert (
                     client.post(
@@ -268,7 +295,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.4.0-m4.1.2",
+        "version": "0.4.0-m4.2",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -293,6 +320,10 @@ def verify(package, output):
             "close_preference_restart_and_save",
             "reversible_archive_trash_restore",
             "sqlite_integrity",
+            "image_plan_public_projection",
+            "original_upload_and_media_bytes",
+            "image_preview_does_not_write",
+            "image_atomic_adoption_idempotence",
         ],
         "exe_sha256": hashlib.sha256(exe.read_bytes()).hexdigest(),
         "installed": False,

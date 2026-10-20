@@ -81,3 +81,6 @@ M1/M2已用户验收。M3以TaskService/TaskRepository协议统一查询与显�
 
 
 M4.1补充：新创作视图通过CreationService/CreationPort/LegacyCreation连接原WorkflowManager，素材仍保存为原格式文章；仅新增素材请求回执表防止重试重复导入。文章保存增加可加入调用方事务的连接参数，原独立保存事务保持。采用在同一事务中检查当前稿版本、候选签名并保存文章修订与采用标记；未重建原库或启用SQLAlchemy/Alembic整体迁移。
+
+
+2026-10-20最新验收：用户明确反馈“这次测试没问题了，M4.1验收通过”，M1–M4.1用户整体验收完成，包含本轮关闭习惯与文章管理补齐；未逐项反馈的特殊分支不补造人工实测。原失败、截图与修正记录保留。用户授权继续M4.2封面与正文配图，见[实施与交付](milestones/04-images-implementation.md)。M4其他单元和M5仍未整体完成。

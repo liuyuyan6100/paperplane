@@ -2,6 +2,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ArticleLibrary } from "./features/editor/ArticleLibrary";
 import { DesktopSettings } from "./features/editor/DesktopSettings";
 import { CreationPanel } from "./features/creation/CreationPanel";
+import { IllustrationPanel } from "./features/illustrations/IllustrationPanel";
 import { TasksButton } from "./features/tasks/TaskCenter";
 import { MetadataAssistant } from "./features/editor/MetadataAssistant";
 import { AssistantPanel } from "./features/assistant/AssistantPanel";
@@ -72,6 +73,15 @@ export function App() {
   const saveBusy = useRef(false);
   const creationDirty = useRef(false);
   const creationUnsavedAreas = useRef<string[]>([]);
+  const illustrationDirty = useRef(false);
+  const illustrationUnsavedAreas = useRef<string[]>([]);
+  const setIllustrationDirty = useCallback(
+    (value: boolean, areas: string[] = []) => {
+      illustrationDirty.current = value;
+      illustrationUnsavedAreas.current = value ? areas : [];
+    },
+    [],
+  );
   const setCreationDirty = useCallback(
     (value: boolean, areas: string[] = []) => {
       creationDirty.current = value;
@@ -95,7 +105,8 @@ export function App() {
     const dirtyNow = () =>
       isDirty(current.current) ||
       !!current.current.saving ||
-      creationDirty.current;
+      creationDirty.current ||
+      illustrationDirty.current;
     const getUnsavedAreas = () => [
       ...(isDirty(current.current) ? ["文章编辑区"] : []),
       ...(current.current.saving ? ["文章正在保存，请等待完成"] : []),
@@ -104,6 +115,7 @@ export function App() {
           ? creationUnsavedAreas.current
           : ["素材与创作"]
         : []),
+      ...(illustrationDirty.current ? illustrationUnsavedAreas.current : []),
     ];
     window.PaperPlaneDesktop = { hasUnsaved: dirtyNow, getUnsavedAreas };
     const beforeUnload = (event: BeforeUnloadEvent) => {
@@ -148,7 +160,8 @@ export function App() {
     if (
       (isDirty(current.current) ||
         current.current.saving ||
-        creationDirty.current) &&
+        creationDirty.current ||
+        illustrationDirty.current) &&
       !confirm(
         "当前文章有未保存修改或正在保存。离开会放弃本页未保存内容，是否继续？",
       )
@@ -217,7 +230,10 @@ export function App() {
 
   function compatibility() {
     if (
-      (dirty || state.saving || creationDirty.current) &&
+      (dirty ||
+        state.saving ||
+        creationDirty.current ||
+        illustrationDirty.current) &&
       !confirm(
         "请先保存需要保留的修改。现在离开新编辑器并打开同一验证库的原工作台？",
       )
@@ -278,7 +294,11 @@ export function App() {
             const same = value.articleId === row.id;
             if (same && (value.saving || value.loading || saveBusy.current))
               throw new Error("文章正在读取或保存，请完成后再操作。");
-            const unsaved = same && (isDirty(value) || creationDirty.current);
+            const unsaved =
+              same &&
+              (isDirty(value) ||
+                creationDirty.current ||
+                illustrationDirty.current);
             if (
               (action === "trash" || unsaved) &&
               !confirm(
@@ -314,7 +334,7 @@ export function App() {
       <main className="editor-main" inert={libraryBusy}>
         <header className="toolbar">
           <div>
-            <span className="milestone">M4 · 素材、提纲与正文采用</span>
+            <span className="milestone">M4.2 · 封面与正文配图</span>
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
@@ -332,7 +352,7 @@ export function App() {
               {mobileAI ? "返回文章" : "显示 AI"}
             </button>
             <CreationPanel
-              key={state.session}
+              key={state.session + ":creation"}
               state={state}
               getCurrent={() => current.current}
               onDirty={setCreationDirty}
@@ -358,6 +378,58 @@ export function App() {
                     post: import("./features/editor/session").Article;
                   }>(
                     `/articles/${value.articleId}/creation/${id}/adopt`,
+                    values,
+                  );
+                  dispatch({
+                    type: "saved",
+                    request: adoption,
+                    article: result.post,
+                  });
+                  void client.invalidateQueries({ queryKey: ["articles"] });
+                } catch (err) {
+                  dispatch({
+                    type: "failed",
+                    session: value.session,
+                    requestId: adoption.id,
+                    error: (err as Error).message,
+                  });
+                  throw err;
+                } finally {
+                  saveBusy.current = false;
+                }
+              }}
+            />
+            <IllustrationPanel
+              key={state.session + ":illustrations"}
+              state={state}
+              getCurrent={() => current.current}
+              onDirty={setIllustrationDirty}
+              onAdopt={async (id, values) => {
+                const value = current.current;
+                if (
+                  saveBusy.current ||
+                  value.saving ||
+                  value.loading ||
+                  isDirty(value)
+                )
+                  throw new Error("请先保存当前文章，再核对采用图片。");
+                if (value.version !== values.post_version)
+                  throw new Error(
+                    "当前编辑器版本与配图预览不同。请返回文章，重新读取当前稿后再预览采用。",
+                  );
+                saveBusy.current = true;
+                const adoption: SaveRequest = {
+                  id: crypto.randomUUID(),
+                  session: value.session,
+                  sequence: value.sequence,
+                  draft: structuredClone(value.draft),
+                };
+                dispatch({ type: "saving", request: adoption });
+                try {
+                  const result = await request<{
+                    post: import("./features/editor/session").Article;
+                  }>(
+                    `/articles/${value.articleId}/illustrations/${id}/adopt`,
                     values,
                   );
                   dispatch({
