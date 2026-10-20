@@ -72,6 +72,7 @@ def verify(package, output):
         "studio.application.articles",
         "studio.domain.articles",
         "studio.infrastructure.legacy_articles",
+        "studio.infrastructure.article_cleanup",
         "studio.preview_runtime",
         "studio.server",
         "studio.service",
@@ -151,7 +152,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.4.0-m4.2" and session["milestone"] == "M4"
+                assert session["version"] == "0.4.0-m4.2.1" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -268,6 +269,15 @@ def verify(package, output):
                 assert image_result.json()['post']['cover'] == uploaded['url']
                 assert client.post(image_route + '/adopt', json=image_values).json()['post']['version'] == 3
                 assert client.get(uploaded['url']).content == stream.getvalue()
+                disposable = client.post('/api/v2/articles', json={'title': '成品永久删除隔离稿', 'cover': uploaded['url']}).json()
+                disposable_route = '/api/v2/articles/' + disposable['id'] + '/manage'
+                assert client.post(disposable_route, json={'action': 'trash', 'version': 1}).status_code == 200
+                purged = client.post(disposable_route, json={'action': 'purge', 'version': 2})
+                assert purged.status_code == 200, purged.text
+                assert purged.json()['protected_files'] == 1
+                assert client.get('/api/v2/articles/' + disposable['id']).status_code == 404
+                assert client.get(uploaded['url']).content == stream.getvalue()
+                assert client.post('/api/v2/articles/trash-storage/cleanup', json={}).status_code == 200
                 assert client.get('/api/state').json()['jobs'] == []
                 assert (
                     client.post(
@@ -295,7 +305,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.4.0-m4.2",
+        "version": "0.4.0-m4.2.1",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,
@@ -324,6 +334,7 @@ def verify(package, output):
             "original_upload_and_media_bytes",
             "image_preview_does_not_write",
             "image_atomic_adoption_idempotence",
+            "permanent_delete_shared_media_protection",
         ],
         "exe_sha256": hashlib.sha256(exe.read_bytes()).hexdigest(),
         "installed": False,

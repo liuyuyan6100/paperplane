@@ -34,6 +34,8 @@ const fs = require("fs"),
       path: path.join(f.output, "editor-desktop.png"),
       fullPage: true,
     });
+    assert.equal(await page.getByRole("dialog", {name: "图文成品预览"}).locator("textarea").count(), 0);
+    await page.getByRole("button", {name: "返回编辑", exact: true}).click();
     const article = (
       await (await context.request.get(f.url + "/api/v2/articles")).json()
     ).articles.find((a) => a.title === "M1浏览器合成验收");

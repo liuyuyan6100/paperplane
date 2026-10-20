@@ -17,6 +17,8 @@ type Props = {
   getCurrent: () => EditorState;
   onDirty: (dirty: boolean, areas?: string[]) => void;
   onAdopt: (id: string, values: ImageAdoption) => Promise<void>;
+  openRequest: number;
+  onPreviewArticle: () => void;
 };
 
 export function IllustrationPanel({
@@ -24,7 +26,10 @@ export function IllustrationPanel({
   getCurrent,
   onDirty,
   onAdopt,
+  openRequest,
+  onPreviewArticle,
 }: Props) {
+  const content = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false),
     dialog = useRef<HTMLDialogElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
@@ -62,6 +67,9 @@ export function IllustrationPanel({
     if (open) dialog.current?.showModal();
     else dialog.current?.close();
   }, [open]);
+  useEffect(() => {
+    if (openRequest) setOpen(true);
+  }, [openRequest]);
   useEffect(() => {
     onDirty(dirty, dirty ? ["封面与配图：尚未保存的计划、图注或修改要求"] : []);
   }, [dirty, onDirty]);
@@ -181,7 +189,11 @@ export function IllustrationPanel({
                 </button>
               ))}
             </nav>
-            <section className="creation-content" aria-label="配图详情">
+            <section
+              ref={content}
+              className="creation-content"
+              aria-label="配图详情"
+            >
               {error && (
                 <p role="alert" className="error">
                   {error}
@@ -237,6 +249,11 @@ export function IllustrationPanel({
                   run={run}
                   onChange={change}
                   onNotice={setNotice}
+                  onNavigate={() => content.current?.scrollTo({ top: 0 })}
+                  onPreviewArticle={() => {
+                    setOpen(false);
+                    onPreviewArticle();
+                  }}
                   onPreview={(values) =>
                     request<ImagePreview>(
                       base + "/" + selected + "/preview",
@@ -276,6 +293,8 @@ type EditorProps = {
   onPreview: (values: ImageAdoption) => Promise<ImagePreview>;
   onAdopt: (values: ImageAdoption) => Promise<void>;
   onNotice: (text: string) => void;
+  onNavigate: () => void;
+  onPreviewArticle: () => void;
 };
 function PlanEditor({
   plan,
@@ -286,6 +305,8 @@ function PlanEditor({
   onPreview,
   onAdopt,
   onNotice,
+  onNavigate,
+  onPreviewArticle,
 }: EditorProps) {
   const [pages, setPages] = useState(() => editablePages(plan.pages));
   const [basis, setBasis] = useState(() => ({
@@ -304,6 +325,7 @@ function PlanEditor({
     value: ImagePreview;
   } | null>(null);
   const [adoptionDirty, setAdoptionDirty] = useState(false);
+  const [adoptedIndex, setAdoptedIndex] = useState<number | null>(null);
   const planDirty = JSON.stringify(pages) !== JSON.stringify(basis.pages);
   const dirty = planDirty || !!instruction || adoptionDirty;
   const stale = basis.version !== plan.version;
@@ -355,6 +377,8 @@ function PlanEditor({
     setPreview(null);
     setAdoptionDirty(false);
     setAck(false);
+    setAdoptedIndex(null);
+    onNavigate();
   }
   function selectCandidate(id: string) {
     if (
@@ -485,14 +509,9 @@ function PlanEditor({
         </button>
         <button
           disabled={locked || planDirty || !!plan.adopted.length}
-          onClick={() => {
-            if (
-              confirm(
-                "AI将基于已保存正文和画像完善配图计划，可能消耗文字模型额度，是否继续？",
-              )
-            )
-              void run(() => onChange("improve", { version: plan.version }));
-          }}
+          onClick={() =>
+            void run(() => onChange("improve", { version: plan.version }))
+          }
         >
           AI完善计划
         </button>
@@ -534,7 +553,7 @@ function PlanEditor({
           </button>
         ))}
         <button
-          disabled={locked || pages.length >= 12 || !!plan.adopted.length}
+          disabled={locked || pages.length >= 12}
           onClick={() => {
             setPages([
               ...pages,
@@ -552,6 +571,7 @@ function PlanEditor({
         >
           ＋ 添加插图
         </button>
+        <button onClick={onPreviewArticle}>查看整篇图文</button>
       </div>
       {page && (
         <>
@@ -689,25 +709,20 @@ function PlanEditor({
                 className="primary"
                 disabled={plan.status !== "review"}
                 onClick={() => {
-                  if (
-                    confirm(
-                      "本次将调用图片模型生成一张候选图，可能产生费用，是否继续？",
-                    )
-                  )
-                    void run(async () => {
-                      await onChange(
-                        "generate",
-                        {
-                          version: plan.version,
-                          page_index: index,
-                          instruction,
-                          parent_id: parent || null,
-                        },
-                        true,
-                      );
-                      setInstruction("");
-                      onNotice("候选图任务已保存，可稍后回来查看。");
-                    });
+                  void run(async () => {
+                    await onChange(
+                      "generate",
+                      {
+                        version: plan.version,
+                        page_index: index,
+                        instruction,
+                        parent_id: parent || null,
+                      },
+                      true,
+                    );
+                    setInstruction("");
+                    onNotice("候选图任务已保存，可稍后回来查看。");
+                  });
                 }}
               >
                 {parent ? "基于候选图修改" : "生成本页候选图"}
@@ -726,6 +741,9 @@ function PlanEditor({
                 />
               </label>
             </div>
+            <p className="image-fee-note">
+              点击生成即调用所选图片模型生成一张，可能产生费用。AI完善计划使用文字模型额度。
+            </p>
             {planDirty && <p>请先保存配图计划。</p>}
           </fieldset>
           <div className="image-candidates" aria-label="本页候选图片">
@@ -857,12 +875,38 @@ function PlanEditor({
                     await onAdopt(values);
                     setAdoptionDirty(false);
                     setPreview(null);
+                    setAdoptedIndex(index);
                   })
                 }
               >
                 确认采用图片并保存文章
               </button>
             </fieldset>
+          )}
+          {adoptedIndex !== null && (
+            <div className="image-next-step" role="status">
+              <p>
+                {pages[adoptedIndex]?.slot === "cover" ? "封面" : "图片"}
+                已采用并保存。
+              </p>
+              {pages.some(
+                (p, i) => p.slot === "body" && i !== adoptedIndex,
+              ) && (
+                <button
+                  className="primary"
+                  onClick={() =>
+                    selectPage(
+                      pages.findIndex(
+                        (p, i) => p.slot === "body" && i !== adoptedIndex,
+                      ),
+                    )
+                  }
+                >
+                  继续制作正文插图
+                </button>
+              )}
+              <button onClick={onPreviewArticle}>查看已保存的整篇图文</button>
+            </div>
           )}
         </>
       )}

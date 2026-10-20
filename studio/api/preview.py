@@ -28,7 +28,7 @@ from studio.infrastructure.legacy_tasks import LegacyTasks
 from studio.preview_preferences import PreviewPreferences
 from studio.service import Problem
 
-PREVIEW_VERSION = "0.4.0-m4.2"
+PREVIEW_VERSION = "0.4.0-m4.2.1"
 CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self'; "
     "img-src 'self' https: http: data:; media-src 'self'; connect-src 'self'; "

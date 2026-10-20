@@ -2,12 +2,17 @@
 
 from studio import profiles
 from studio.db import now
+from studio.infrastructure.article_cleanup import ArticleCleanup
 from studio.service import Problem
 
 
 class LegacyArticleRepository:
     def __init__(self, studio):
         self.studio = studio
+        self.cleanup = ArticleCleanup(studio)
+
+    def storage(self, clean=False):
+        return self.cleanup.cleanup() if clean else self.cleanup.status()
 
     def listing(self, scope="active"):
         condition = {
@@ -22,6 +27,8 @@ class LegacyArticleRepository:
         )
 
     def manage(self, article_id, action, version):
+        if action == "purge":
+            return self.cleanup.purge(article_id, version)
         with self.studio.db.connect(immediate=True) as db:
             post = db.execute("SELECT * FROM posts WHERE id=?", (article_id,)).fetchone()
             if not post:

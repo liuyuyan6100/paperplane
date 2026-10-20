@@ -2,7 +2,7 @@ const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),ass
 (async()=>{
  const f=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));fs.mkdirSync(f.output,{recursive:true});
  const browser=await chromium.launch({headless:true}),page=await browser.newPage({viewport:{width:1440,height:940}}),errors=[];
- page.on('pageerror',err=>errors.push(String(err)));page.on('dialog',d=>d.accept());
+ const dialogs=[];page.on('pageerror',err=>errors.push(String(err)));page.on('dialog',d=>{dialogs.push(d.message());d.accept();});
  const panel=page.getByRole('dialog',{name:'本篇封面与配图',exact:true}),body=page.getByLabel('文章正文',{exact:true});
  const button=name=>panel.getByRole('button',{name,exact:true});
  async function open(){await page.getByRole('button',{name:'封面与配图',exact:true}).click();await panel.waitFor();}
@@ -20,13 +20,19 @@ const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),ass
   await button('保存配图计划').click();await panel.getByText('配图计划已保存，文章保持原样。',{exact:true}).waitFor();
   assert.equal(await page.evaluate(()=>window.PaperPlaneDesktop.hasUnsaved()),false);
   await button('生成本页候选图').click();await panel.getByRole('img',{name:/候选图片/}).first().waitFor();
+  assert.deepEqual(dialogs,[], 'Explicit generation must not show another confirmation');
   const img=panel.getByRole('img',{name:/候选图片/}).first();await img.evaluate(el=>el.decode());assert(await img.evaluate(el=>el.complete&&el.naturalWidth>0));
   assert.equal((await(await page.request.get(f.url+'/api/v2/articles/'+f.post_id)).json()).version,1);
   await panel.locator('.image-candidates').scrollIntoViewIfNeeded();await page.screenshot({path:path.join(f.output,'cover-candidate.png'),fullPage:true});
   await button('选择并预览').click();await button('预览采用位置').click();await panel.getByAltText('采用后的文章封面预览').waitFor();
   await button('确认采用图片并保存文章').click();await panel.getByText('图片已采用并保存为文章新版本，原修订与旧图继续保留。',{exact:true}).waitFor();
   assert.equal(await page.evaluate(()=>window.PaperPlaneDesktop.hasUnsaved()),false);
-  await panel.getByRole('button',{name:'2. 正文插图',exact:true}).click();
+  await panel.locator('.image-next-step').scrollIntoViewIfNeeded();
+  const tabs=await panel.locator('.image-page-tabs').boundingBox(),content=await panel.getByRole('region',{name:'配图详情',exact:true}).boundingBox();
+  assert(tabs.y>=content.y && tabs.y+tabs.height<=content.y+content.height,'Page tabs remain visible while reviewing adoption');
+  await page.screenshot({path:path.join(f.output,'cover-adopt-next-step.png'),fullPage:true});
+  await button('继续制作正文插图').click();
+  await panel.getByLabel('计划插图位置',{exact:true}).waitFor();
   await panel.getByLabel('上传本页原图',{exact:true}).setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:Buffer.from(f.png,'base64')});
   await panel.getByText('原图已作为本页候选保存，尚未写入文章。',{exact:true}).waitFor();
   await button('选择并预览').click();await panel.getByLabel('采用图片说明',{exact:true}).fill('合成测试插图，非真实截图');
@@ -41,6 +47,17 @@ const {chromium}=require('playwright'),fs=require('fs'),path=require('path'),ass
   const saved=await(await page.request.get(f.url+'/api/v2/articles/'+f.post_id)).json();
   assert.equal(saved.version,3);assert(saved.body.includes('图注：合成测试插图，非真实截图'));assert(saved.body.indexOf('/media/')<saved.body.indexOf('— 合成作者'));
   await body.fill(saved.body);await page.waitForFunction(()=>!window.PaperPlaneDesktop.hasUnsaved());await page.locator('dialog[aria-label="本篇封面与配图"]').evaluate(el=>el.showModal());
+  await button('查看整篇图文').click();
+  const finished=page.getByRole('dialog',{name:'图文成品预览',exact:true});await finished.waitFor();
+  await finished.getByAltText('文章封面',{exact:true}).evaluate(el=>el.decode());
+  await finished.locator('.prose img').evaluate(el=>el.decode());
+  assert.equal(await finished.locator('textarea').count(),0);
+  assert.equal(await finished.locator('h1').innerText(),'M4配图浏览器验收');
+  await page.screenshot({path:path.join(f.output,'article-finished-desktop.png'),fullPage:true});
+  await finished.getByRole('button',{name:'手机阅读',exact:true}).click();
+  assert((await finished.locator('.article-preview-page').boundingBox()).width<=390);
+  await page.screenshot({path:path.join(f.output,'article-finished-mobile.png'),fullPage:true});
+  await finished.getByRole('button',{name:'继续配图',exact:true}).click();await panel.waitFor();
   // Polling a newer plan must preserve locally typed planning input.
   await panel.getByLabel('画面描述',{exact:true}).fill('本地尚未保存的画面要求😀');
   const plans=await(await page.request.get(f.url+'/api/v2/articles/'+f.post_id+'/illustrations')).json(),pid=plans.plans[0].id;

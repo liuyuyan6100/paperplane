@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ArticleLibrary } from "./features/editor/ArticleLibrary";
+import { ArticlePreview } from "./features/editor/ArticlePreview";
 import { DesktopSettings } from "./features/editor/DesktopSettings";
 import { CreationPanel } from "./features/creation/CreationPanel";
 import { IllustrationPanel } from "./features/illustrations/IllustrationPanel";
@@ -91,8 +92,7 @@ export function App() {
   );
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [preview, setPreview] = useState(false);
-  const [previewHtml, setPreviewHtml] = useState("");
-  const [previewError, setPreviewError] = useState("");
+  const [imageOpenRequest, setImageOpenRequest] = useState(0);
   const [fields, setFields] = useState(false);
   const [mobileAI, setMobileAI] = useState(false);
   const [mobileLibrary, setMobileLibrary] = useState(false);
@@ -130,31 +130,6 @@ export function App() {
       delete window.PaperPlaneDesktop;
     };
   }, []);
-
-  useEffect(() => {
-    if (!preview || !session.data) return;
-    const controller = new AbortController();
-    setPreviewHtml("");
-    setPreviewError("");
-    const timer = setTimeout(() => {
-      request<{ html: string }>(
-        "/preview",
-        { body: state.draft.body },
-        controller.signal,
-      )
-        .then((value) => {
-          if (!controller.signal.aborted) setPreviewHtml(value.html);
-        })
-        .catch((error) => {
-          if (!controller.signal.aborted)
-            setPreviewError(String(error.message));
-        });
-    }, 200);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [preview, state.draft.body, session.data]);
 
   async function navigate(id: string | null, seeded = false) {
     if (
@@ -300,7 +275,7 @@ export function App() {
                 creationDirty.current ||
                 illustrationDirty.current);
             if (
-              (action === "trash" || unsaved) &&
+              unsaved &&
               !confirm(
                 `将《${row.title}》${action === "trash" ? "移入回收站（可恢复）" : action === "archive" ? "归档" : "恢复"}？` +
                   (unsaved
@@ -404,6 +379,8 @@ export function App() {
               state={state}
               getCurrent={() => current.current}
               onDirty={setIllustrationDirty}
+              openRequest={imageOpenRequest}
+              onPreviewArticle={() => setPreview(true)}
               onAdopt={async (id, values) => {
                 const value = current.current;
                 if (
@@ -480,9 +457,7 @@ export function App() {
                     ? `已保存 · v${state.version}`
                     : "新草稿"}
             </span>
-            <button aria-pressed={preview} onClick={() => setPreview(!preview)}>
-              {preview ? "收起预览" : "预览"}
-            </button>
+            <button onClick={() => setPreview(true)}>预览</button>
             <button
               className="primary"
               disabled={
@@ -593,6 +568,22 @@ export function App() {
                     {fields ? "收起文章信息" : "摘要、署名与更多信息"}
                   </button>
                 </div>
+                <div className="article-media-status" aria-label="文章配图状态">
+                  {state.draft.cover && (
+                    <img src={state.draft.cover} alt="已保存的文章封面" />
+                  )}
+                  <span>
+                    {state.draft.cover ? "已设置封面" : "尚未设置封面"} ·
+                    正文图片{" "}
+                    {
+                      Array.from(
+                        state.draft.body.matchAll(/!\[[^\]]*\]\([^)]+\)/g),
+                      ).length
+                    }{" "}
+                    张
+                  </span>
+                  <button onClick={() => setPreview(true)}>查看图文成品</button>
+                </div>
                 {fields && (
                   <div className="extra-fields">
                     <MetadataAssistant
@@ -653,9 +644,7 @@ export function App() {
                   </div>
                 )}
               </section>
-              <section
-                className={"writing-space" + (preview ? " with-preview" : "")}
-              >
+              <section className="writing-space">
                 <div className="writing-pane">
                   <div className="pane-heading">
                     <span>正文 · Markdown</span>
@@ -673,19 +662,6 @@ export function App() {
                     onChange={(e) => edit({ body: e.target.value })}
                   />
                 </div>
-                {preview && (
-                  <div className="preview-pane">
-                    <div className="pane-heading">阅读预览</div>
-                    {previewError ? (
-                      <p role="alert">{previewError}</p>
-                    ) : (
-                      <article
-                        className="prose"
-                        dangerouslySetInnerHTML={{ __html: previewHtml }}
-                      />
-                    )}
-                  </div>
-                )}
               </section>
             </div>
           </EditorSplit>
@@ -706,6 +682,15 @@ export function App() {
             <button onClick={download}>下载当前稿（保留文字）</button>
           </details>
         </footer>
+        <ArticlePreview
+          open={preview}
+          draft={state.draft}
+          onClose={() => setPreview(false)}
+          onImages={() => {
+            setPreview(false);
+            setImageOpenRequest((n) => n + 1);
+          }}
+        />
       </main>
     </div>
   );

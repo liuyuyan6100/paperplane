@@ -243,8 +243,8 @@ class IllustrationManager:
             self.require_active(plan)
             if plan['status'] in ('queued', 'running') or type(values.get('version')) is not int or values['version'] != plan['version']:
                 fail('计划正在生成或已被修改，请保留编辑并重新打开', 409)
-            if db.execute('SELECT 1 FROM illustration_adoptions WHERE plan_id=?', (plan_id,)).fetchone() and len(values.get('pages', [])) != len(plan['pages']):
-                fail('已采用图片的计划请保持页数；调整页数可新建计划')
+            if plan['adopted'] and len(values.get('pages', [])) < len(plan['pages']):
+                fail('已采用图片的计划不能减少页数；可以在末尾追加插图')
             pages = clean_plan(values.get('pages'))
             if any(pages[a['page_index']]['slot'] != a['slot'] for a in plan['adopted']):
                 fail('已采用页请保持图片用途，改变用途可新建计划')

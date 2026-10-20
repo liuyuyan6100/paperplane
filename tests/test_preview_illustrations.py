@@ -105,6 +105,23 @@ def test_preview_atomic_adoption_idempotence_and_old_revision(ctx, index):
     assert not app.jobs()
 
 
+def test_append_body_page_after_cover_adoption_preserves_adopted_position(ctx):
+    app, _, _, client = ctx
+    url, plan, _ = setup_plan(ctx)
+    plan, _ = original(ctx, url, plan)
+    candidate = plan["candidates"][0]
+    assert client.post(url + "/adopt", json={"candidate_id": candidate["id"], "post_version": 1}).status_code == 200
+    cover = app.post(plan["post_id"])["cover"]
+    pages = [{k: v for k, v in p.items() if k in ("title", "text", "prompt", "slot", "aspect", "placement", "caption")} for p in plan["pages"]]
+    result = client.post(url + "/edit", json={"version": plan["version"], "pages": pages + [pages[1]]})
+    assert result.status_code == 200, result.text
+    updated = result.json()
+    assert len(updated["pages"]) == 3 and len(updated["adopted"]) == 1
+    assert app.post(plan["post_id"])["cover"] == cover
+    assert client.post(url + "/edit", json={"version": updated["version"], "pages": pages}).status_code == 400
+    assert client.post(url + "/edit", json={"version": updated["version"], "pages": [pages[1], pages[1], pages[1]]}).status_code == 400
+
+
 def test_generation_references_parent_failure_and_manual_recovery(ctx):
     app, post, _, client = ctx
     url, plan, _ = setup_plan(ctx)

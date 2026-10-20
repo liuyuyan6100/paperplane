@@ -3,7 +3,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
 (async()=>{
  const f=JSON.parse(fs.readFileSync(process.argv[2],'utf8'));fs.mkdirSync(f.output,{recursive:true});
  const browser=await chromium.launch({headless:true}),page=await browser.newPage({viewport:{width:1440,height:940}}),errors=[];
- let consent=true;page.on('dialog',d=>consent?d.accept():d.dismiss());page.on('pageerror',e=>errors.push(String(e)));
+ let consent=true,dialogs=[];page.on('dialog',d=>{dialogs.push(d.message());consent?d.accept():d.dismiss();});page.on('pageerror',e=>errors.push(String(e)));
  const scope=page.getByRole('navigation',{name:'文章范围',exact:true});
  const row=()=>page.getByRole('button',{name:'管理测试稿的操作',exact:true});
  async function menu(action){if(await row().getAttribute('aria-expanded')!=='true')await row().click();await page.getByRole('group',{name:'管理测试稿操作',exact:true}).getByRole('button',{name:action,exact:true}).click();}
@@ -37,6 +37,13 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   await page.getByRole('button').filter({hasText:'管理测试稿'}).first().click();assert.equal(await body.inputValue(),'已保存的合成正文😀');
   await page.locator('.article-row').click({button:'right'});await page.getByRole('group',{name:'管理测试稿操作',exact:true}).waitFor();
   await page.screenshot({path:path.join(f.output,'article-actions.png'),fullPage:true});
+  dialogs=[];
+  await menu('删除（移入回收站）');await count(0);await scope.getByRole('button',{name:'回收站',exact:true}).click();await count(1);
+  await row().click();await page.screenshot({path:path.join(f.output,'trash-permanent-delete.png'),fullPage:true});
+  await page.getByRole('button',{name:'永久删除（不可恢复）',exact:true}).click();await count(0);
+  await page.getByText(/已永久删除本篇及历史/).waitFor();assert.deepEqual(dialogs,[]);
+  await page.getByRole('button',{name:'清理待释放文件与压缩数据库',exact:true}).click();await page.getByText(/清理释放/).waitFor();
+  await page.reload();await scope.getByRole('button',{name:'回收站',exact:true}).click();await count(0);
   await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'文章列表',exact:true}).click();
   assert(await page.locator('.library').evaluate(el=>el.scrollWidth<=el.clientWidth+1));assert.deepEqual(errors,[]);
   fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['settings-persist-reload','dirty-cancel-preserves','inert-during-mutation','archive-read-only','trash-and-restore-to-archive','unarchive','right-click-menu','mobile-bounds','no-console-errors']},null,2));

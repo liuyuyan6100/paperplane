@@ -32,7 +32,7 @@ class PreviewInput(BaseModel):
 
 class ArticleAction(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
-    action: Literal["archive", "unarchive", "trash", "restore"]
+    action: Literal["archive", "unarchive", "trash", "restore", "purge"]
     version: int = Field(ge=1)
 
 
@@ -46,6 +46,14 @@ def article_router(service: ArticleService):
     @router.get("/profiles")
     def profiles():
         return {"profiles": service.profiles()}
+
+    @router.get("/articles/trash-storage")
+    def storage():
+        return service.storage()
+
+    @router.post("/articles/trash-storage/cleanup")
+    def cleanup():
+        return service.storage(True)
 
     @router.get("/articles/{article_id}")
     def get(article_id: ArticleId):

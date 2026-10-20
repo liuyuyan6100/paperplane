@@ -4,9 +4,9 @@
 
 边学边测试：[功能使用与验收指南](docs/feature-guides/README.md)集中收录操作步骤、预期结果、用户反馈截图和每轮验收记录；首次创作请先保存文章。
 
-M4.1已于2026-10-20由用户验收通过。当前M4.2新增[封面与正文配图](docs/feature-guides/m4.2-images.md)，安装与体验待验收。历史M4.1.2补齐[关闭习惯、设置与文章菜单](docs/feature-guides/m4.1.2-desktop-and-library.md)：正常关闭选择一次后沿用，文章支持归档及可恢复的回收站；仍待用户安装复验。
+M4.1已于2026-10-20由用户验收通过。当前M4.2.1按用户反馈修正[封面与正文配图](docs/feature-guides/m4.2-images.md)：永久删除释放独占文件、明确按钮点击直接执行、封面后继续正文插图，以及独立整篇图文预览，待安装复验。历史M4.1.2关闭习惯和文章菜单已随M4.1整体验收；原反馈与复验记录保留。
 
-本分支为 **架构验证分支**。M1–M4.1已由用户安装验收通过，当前M4.2候选`0.4.0-m4.2`在新编辑器接通封面与正文配图，待用户安装体验。素材、提纲确认、正文待审与采用、侧边AI、任务中心、设置和文章归档/回收站保留。见[M4.2实施记录](docs/architecture/milestones/04-images-implementation.md)、[操作指南](docs/feature-guides/m4.2-images.md)及[安装验收](docs/architecture/milestones/04-images-acceptance.md)。其他M4单元与M5稳定交付仍未整体完成；原工作台入口继续保留。
+本分支为 **架构验证分支**。M1–M4.1已由用户安装验收通过，当前M4.2修正候选`0.4.0-m4.2.1`待复验。素材、提纲确认、正文待审与采用、侧边AI、任务中心、设置和文章管理保留。见[M4.2实施记录](docs/architecture/milestones/04-images-implementation.md)、[操作指南](docs/feature-guides/m4.2-images.md)及[安装验收](docs/architecture/milestones/04-images-acceptance.md)。其他M4单元与M5稳定交付仍未整体完成；原工作台入口继续保留。
 
 验证新编辑器需安装 `requirements-preview.txt`，在 `frontend/` 执行 `npm ci`、`npm run build`，再在仓库根运行 `python preview.py --serve --open --data-dir ./data-preview`。Windows 独立安装包由 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_preview.ps1` 构建。验证版默认使用 `%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，与正式版独立。
 

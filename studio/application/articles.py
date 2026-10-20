@@ -13,6 +13,9 @@ class ArticleService:
     def manage(self, article_id, action, version):
         return self.repository.manage(article_id, action, version)
 
+    def storage(self, clean=False):
+        return self.repository.storage(clean)
+
     def get(self, article_id):
         return self.repository.get(article_id)
 
