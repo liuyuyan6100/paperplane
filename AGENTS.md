@@ -8,6 +8,8 @@ Read docs/architecture/README.md and the active milestone before implementation.
 
 Keep the sanitized public history and source security checks. Do not merge private development history or bulk-copy a private checkout. Review newer feature patches against docs/architecture/feature-parity.md before migration.
 
+Repository baseline (2026-10-21): the user authorized making `codex/architecture-editor-foundation` the default branch and deleting the former `main` branch reference. Continue from this development baseline; the former main commit remains in its ancestry. This repository setting does not mark M4 complete or publish a stable release. Keep README.md, ROADMAP.md and the Easel comparison consistent with actual implementation and acceptance evidence. Framework images under docs/diagrams are generated with Archify; preserve their source, byte-bound receipts and third-party licenses.
+
 Each installable milestone requires automated regression, a separately identified preview installer and isolated data, then explicit user installation acceptance before the next milestone. Do not claim a proposed framework is implemented, a launched installer is an installed version, or passing synthetic tests prove real platform behavior. Update the milestone record and docs/wiki/README.md links as evidence arrives.
 
 ## Feature usage and acceptance guides

@@ -1,0 +1,237 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "纸飞机 · 当前应用框架",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/liuyuyan6100/paperplane",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "5e900ed7cabee83aeced10e2cf49cea1a16f21aa"
+    }
+  },
+  "layout": {
+    "mode": "grid",
+    "origin": [
+      60,
+      70
+    ],
+    "cols": 3,
+    "cellW": 250,
+    "cellH": 88,
+    "gapX": 90,
+    "gapY": 125
+  },
+  "components": [
+    {
+      "id": "windows_shell",
+      "type": "frontend",
+      "label": "Windows 桌面壳",
+      "sublabel": "WebView2 · 托盘 · 安装升级",
+      "row": 0,
+      "col": 0,
+      "sources": [
+        {
+          "path": "preview.py"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    },
+    {
+      "id": "editor_ui",
+      "type": "frontend",
+      "label": "React 编辑工作台",
+      "sublabel": "文章 · 侧边 AI · 创作 · 配图",
+      "row": 0,
+      "col": 1,
+      "sources": [
+        {
+          "path": "frontend/src/App.tsx"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    },
+    {
+      "id": "typed_api",
+      "type": "backend",
+      "label": "FastAPI 接口",
+      "sublabel": "类型校验 · 同源与会话验证",
+      "row": 0,
+      "col": 2,
+      "sources": [
+        {
+          "path": "studio/api/preview.py"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    },
+    {
+      "id": "use_cases",
+      "type": "backend",
+      "label": "应用用例与窄接口",
+      "sublabel": "保存 · 建议 · 任务 · 创作 · 配图",
+      "row": 1,
+      "col": 2,
+      "sources": [
+        {
+          "path": "studio/application/articles.py"
+        },
+        {
+          "path": "studio/domain/articles.py"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    },
+    {
+      "id": "compatibility",
+      "type": "backend",
+      "label": "原业务兼容适配层",
+      "sublabel": "复用状态机与采用保存事务",
+      "row": 1,
+      "col": 1,
+      "sources": [
+        {
+          "path": "studio/infrastructure/legacy_creation.py"
+        },
+        {
+          "path": "studio/infrastructure/legacy_illustrations.py"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    },
+    {
+      "id": "local_storage",
+      "type": "database",
+      "label": "本机数据与原文件",
+      "sublabel": "SQLite 修订 / 任务 · 图片 / 视频",
+      "row": 1,
+      "col": 0,
+      "sources": [
+        {
+          "path": "studio/db.py"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    },
+    {
+      "id": "single_worker",
+      "type": "backend",
+      "label": "单一后台 Worker",
+      "sublabel": "任务落库 · 执行令牌 · 中断恢复",
+      "row": 2,
+      "col": 1,
+      "sources": [
+        {
+          "path": "studio/preview_runtime.py"
+        },
+        {
+          "path": "studio/workflows.py"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    },
+    {
+      "id": "model_services",
+      "type": "external",
+      "label": "自选文字与图片 API",
+      "sublabel": "按功能路由 · 输入快照",
+      "row": 2,
+      "col": 2,
+      "sources": [
+        {
+          "path": "studio/model_routing.py"
+        },
+        {
+          "path": "studio/image_provider.py"
+        }
+      ],
+      "size": [
+        250,
+        88
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "shell_loads_ui",
+      "from": "windows_shell",
+      "to": "editor_ui"
+    },
+    {
+      "id": "ui_calls_api",
+      "from": "editor_ui",
+      "to": "typed_api",
+      "label": "本机 HTTP"
+    },
+    {
+      "id": "api_uses_services",
+      "from": "typed_api",
+      "to": "use_cases"
+    },
+    {
+      "id": "ports_delegate",
+      "from": "use_cases",
+      "to": "compatibility"
+    },
+    {
+      "id": "persist_content",
+      "from": "compatibility",
+      "to": "local_storage",
+      "label": "事务保存"
+    },
+    {
+      "id": "wake_worker",
+      "from": "compatibility",
+      "to": "single_worker",
+      "label": "排队 / 唤醒",
+      "labelDy": 24
+    },
+    {
+      "id": "worker_calls_models",
+      "from": "single_worker",
+      "to": "model_services",
+      "label": "模型 API"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "已接通的主线",
+      "items": [
+        "编辑 → 侧边修改 → 任务 → 素材 / 提纲 / 正文 → 封面 / 插图",
+        "M1–M4.1 已验收；M4.2.1 已安装，用户复验待确认"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "兼容与后续",
+      "items": [
+        "原工作台继续提供画像、平台改编与送稿等既有入口",
+        "统一数据访问、剩余功能迁入及正式版迁移仍在 Roadmap"
+      ]
+    }
+  ]
+}

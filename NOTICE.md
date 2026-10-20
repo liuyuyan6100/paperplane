@@ -7,3 +7,5 @@
 本项目使用 Python 标准库及基础/可选集成依赖：pywebview、pystray、Pillow、PyInstaller、PyYAML、websockets、PyJWT 等。其源码和二进制的分发须遵守对应版本附带的许可证。本仓库不包含这些依赖的安装目录，不把第三方代码重新授权为 MIT。
 
 本仓库的账号、文章及模型示例仅用于说明；用户需要配置自己的账号、接口权限与凭据。未随源码分发任何模型权重、开发者的文章数据库、平台登录态或私有素材库。
+
+`docs/diagrams/paperplane-framework.html`由[Archify](https://github.com/tt-a1i/archify)生成，包含其交互查看器；相关MIT版权与许可见[Archify-MIT.txt](docs/diagrams/licenses/Archify-MIT.txt)。HTML/SVG中的JetBrains Mono字体保留[OFL许可](docs/diagrams/licenses/JetBrainsMono-OFL.txt)。图中纸飞机组件与关系依据本仓库源码编写；Archify不作为应用运行依赖。

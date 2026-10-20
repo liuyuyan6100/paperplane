@@ -1,99 +1,115 @@
 # 纸飞机 PaperPlane
 
-一个面向个人创作者的 AI 内容工作台，把素材、账号画像、提纲、正文修改、配图、平台改编和送稿记录放在同一处。
+面向个人作者的 AI 图文工作台。在 Windows 本机整理资料、接入自己的模型 API，围绕一篇文章完成提纲确认、正文修改、配图和草稿准备，并保留每次采用的版本与任务记录。
 
-边学边测试：[功能使用与验收指南](docs/feature-guides/README.md)集中收录操作步骤、预期结果、用户反馈截图和每轮验收记录；首次创作请先保存文章。
+[功能与 Roadmap](ROADMAP.md) · [操作与测试指南](docs/feature-guides/README.md) · [应用框架](docs/diagrams/README.md) · [与 Easel 的场景对比](docs/PROJECT_COMPARISON.md)
 
-M4.1已于2026-10-20由用户验收通过。当前M4.2.1按用户反馈修正[封面与正文配图](docs/feature-guides/m4.2-images.md)：永久删除释放独占文件、明确按钮点击直接执行、封面后继续正文插图，以及独立整篇图文预览，待安装复验。历史M4.1.2关闭习惯和文章菜单已随M4.1整体验收；原反馈与复验记录保留。
+## 适合怎样的创作
 
-本分支为 **架构验证分支**。M1–M4.1已由用户安装验收通过，当前M4.2修正候选`0.4.0-m4.2.1`待复验。素材、提纲确认、正文待审与采用、侧边AI、任务中心、设置和文章管理保留。见[M4.2实施记录](docs/architecture/milestones/04-images-implementation.md)、[操作指南](docs/feature-guides/m4.2-images.md)及[安装验收](docs/architecture/milestones/04-images-acceptance.md)。其他M4单元与M5稳定交付仍未整体完成；原工作台入口继续保留。
+- **技术实践与知识长文**：从自己的笔记、参考资料和实际经历出发，先确认结构，再写正文；让 AI 讨论或修改指定段落，作者审阅后采用。
+- **持续经营个人账号**：复用账号定位、读者和写作风格；文章、封面、正文插图与修改历史放在一起，隔几天回来仍能接着做。
+- **公众号与博客图文准备**：从母稿逐步准备成品，核对图文效果和平台草稿状态；平台适配、送稿和复盘按各自的实际支持范围使用。
 
-验证新编辑器需安装 `requirements-preview.txt`，在 `frontend/` 执行 `npm ci`、`npm run build`，再在仓库根运行 `python preview.py --serve --open --data-dir ./data-preview`。Windows 独立安装包由 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/build_preview.ps1` 构建。验证版默认使用 `%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，与正式版独立。
+创作主线是：**保存文章 → 选择素材与画像 → 确认提纲 → 审阅并采用正文 → 制作封面与插图 → 图文成品预览**。新编辑器已经接通这条主线；公众号送稿和部分平台功能仍从原工作台进入。
 
-当前开源快照：**0.1.76，早期版本，持续改进中**。适合希望在自己的电脑上管理文章，并接入自己的模型 API 的创作者与开发者。
+## 当前做到了哪里
 
-## 可以用来做什么
+截至 **2026-10-21**，当前开发候选为 **`0.4.0-m4.2.1`**，Windows 安装版本 `0.4.0.5`。M1–M4.1已完成用户验收；M4.2.1已实现、回归并安装核验，用户功能复验待确认。当前分支是仓库开发基线，仍处于架构整理阶段，M5稳定交付尚未完成。历史`0.1.76`是本轮整理的公开起点。
 
-- **整理素材**：导入文章、笔记和图片，按项目组织资料；共享资料库支持文件夹导入。
-- **保存账号画像**：管理定位、读者、写作风格和文末署名；创作任务携带画像和已确认经验。
-- **逐步写作**：生成提纲，确认后写正文；候选正文审阅采用后更新原稿。
-- **在文章旁修改**：围绕当前工作项与 AI 对话，查看建议或改稿并采用；版本检查避免静默覆盖后续手动修改。
-- **准备图文**：规划封面和正文插图、审阅候选、采用配图，或导入自己的图片和视频素材。
-- **改编与送稿**：保留母稿，生成不同平台的版本，执行检查并记录草稿回执；结果未知时先核对，避免盲目重发。
-- **本机使用**：Windows 桌面客户端，或 Python 启动本地 Web 工作台；模型地址、Key 和模型名自行配置。
+| 状态 | 已有内容 | 证据或入口 |
+| --- | --- | --- |
+| 已验收 · M1 | 文章新建、Markdown编辑、保存重开、版本冲突与未保存保护 | [文章编辑](docs/architecture/milestones/01-editor-acceptance.md) |
+| 已验收 · M2 | 侧边AI讨论、全文/选区修改、对照、采用与撤销、历史建议继续修改 | [侧边AI](docs/architecture/milestones/02-assistant-acceptance.md) |
+| 已验收 · M3 | 任务中心、本篇筛选、失败/中断恢复、未知送稿先核对 | [任务中心](docs/architecture/milestones/03-tasks-acceptance.md) |
+| 已验收 · M4.1 | 素材→可编辑提纲→确认后生成待审正文→采用保存；关闭习惯与文章归档/回收站 | [完整练习](docs/feature-guides/m4.1-text-creation.md) |
+| 已实现，待用户复验 · M4.2.1 | 封面与正文插图计划、生成/上传、位置预览、采用保存、独立图文预览、回收站永久删除及独占文件清理 | [配图与管理操作](docs/feature-guides/m4.2-images.md) |
+| 兼容入口保留 | 画像与已确认经验、选题、平台改编、送稿准备及回执、已有媒体、备份恢复等原功能 | [功能保留清单](docs/architecture/feature-parity.md) |
+| 规划中 | 剩余能力逐项迁入、统一数据访问与迁移、完整升级/回退、正式Windows稳定交付 | [Roadmap](ROADMAP.md) |
 
-这些能力仍有体验与平台兼容性限制，不能把平台目录中的每一项都理解成已经全自动验通。
+“代码存在”“已迁入新界面”“自动测试通过”和“用户验收”分开记录。平台目录也不代表每个平台都已真实验通。
 
-## 从源码运行
+## 应用框架
 
-需要 Git 和 Python 3.13（建议 64 位），并能访问 GitHub 与 Python 包仓库。本地 Web 服务需要 Pillow 与 PyYAML；Windows 桌面和云端访问另有依赖。
+![Archify生成的纸飞机当前应用框架](docs/diagrams/paperplane-framework.svg)
 
-```sh
+图由 **Archify** 从本仓库源码关系生成，附[JSON源图、可交互HTML与校验记录](docs/diagrams/README.md)。GitHub中展示静态SVG；下载HTML后可在浏览器中查看节点来源、切换主题并导出图片。
+
+当前采用 **React + TypeScript、FastAPI、Python模块化单体、SQLite，以及Windows WebView2桌面壳**。新功能通过窄接口复用原业务与唯一后台worker；本地草稿不被后台刷新覆盖，生成结果经审阅采用后才更新原稿。SQLAlchemy/Alembic等数据访问整理仍是后续工作，图中不把规划当成已接入。
+
+## Roadmap
+
+| 阶段 | 目标 | 当前进度 |
+| --- | --- | --- |
+| M0–M3 | 框架基线、文章编辑、侧边AI与任务恢复 | M0完成；M1–M3已用户验收 |
+| M4.1 | 打通素材、提纲确认与正文采用 | 已用户验收 |
+| M4.2 | 打通封面、正文配图与图文预览 | M4.2.1已安装，待用户复验 |
+| M4其余单元 | 画像/经验、选题/改编、媒体/平台/复盘的逐项迁入；数据访问及完整兼容核对 | 保留原入口，分组推进；具体拆分顺序待确认 |
+| M5 | 稳定安装升级、正式数据迁移及回退、完整Windows使用链 | 规划中，需独立验收 |
+
+完整功能分组、实现边界和完成条件见[ROADMAP.md](ROADMAP.md)。不预设交付日期，也不把当前开发基线切换等同于稳定版发布。
+
+## 与 Easel 的应用场景有什么不同
+
+纸飞机优先服务**围绕一篇文章反复编辑、核对与采用的个人作者**；Easel官方主线是**由Agent串联社媒选题、多媒体制作、发布和复盘**。[Easel官方介绍](https://github.com/ZJU-REAL/Easel/blob/8d08b216105bd7c7057c84c97cd637cec44db609/README.md)
+
+| 你的任务 | 纸飞机当前侧重 | Easel官方侧重 |
+| --- | --- | --- |
+| 已有资料，要逐节完成长文 | 提纲确认、待审稿、编辑旁修改、修订与配图采用 | Agent与内容技能协作 |
+| 从社媒选题扩展多种成品 | 平台改编等原能力保留，新界面继续迁入 | 发现、策划、多媒体制作与运营 |
+| 自己核对后提交平台 | 图文预览与草稿回执；公众号公开发表在微信确认 | 自动与人工审核发布路径均提供 |
+
+Easel同样支持画像、长文、Windows/Web和人工审核发布，这些不是纸飞机独有能力。对比是使用重点与当前交付进度，详见[场景、边界和来源](docs/PROJECT_COMPARISON.md)。感谢Easel带来的工作台与模型配置引导灵感。
+
+## 从源码体验当前工作台
+
+开发构建需要 **Python 3.13、Node.js 22、Git**。建议先建立虚拟环境；以下在Windows PowerShell执行：
+
+```powershell
 git clone https://github.com/liuyuyan6100/paperplane.git
 cd paperplane
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-preview.txt
+npm ci --prefix frontend
+npm run build --prefix frontend
+.\.venv\Scripts\python.exe preview.py --serve --open --data-dir ./data-preview
+```
+
+使用终端打印的本机地址，按[功能指南](docs/feature-guides/README.md)保存一篇测试文章，再配置自己的文字/图片模型API。没有配置模型时也可手写和保存文章。源码示例使用独立`data-preview/`，不导入开发者的数据或配置。
+
+Windows普通安装包从源码构建：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\build_preview.ps1 -OpenInstaller
+```
+
+构建还需要Inno Setup 6；普通安装后运行不要求使用者另外安装Node.js。验证版数据为`%LOCALAPPDATA%/PaperPlaneStudioPreview/local`，原正式版数据为`%LOCALAPPDATA%/PaperPlaneStudio/local`，两者独立；当前不自动把正式数据迁入验证版。
+
+<details>
+<summary>原Web工作台与原桌面构建入口</summary>
+
+原功能通过兼容入口继续保留。单独启动原Web工作台：
+
+```sh
 python -m pip install -r requirements.txt
 python run.py --data-dir ./data --open
 ```
 
-访问 `http://127.0.0.1:8787`。服务默认仅监听本机；关闭浏览器不等于停止服务，在终端按 Ctrl+C 停止。首次使用无需导入任何开发者的配置或数据。
+默认访问`http://127.0.0.1:8787`；端口占用可加`--port 8788`。原桌面构建使用`tools/build_desktop.ps1`；部署、服务器认证和完整运行方式见[部署说明](docs/DEPLOYMENT.md)。这些入口与当前React工作台应按对应版本使用。
 
-以上四步已用公开仓库的独立环境验证。推荐先创建虚拟环境，避免影响其他项目：Windows 用 `python -m venv .venv`，后续将 python 换为 `.\.venv\Scripts\python.exe`；macOS/Linux 用 `python3 -m venv .venv` 和 `.venv/bin/python`（原生 macOS/Linux 安装本轮未实测）。端口占用时可追加 `--port 8788`，并访问对应端口。clone 提示目录已存在时，请先切到空目录，不要覆盖已有数据。
+</details>
 
-打开「使用引导」，或阅读 [使用指南](docs/USER_GUIDE.md)：配置模型 → 连接公众号 → 确认提纲与正文 → 准备图文 → 检查并送草稿 → 微信后台确认发表。
+## 数据、平台与验证
 
-## Windows 客户端
+文章、修订、任务和回执保存在SQLite，图片/视频保存在所选数据目录；Windows凭据使用当前用户的DPAPI加密。[数据与备份说明](docs/DATA_AND_SECURITY.md)
 
-在 Windows PowerShell 中从源码构建；安装向导由使用者确认：
+公众号接口需要对应权限；送入草稿箱后在微信后台核对并公开发表。公众号原生图文视频仍需按对应流程人工上传和关联，API菜单/回复视频素材不能冒充图文视频。本机与服务器的文章、素材各自保存，当前不自动同步。其他平台的适配与真实可用性以各自回执和验收为准。
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\build_desktop.ps1 -OpenInstaller
-```
+最近一次应用回归：**1162通过、6环境跳过、0失败，另347个子测试通过**；前端14项，成品与升级/回退核验通过。该结果不等于所有外部平台或生成质量均已验收，详见[M4.2.1实施与验证](docs/architecture/milestones/04-images-implementation.md)。开发方式与依赖见[测试说明](tests/README.md)，历史文档核验见[核验表](docs/VERIFICATION.md)。
 
-需要 Python 和 Inno Setup 6。脚本会在 `.venv` 安装桌面构建依赖，产物默认写入 `dist/`。没有 Inno Setup 时可用 `-SkipInstaller` 仅生成可运行目录。
+目录：`frontend/`当前React工作台，`studio/`后端与业务适配，`web/`兼容前端，`library/`共享资料库服务，`skills/`与`agents/`内容技能和提示词，`tests/`隔离测试，`tools/`构建与维护工具。
 
-安装版业务数据位于 `%LOCALAPPDATA%\PaperPlaneStudio\local`；源码版默认使用项目 `data/`，也可显式传入 `--data-dir`。两者不会自动合并。
+问题和建议请提交到[Issues](https://github.com/liuyuyan6100/paperplane/issues)，使用合成稿并移除Key、Cookie、个人文章与运行数据库。
 
-## 平台能力与当前边界
+## 许可证与致谢
 
-- 微信公众号支持官方 API 图文草稿流程，需要账号对应接口权限和正确的 IP 白名单；**送入草稿箱不等于公开发表**。
-- 当前观察到的 API 视频素材用于菜单、自动回复等场景，不能据此认定图文视频可用。公众号正文视频需在微信图文编辑器「本地上传」并插入保存，再关联原生视频；当前版本会拦截不适用的 API 视频素材。
-- 其他平台包含不同程度的登录、导出、图文草稿或浏览器适配能力。以界面中的具体能力和实际回执为准，不能承诺所有账号都可用。
-- 本机和服务器的文章、素材各自保存，不自动同步。云端部署需配置访问认证，见 [部署说明](docs/DEPLOYMENT.md)。
-- AI 生成仍需核实事实与图片。模型调用与平台操作可能产生费用或依赖外部服务，不包含免费额度。
-
-## 数据与开发
-
-文章、修订、任务与回执保存在 SQLite；图片和视频保存在所选数据目录。Windows 凭据使用当前系统用户的 DPAPI 加密。备份与跨机恢复的边界见 [数据说明](docs/DATA_AND_SECURITY.md)。
-
-```sh
-python -m pip install -r requirements-desktop.txt -r requirements-cloud.txt -r requirements-test.txt
-npm ci
-npx playwright install chromium
-python -m pytest -q
-```
-
-完整回归还需要 Node.js 22 和 Chromium；具体说明见 [开发测试](tests/README.md)。所有公开文档步骤的核验范围、已修复问题和未实测项目见 [核验表](docs/VERIFICATION.md)，请先阅读与你运行方式对应的一行。
-
-目录：`studio/` 后端，`web/` 前端，`library/` 共享资料库服务，`skills/` 内容技能，`agents/` 助手提示词，`tests/` 合成测试，`tools/` 通用构建与维护工具。
-
-欢迎通过 [Issues](https://github.com/liuyuyan6100/paperplane/issues) 反馈可复现的问题。请使用合成数据，移除 Key、Cookie、个人文章和运行数据库后再提交。
-
-## 感谢 Easel
-
-感谢 [ZJU-REAL/Easel](https://github.com/ZJU-REAL/Easel) 带来的灵感，尤其是将账号画像、内容技能、素材和发布流程连接起来的工作台思路，以及首次模型配置引导的交互启发。
-
-Easel 的官方介绍强调以 OpenClaw Agent 串联发现、策划、创作、发布和归因，并提供丰富的图像、音频与视频技能。纸飞机当前更聚焦个人文章创作：在 Windows 本机接入自选模型 API，围绕提纲确认、编辑旁对话、版本采用和公众号草稿准备组织工作。双方都涉及画像、素材与平台适配；这里比较的是定位与使用侧重，不是性能排名，也不把对方的官方介绍冒充本项目实测。
-
-详见 [项目定位对比与写作素材](docs/PROJECT_COMPARISON.md)。纸飞机无需先安装 OpenClaw；Easel 的当前要求与能力请以其仓库说明为准。
-
-## 许可证
-
-本项目原创代码采用 [MIT](LICENSE) 许可证。第三方依赖保留各自的许可证，参见 [致谢与第三方说明](NOTICE.md)。
-
-
-2026-10-19 M3.2补充：文章信息区提供AI补齐空白摘要/署名/标签，先审阅再填入，保留手动信息；任务中心增加用途解释及本篇状态入口。M3现已用户确认通过，详见M3验收单。
-
-2026-10-20：用户反馈采用保存成功、关闭仍被提示先保存；当前修正候选区分保存状态和未提交输入，提供明确关闭选择。[截图与复验记录](docs/feature-guides/records/m4.1-close-feedback-2026-10-20.md)。整体仍待用户确认。
-
-
-2026-10-20最新验收：用户明确反馈“这次测试没问题了，M4.1验收通过”，M1–M4.1用户整体验收完成，包含本轮关闭习惯与文章管理补齐；未逐项反馈的特殊分支不补造人工实测。原失败、截图与修正记录保留。用户授权继续M4.2封面与正文配图，见[实施与交付](docs/architecture/milestones/04-images-implementation.md)。M4其他单元和M5仍未整体完成。
+原创代码采用[MIT](LICENSE)；第三方依赖保留各自许可。感谢[Easel](https://github.com/ZJU-REAL/Easel)的产品灵感与[Archify](https://github.com/tt-a1i/archify)的图表工具，详见[第三方说明](NOTICE.md)。

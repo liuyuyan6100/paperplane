@@ -6,3 +6,7 @@ docs/requirements-alignment/versions/**/index.html -diff
 
 # Portable style manifest hashes exact resource bytes.
 docs/visual-styles/aiclaw-warm-engineering-v1/** -text
+# Preserve the byte identity in the Archify delivery receipt on all platforms.
+docs/diagrams/paperplane-framework.architecture.json -text whitespace=cr-at-eol
+docs/diagrams/paperplane-framework.html -text -whitespace
+docs/diagrams/paperplane-framework.svg -text -whitespace

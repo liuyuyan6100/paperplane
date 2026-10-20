@@ -4,6 +4,10 @@
 
 ## 使用与学习
 
+- [项目功能与Roadmap](../../ROADMAP.md)：已验收、待复验、兼容保留与后续规划。
+- [Archify应用框架图](../diagrams/README.md)：当前框架、交互HTML、源码引用和校验。
+- [与Easel的应用场景对比](../PROJECT_COMPARISON.md)：重点任务、共同能力与官方来源。
+
 - [功能使用与验收指南](../feature-guides/README.md)：按步骤学习与测试，包含截图、问题记录和后续验收模板。
 - [M4.2.1体验修正与复验](../feature-guides/records/m4.2.1-feedback-2026-10-20.md)：永久删除、点击直接执行、封面后的下一步与独立图文成品预览。
 - [关闭习惯与文章列表管理](../feature-guides/m4.1.2-desktop-and-library.md)：一次选择记住、设置更改，以及归档、回收站和恢复。

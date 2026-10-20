@@ -1,0 +1,81 @@
+{
+  "date": "2026-10-21",
+  "generator": "Archify 2.17.0-dev.1",
+  "diagram_type": "architecture",
+  "output": "paperplane-framework.html",
+  "source": "paperplane-framework.architecture.json",
+  "source_revision": "5e900ed7cabee83aeced10e2cf49cea1a16f21aa",
+  "verified_source_references": 12,
+  "specification": {
+    "sha256": "f400cda7d301e9ba0710e11810434dc73fcf8e2ae96f3667799e0fd9abeff070",
+    "bytes": 5196
+  },
+  "artifact": {
+    "sha256": "2c40a0658cfb0bf43bea80d945ea26e9fac5e08ef8e0bd75ac562ac819e11303",
+    "bytes": 808541
+  },
+  "validation": {
+    "checksPassed": 9,
+    "checkCount": 9,
+    "compositionProfile": "showcase",
+    "compositionStatus": "pass",
+    "errors": 0,
+    "warnings": 0
+  },
+  "browser_evidence": "passed",
+  "browser_state": {
+    "detail": "read",
+    "motion": "still"
+  },
+  "viewports": [
+    {
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "overflowX": false,
+      "overflowY": false,
+      "readabilityOk": true,
+      "ok": true
+    },
+    {
+      "width": 1600,
+      "height": 1000,
+      "theme": "light",
+      "overflowX": false,
+      "overflowY": false,
+      "readabilityOk": true,
+      "ok": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "theme": "light",
+      "overflowX": false,
+      "overflowY": false,
+      "readabilityOk": true,
+      "ok": true
+    },
+    {
+      "width": 2048,
+      "height": 1320,
+      "theme": "light",
+      "overflowX": false,
+      "overflowY": false,
+      "readabilityOk": true,
+      "ok": true
+    }
+  ],
+  "visual_review": "passed",
+  "visual_review_scope": "Final light/dark viewer screenshots and canonical PNG inspected; glyphs, labels, arrows, legend and source badges readable. No clipping or lower empty band.",
+  "correction_rounds": 2,
+  "exports": {
+    "paperplane-framework.svg": {
+      "sha256": "d08a0bbf30f3a9b25249e490ae921e04c829ca2a16d5bcb1c37ad3d1132bd8da",
+      "bytes": 148300
+    },
+    "paperplane-framework.png": {
+      "sha256": "477bbad9ccf7a0fa4a328f9cceee7b30e6055364f2a7e0234485b683ee3d61da",
+      "bytes": 486619
+    }
+  }
+}
