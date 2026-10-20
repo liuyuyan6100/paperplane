@@ -116,7 +116,9 @@ python run.py --data-dir ./data --open
 
 ## 微信公众号
 
-公众号：**沐沐ai专题**。扫码阅读 AI 学习笔记、工程实践与项目更新。二维码取自作者博客的“联系与订阅”。
+作者：**Aiclaw** · 微信公众号：**沐沐ai专题**
+
+扫码阅读 AI 学习笔记、工程实践与项目更新。二维码取自作者博客的“联系与订阅”。
 
 <a href="docs/assets/wechat-official-account.jpg"><img src="docs/assets/wechat-official-account.jpg" alt="沐沐ai专题 微信公众号二维码" width="192" /></a>
 
