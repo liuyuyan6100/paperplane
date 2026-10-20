@@ -24,6 +24,9 @@ OWNER_DOMAIN = re.compile(r"(?i)\b(?:[a-z0-9-]+\.)*" + "aiclawonline" + r"\.webs
 # Match the entire line and path; other service URLs and query strings stay blocked.
 PUBLIC_AUTHOR_LINK = ("作者：**Aiclaw** · [个人博客](https://blog." + "aiclawonline"
                       + ".website/) · [微信公众号：沐沐ai专题](#微信公众号)")
+# Retain the already published contact label for scans of earlier Git revisions.
+PUBLIC_AUTHOR_LINKS = {PUBLIC_AUTHOR_LINK,
+                      PUBLIC_AUTHOR_LINK.replace("[微信公众号：沐沐ai专题]", "[微信公众号]")}
 # Explicit documentation examples, the container account and hosted CI accounts.
 GENERIC_USERS = {"user", "username", "example", "public", "default", "all users",
                  "archive", "runner", "runneradmin", "runner~1"}
@@ -75,7 +78,7 @@ def check_content(path: str, data: bytes, revision: str = "") -> list[Finding]:
         text = data.decode("utf-8", errors="replace")
     for number, line in enumerate(text.splitlines(), 1):
         kinds = set()
-        if OWNER_DOMAIN.search(line) and not (path == "README.md" and line == PUBLIC_AUTHOR_LINK):
+        if OWNER_DOMAIN.search(line) and not (path == "README.md" and line in PUBLIC_AUTHOR_LINKS):
             kinds.add("owner-service-domain")
         for rule, kind in ((WINDOWS_HOME, "personal-windows-home"),
                            (UNIX_HOME, "personal-unix-home")):

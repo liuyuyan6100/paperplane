@@ -59,7 +59,8 @@ class PublicSourceSecurityTests(unittest.TestCase):
 
     def test_public_author_link_is_allowed_only_as_exact_homepage_contact(self):
         contact = guard.PUBLIC_AUTHOR_LINK
-        self.assertEqual(guard.check_content("README.md", contact.encode()), [])
+        for published_contact in guard.PUBLIC_AUTHOR_LINKS:
+            self.assertEqual(guard.check_content("README.md", published_contact.encode()), [])
         cases = [
             ("notes.md", contact),
             ("nested/README.md", contact),
