@@ -16,10 +16,12 @@ export function ProfilePanel({
   selectedId,
   profiles,
   onDirty,
+  openRequest = 0,
 }: {
   selectedId: string | null;
   profiles: Summary[];
   onDirty: (value: boolean) => void;
+  openRequest?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [id, setId] = useState<string | null>(null);
@@ -30,6 +32,7 @@ export function ProfilePanel({
   const [conflict, setConflict] = useState(false);
   const [notice, setNotice] = useState("");
   const dialog = useRef<HTMLDialogElement>(null);
+  const handledOpen = useRef(openRequest);
   const client = useQueryClient();
   const detail = useQuery({
     queryKey: ["profile-detail", id],
@@ -53,6 +56,19 @@ export function ProfilePanel({
   }, [detail.data, dirty, id]);
   useEffect(() => onDirty(dirty || busy), [dirty, busy, onDirty]);
   useEffect(() => () => onDirty(false), [onDirty]);
+  useEffect(() => {
+    if (openRequest > handledOpen.current) {
+      handledOpen.current = openRequest;
+      setId(selectedId);
+      const cached = selectedId ? client.getQueryData<Profile>(["profile-detail", selectedId]) : null;
+      setFields(cached ? {
+        name: cached.name, direction: cached.direction,
+        audience: cached.audience, goal: cached.goal,
+      } : blank);
+      setDirty(false);
+      setOpen(true);
+    }
+  }, [openRequest, selectedId, client]);
 
   function choose(next: string | null) {
     if (dirty && !confirm("画像有未保存输入，切换会放弃这些输入，是否继续？")) return;

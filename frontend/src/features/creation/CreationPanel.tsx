@@ -55,11 +55,13 @@ export function CreationPanel({
   getCurrent,
   onAdopt,
   onDirty,
+  openRequest = 0,
 }: {
   state: EditorState;
   getCurrent: () => EditorState;
   onAdopt: (id: string, values: Adoption) => Promise<void>;
   onDirty: (dirty: boolean, areas?: string[]) => void;
+  openRequest?: number;
 }) {
   const [open, setOpen] = useState(false),
     dialog = useRef<HTMLDialogElement>(null);
@@ -81,6 +83,7 @@ export function CreationPanel({
     [notice, setNotice] = useState("");
   const active = useRef(false),
     pending = useRef<{ fingerprint: string; id: string } | null>(null);
+  const handledOpen = useRef(openRequest);
   const client = useQueryClient();
   const id = state.articleId,
     base = `/articles/${id}/creation`;
@@ -125,6 +128,12 @@ export function CreationPanel({
     if (open) dialog.current?.showModal();
     else dialog.current?.close();
   }, [open]);
+  useEffect(() => {
+    if (openRequest > handledOpen.current) {
+      handledOpen.current = openRequest;
+      setOpen(true);
+    }
+  }, [openRequest]);
   const composerDirty =
     references.length > 0 ||
     instruction !== "根据所选素材扩写正文，区分有依据的事实与待核实内容。";

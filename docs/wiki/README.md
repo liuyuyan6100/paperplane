@@ -10,6 +10,7 @@
 
 - [功能使用与验收指南](../feature-guides/README.md)：按步骤学习与测试，包含截图、问题记录和后续验收模板。
 - [第一次使用：从想法到一篇图文](../feature-guides/quick-start.md)：画像、选题、文章、素材、提纲、正文、配图与任务的顺序。
+- [应用内新手入门视觉模块验收](../feature-guides/m4.3.2-onboarding.md)：独立按钮、四段流程与实际跳转。
 - [Windows 测试预发布版 M4.2.2](https://github.com/liuyuyan6100/paperplane/releases/tag/v0.4.0-m4.2.2)：安装包、SHA256校验文件与测试说明。
 - [M4.2体验修正与复验](../feature-guides/records/m4.2.1-feedback-2026-10-20.md)：永久删除、点击直接执行、封面后的下一步、独立图文成品预览与生图失败卡片。
 - [M4.3.1画像核心字段指南](../feature-guides/m4.3.1-profiles.md)：新版编辑器管理画像名称、内容方向、目标读者和运营目标；用户确认测试通过。

@@ -37,11 +37,13 @@ const newId = () => crypto.randomUUID().replaceAll("-", "");
 export function TopicPanel({
   articleProfileId,
   profiles,
+  openRequest = 0,
   onDirty,
   onOpenArticle,
 }: {
   articleProfileId: string | null;
   profiles: Profile[];
+  openRequest?: number;
   onDirty: (value: boolean) => void;
   onOpenArticle: (id: string) => void;
 }) {
@@ -54,6 +56,7 @@ export function TopicPanel({
   const dialog = useRef<HTMLDialogElement>(null);
   const pending = useRef<string | null>(null);
   const busyRef = useRef(false);
+  const handledOpen = useRef(openRequest);
   const client = useQueryClient();
   const history = useQuery({
     queryKey: ["topic-plans"],
@@ -80,6 +83,13 @@ export function TopicPanel({
     setProfileId(articleProfileId || profiles[0]?.id || "");
     setOpen(true);
   }
+  useEffect(() => {
+    if (openRequest > handledOpen.current) {
+      handledOpen.current = openRequest;
+      setProfileId(articleProfileId || profiles[0]?.id || "");
+      setOpen(true);
+    }
+  }, [openRequest, articleProfileId, profiles]);
   function closePanel() {
     if (busyRef.current) return;
     if (idea.trim() && !confirm("选题想法尚未提交，关闭会放弃输入，是否继续？")) return;

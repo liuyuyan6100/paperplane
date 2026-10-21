@@ -70,12 +70,22 @@ function when(value: string) {
 export function TasksButton({
   articleId,
   onOpenArticle,
+  openRequest = 0,
 }: {
   articleId: string | null;
   onOpenArticle: (id: string) => void;
+  openRequest?: number;
 }) {
   const [open, setOpen] = useState(false);
+  const handledOpen = useRef(openRequest);
   const [articleOnly, setArticleOnly] = useState(false);
+  useEffect(() => {
+    if (openRequest > handledOpen.current) {
+      handledOpen.current = openRequest;
+      setArticleOnly(false);
+      setOpen(true);
+    }
+  }, [openRequest]);
   const summary = useQuery({
     queryKey: ["tasks", "summary"],
     queryFn: ({ signal }) => request<Page>("/tasks?limit=1", undefined, signal),

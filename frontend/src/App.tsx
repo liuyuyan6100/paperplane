@@ -6,6 +6,8 @@ import { CreationPanel } from "./features/creation/CreationPanel";
 import { IllustrationPanel } from "./features/illustrations/IllustrationPanel";
 import { ProfilePanel } from "./features/profiles/ProfilePanel";
 import { TopicPanel } from "./features/topics/TopicPanel";
+import { OnboardingGuide } from "./features/onboarding/OnboardingGuide";
+import type { GuideAction } from "./features/onboarding/flow";
 import { TasksButton } from "./features/tasks/TaskCenter";
 import { MetadataAssistant } from "./features/editor/MetadataAssistant";
 import { AssistantPanel } from "./features/assistant/AssistantPanel";
@@ -72,6 +74,7 @@ export function App() {
   );
   const current = useRef(state);
   const bodyInput = useRef<HTMLTextAreaElement>(null);
+  const titleInput = useRef<HTMLInputElement>(null);
   current.current = state;
   const saveBusy = useRef(false);
   const creationDirty = useRef(false);
@@ -103,6 +106,10 @@ export function App() {
   const [libraryBusy, setLibraryBusy] = useState(false);
   const [preview, setPreview] = useState(false);
   const [imageOpenRequest, setImageOpenRequest] = useState(0);
+  const [profileOpenRequest, setProfileOpenRequest] = useState(0);
+  const [topicOpenRequest, setTopicOpenRequest] = useState(0);
+  const [creationOpenRequest, setCreationOpenRequest] = useState(0);
+  const [taskOpenRequest, setTaskOpenRequest] = useState(0);
   const [fields, setFields] = useState(false);
   const [mobileAI, setMobileAI] = useState(false);
   const [mobileLibrary, setMobileLibrary] = useState(false);
@@ -249,6 +256,16 @@ export function App() {
     (a) => a.id === state.articleId && a.version > (state.version ?? 0),
   );
   const edit = (patch: Partial<Draft>) => dispatch({ type: "edit", patch });
+  const guideAction = (action: GuideAction) => {
+    if (action === "model") { setAiCollapsed(false); setMobileAI(true); }
+    else if (action === "profile") { setFields(true); setProfileOpenRequest((value) => value + 1); }
+    else if (action === "topic") setTopicOpenRequest((value) => value + 1);
+    else if (action === "article") titleInput.current?.focus();
+    else if (action === "creation") setCreationOpenRequest((value) => value + 1);
+    else if (action === "images") setImageOpenRequest((value) => value + 1);
+    else if (action === "preview") setPreview(true);
+    else if (action === "tasks") setTaskOpenRequest((value) => value + 1);
+  };
 
   if (!session.data)
     return (
@@ -275,6 +292,7 @@ export function App() {
         >
           ＋ 新建文章
         </button>
+        <OnboardingGuide hasArticle={!!state.articleId} onAction={guideAction} />
         <ArticleLibrary
           rows={articles.data?.articles ?? []}
           selected={state.articleId}
@@ -333,11 +351,13 @@ export function App() {
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
+            <OnboardingGuide mobile hasArticle={!!state.articleId} onAction={guideAction} />
             <DesktopSettings />
             <TopicPanel
               key={state.session + ":topics"}
               articleProfileId={state.draft.profile_id}
               profiles={profiles.data?.profiles ?? []}
+              openRequest={topicOpenRequest}
               onDirty={setTopicDirty}
               onOpenArticle={(id) => void navigate(id)}
             />
@@ -356,6 +376,7 @@ export function App() {
             <CreationPanel
               key={state.session + ":creation"}
               state={state}
+              openRequest={creationOpenRequest}
               getCurrent={() => current.current}
               onDirty={setCreationDirty}
               onAdopt={async (id, values) => {
@@ -457,6 +478,7 @@ export function App() {
             />
             <TasksButton
               articleId={state.articleId}
+              openRequest={taskOpenRequest}
               onOpenArticle={(id) => {
                 setFields(true);
                 if (id !== current.current.articleId) void navigate(id);
@@ -549,6 +571,7 @@ export function App() {
                   <span>文章标题</span>
                   <input
                     className="title-input"
+                    ref={titleInput}
                     aria-label="文章标题"
                     value={state.draft.title}
                     maxLength={150}
@@ -592,6 +615,7 @@ export function App() {
                     key={state.session + ":profile"}
                     selectedId={state.draft.profile_id}
                     profiles={profiles.data?.profiles ?? []}
+                    openRequest={profileOpenRequest}
                     onDirty={setProfileDirty}
                   />
                   <button
