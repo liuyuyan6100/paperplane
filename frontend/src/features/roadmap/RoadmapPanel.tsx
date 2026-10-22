@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { COMPLETED, EASEL_COMPARE_URL, EASEL_UPDATES, PLANNED, PRODUCT_AUTHOR, ROADMAP_UPDATED } from "./roadmap";
+import { COMPLETED, PLANNED, PRODUCT_AUTHOR, ROADMAP_UPDATED } from "./roadmap";
 
 export function RoadmapPanel({ openRequest = 0 }: { openRequest?: number }) {
   const [open, setOpen] = useState(false);
@@ -36,12 +36,6 @@ export function RoadmapPanel({ openRequest = 0 }: { openRequest?: number }) {
             <p>{item.detail}</p><small>完成标志：{item.done}</small>
           </li>)}</ol>
           <p className="roadmap-note">每次交付一个小单元，经测试和安装验收后继续。视频、运营复盘与完整规则同步排在后续，暂无交付日期。部分能力已有原工作台入口，新界面仍待迁入。</p>
-        </section>
-        <section aria-labelledby="roadmap-easel"><h3 id="roadmap-easel">Easel 本轮更新参考</h3>
-          <p>核对范围：b29d0d7 → 3f1d4fb · 2026-10-23</p>
-          <div className="roadmap-grid">{EASEL_UPDATES.map((item) => <article key={item.title}><h4>{item.title}</h4><p>{item.detail}</p></article>)}</div>
-          <p><a href={EASEL_COMPARE_URL} target="_blank" rel="noreferrer">查看 Easel 上游变更 ↗</a></p>
-          <p className="roadmap-note">这是上游功能摘要；平台发布、真实模型与媒体服务仍需各自验证。纸飞机优先完善文章审阅与草稿流程。</p>
         </section>
       </div>
     </dialog>, document.body)}

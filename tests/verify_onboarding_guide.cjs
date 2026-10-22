@@ -18,8 +18,7 @@ const assert = require('node:assert/strict');
     await roadmap.getByText('纸飞机 · 作者：灵魂工程师').waitFor();
     await roadmap.getByRole('heading', { name: '待开发 · 按优先级推进' }).waitFor();
     assert.equal(await roadmap.getByText('初步验收', { exact: true }).count(), 1);
-    assert.equal(await roadmap.getByRole('link', { name: '查看 Easel 上游变更' }).getAttribute('href'),
-      'https://github.com/ZJU-REAL/Easel/compare/b29d0d7...3f1d4fb');
+    assert.equal(await roadmap.getByText(/Easel/).count(), 0);
     await page.screenshot({ path: screenshot.replace('.png', '-roadmap.png') });
     await page.keyboard.press('Escape');
     assert.equal(await roadmap.isVisible(), false);

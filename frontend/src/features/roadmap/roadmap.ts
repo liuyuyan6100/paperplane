@@ -15,10 +15,3 @@ export const PLANNED = [
   { priority: "P2", title: "资料与已确认写作经验", detail: "补齐资料管理、经验确认/纠错/停用；长期规则与冲突处理分步推进。", done: "能查来源、改错和停用，候选建议不会自动成为写作事实。" },
   { priority: "M5 · 稳定交付", title: "安装升级、备份与回退", detail: "完整数据兼容和升级演练，再完成稳定版验收。", done: "旧文章、媒体、配置、任务回执可验证地保留并能回退。" },
 ];
-export const EASEL_UPDATES = [
-  { title: "画像页切换已有角色", detail: "浏览并切换既有 persona，减少重复建立。" },
-  { title: "视频合成断点续做", detail: "校验输入与产物摘要后复用镜头；损坏镜头重新处理，旧成片保留。" },
-  { title: "可选工具预算", detail: "OpenClaw 原生执行可设置调用次数与总时限；默认不启用，不覆盖所有执行引擎。" },
-  { title: "稳定性修复", detail: "聊天流与历史恢复、带命名空间的模型 ID、BOM 配置、发布状态及媒体脚本。" },
-];
-export const EASEL_COMPARE_URL = "https://github.com/ZJU-REAL/Easel/compare/b29d0d7...3f1d4fb";
