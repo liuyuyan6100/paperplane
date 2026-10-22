@@ -15,3 +15,6 @@ class TaskService:
 
     def command(self, kind: str, task_id: str, values: dict):
         return self.repository.command(kind, task_id, values)
+
+    def change_visibility(self, action: str, items: list[dict]):
+        return self.repository.change_visibility(action, items)

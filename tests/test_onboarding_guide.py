@@ -24,6 +24,6 @@ def test_onboarding_guide_navigation(tmp_path):
             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
         )
         assert result.returncode == 0, result.stdout + result.stderr
-        assert service.app.db.one("SELECT COUNT(*) n FROM posts")["n"] == 0
+        assert service.app.db.one("SELECT COUNT(*) n FROM posts")["n"] == 1
     finally:
         service.stop()

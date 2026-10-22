@@ -4,6 +4,7 @@ import hashlib
 import json
 import threading
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 
 from studio.db import dumps, now
 from studio.domain.tasks import LABELS, error_kind, group_for
@@ -18,6 +19,11 @@ CREATE TABLE IF NOT EXISTS task_commands (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_task_commands_pending
  ON task_commands(kind,task_id) WHERE status='pending';
+CREATE TABLE IF NOT EXISTS task_visibility (
+ kind TEXT NOT NULL, task_id TEXT NOT NULL, visibility TEXT NOT NULL,
+ source_status TEXT NOT NULL, source_updated_at TEXT NOT NULL,
+ updated_at TEXT NOT NULL, PRIMARY KEY(kind,task_id)
+);
 """
 
 
@@ -288,6 +294,7 @@ class LegacyTasks:
         item = dict(row)
         item["kind_label"] = BY_KIND[row["kind"]].label
         item["group"] = group_for(row["kind"], row["status"], row["stage"])
+        item["overdue"] = self._overdue(row)
         item["status_label"] = (
             "已回复"
             if row["kind"] == "assistant"
@@ -320,6 +327,18 @@ class LegacyTasks:
         elif row["kind"] == "topic":
             item["stage_label"] = "选择题目" if row["stage"] == "selection" else "选题已选择"
         item["revision"] = digest(raw)
+        visibility = db.execute(
+            "SELECT visibility,source_status,source_updated_at FROM task_visibility "
+            "WHERE kind=? AND task_id=?", (row["kind"], row["id"]),
+        ).fetchone()
+        item["visibility"] = (
+            visibility["visibility"] if visibility
+            and visibility["source_status"] == row["status"]
+            and visibility["source_updated_at"] == row["updated_at"]
+            else "active"
+        )
+        item["visibility_revision"] = digest([raw, item["visibility"]])
+        item["can_manage"] = item["group"] != "active" and row["status"] != "uncertain" and row["kind"] != "draft-intent"
         item["error_kind"] = error_kind(row["status"], row["error"])
         item["actions"] = self._actions(row, raw)
         links = {
@@ -374,6 +393,8 @@ class LegacyTasks:
             )
         elif row["kind"] == "workflow" and row["status"] == "outline_review":
             instruction = "请到原创作任务确认提纲；未确认前不会生成正文。"
+        elif row["kind"] == "image" and row["status"] == "failed":
+            instruction = "这是图片候选生成失败。请从文章顶部“封面与配图”检查原计划，再决定是否重新生成；任务中心不会自动重试，也可将这条失败记录移入回收站。"
         elif item["group"] == "active":
             instruction = "任务在本机后台执行，可关闭任务中心继续编辑；刷新或切换页面不会重复发起。"
         elif row["kind"] == "assistant" and item["group"] == "done":
@@ -391,7 +412,18 @@ class LegacyTasks:
         item["instruction"] = instruction
         return item
 
-    def listing(self, *, group="all", kind=None, post_id=None, query="", offset=0, limit=50):
+    @staticmethod
+    def _overdue(row):
+        if group_for(row["kind"], row["status"], row["stage"]) not in ("attention", "review"):
+            return False
+        if row["status"] == "uncertain":
+            return False
+        try:
+            return datetime.fromisoformat(row["updated_at"]) <= datetime.now(timezone.utc) - timedelta(days=7)
+        except (TypeError, ValueError):
+            return False
+
+    def listing(self, *, group="all", kind=None, post_id=None, query="", offset=0, limit=50, view="active"):
         conditions, params = ["1"], []
         for name, value in [("kind", kind), ("post_id", post_id)]:
             if value:
@@ -403,7 +435,7 @@ class LegacyTasks:
             )
             value = "%" + query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
             params.extend([value] * 3)
-        scope = (
+        base_scope = (
             "SELECT *,("
             + self.group_sql
             + ") task_group FROM ("
@@ -411,16 +443,32 @@ class LegacyTasks:
             + ") WHERE "
             + " AND ".join(conditions)
         )
+        scope = (
+            "SELECT b.* FROM (" + base_scope + ") b LEFT JOIN task_visibility v "
+            "ON v.kind=b.kind AND v.task_id=b.id WHERE "
+            "CASE WHEN v.source_status=b.status AND v.source_updated_at=b.updated_at "
+            "THEN v.visibility ELSE 'active' END=?"
+        )
+        scoped_params = params + [view]
         with self.app.db.connect() as db:
             db.execute("BEGIN")
-            counts = {key: 0 for key in ("all", "active", "attention", "review", "done")}
+            counts = {key: 0 for key in ("all", "active", "attention", "review", "done", "overdue")}
             for row in db.execute(
-                "SELECT task_group,COUNT(*) n FROM (" + scope + ") GROUP BY task_group", params
+                "SELECT task_group,COUNT(*) n FROM (" + scope + ") GROUP BY task_group", scoped_params
             ):
                 counts[row["task_group"]] = row["n"]
                 counts["all"] += row["n"]
-            tail = "" if group == "all" else " WHERE task_group=?"
-            scoped = params + ([] if group == "all" else [group])
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat(timespec="seconds")
+            counts["overdue"] = db.execute(
+                "SELECT COUNT(*) n FROM (" + scope + ") WHERE task_group IN ('attention','review') "
+                "AND status!='uncertain' AND updated_at<=?", (*scoped_params, cutoff),
+            ).fetchone()["n"]
+            tail = (
+                "" if group == "all" else
+                " WHERE task_group IN ('attention','review') AND status!='uncertain' AND updated_at<=?"
+                if group == "overdue" else " WHERE task_group=?"
+            )
+            scoped = scoped_params + ([] if group == "all" else [cutoff] if group == "overdue" else [group])
             rows = db.execute(
                 "SELECT * FROM ("
                 + scope
@@ -440,6 +488,44 @@ class LegacyTasks:
             "workers": self.workers(),
             "checked_at": now(),
         }
+
+    def change_visibility(self, action, items):
+        target = {"archive": "archived", "trash": "trash", "restore": "active"}.get(action)
+        if not target:
+            raise Problem("未知收纳操作", 400)
+        succeeded, failed = [], []
+        with self.lock:
+            with self.app.db.connect(immediate=True) as db:
+                for item in items:
+                    kind, task_id = item["kind"], item["id"]
+                    try:
+                        row = self._projected(db, kind, task_id)
+                        shown = self._present(row, db)
+                        if shown["visibility_revision"] != item["revision"]:
+                            raise Problem("任务已变化，请刷新后重试", 409)
+                        if target != "active" and (
+                            shown["group"] == "active"
+                            or row["status"] == "uncertain"
+                            or kind == "draft-intent"
+                        ):
+                            raise Problem("执行中或送稿待核对的任务不能收纳", 409)
+                        if target == "active":
+                            db.execute(
+                                "DELETE FROM task_visibility WHERE kind=? AND task_id=?",
+                                (kind, task_id),
+                            )
+                        else:
+                            db.execute(
+                                "INSERT INTO task_visibility(kind,task_id,visibility,source_status,source_updated_at,updated_at) "
+                                "VALUES(?,?,?,?,?,?) ON CONFLICT(kind,task_id) DO UPDATE SET "
+                                "visibility=excluded.visibility,source_status=excluded.source_status,"
+                                "source_updated_at=excluded.source_updated_at,updated_at=excluded.updated_at",
+                                (kind, task_id, target, row["status"], row["updated_at"], now()),
+                            )
+                        succeeded.append({"kind": kind, "id": task_id})
+                    except Problem as exc:
+                        failed.append({"kind": kind, "id": task_id, "message": str(exc)})
+        return {"succeeded": succeeded, "failed": failed}
 
     def workers(self):
         return {

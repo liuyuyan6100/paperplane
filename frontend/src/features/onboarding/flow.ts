@@ -39,7 +39,7 @@ export const GUIDE_PHASES: GuidePhase[] = [
   {
     id: "create", number: "03", title: "创作", cue: "每个结果先审阅",
     tone: "amber", steps: [
-      { id: "creation", title: "素材、提纲与正文", entry: "顶部 → 素材与创作", done: "确认提纲，审阅并采用正文", action: "creation", needsArticle: true },
+      { id: "creation", title: "素材、提纲与正文", entry: "文章顶部「素材与创作」按钮；已有任务会打开待确认提纲", done: "确认提纲，审阅并采用正文", action: "creation", needsArticle: true },
     ],
   },
   {
@@ -47,7 +47,7 @@ export const GUIDE_PHASES: GuidePhase[] = [
     tone: "green", steps: [
       { id: "images", title: "封面与正文配图", entry: "顶部 → 封面与配图", done: "图片经审阅采用", action: "images", needsArticle: true },
       { id: "preview", title: "查看整篇图文", entry: "顶部 → 预览", done: "核对文字与图片位置", action: "preview", needsArticle: true },
-      { id: "tasks", title: "查看任务结果", entry: "顶部 → 任务中心", done: "确认失败或待处理的下一步", action: "tasks" },
+      { id: "tasks", title: "查看任务与收纳记录", entry: "顶部 → 任务中心", done: "处理失败项；废弃项归档或移入可恢复回收站", action: "tasks" },
     ],
   },
 ];

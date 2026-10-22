@@ -12,6 +12,7 @@ interface Task {
   status: string;
   status_label: string;
   group: string;
+  overdue: boolean;
   stage: string;
   stage_label: string;
   description: string;
@@ -21,6 +22,9 @@ interface Task {
   updated_at: string;
   attempts: number | null;
   revision: string;
+  visibility: "active" | "archived" | "trash";
+  visibility_revision: string;
+  can_manage: boolean;
   actions: string[];
   legacy_url: string;
   instruction: string;
@@ -45,6 +49,7 @@ const groups = {
   attention: "需处理",
   review: "待确认",
   done: "已结束",
+  overdue: "7 天未变化",
 };
 const errors: Record<string, string> = {
   unknown_delivery: "原平台是否收到尚未确认，不能直接重发。",
@@ -189,6 +194,8 @@ export function TaskCenter({
 }) {
   const root = useRef<HTMLDialogElement>(null);
   const [group, setGroup] = useState("all");
+  const [view, setView] = useState<"active" | "archived" | "trash">("active");
+  const [checked, setChecked] = useState<string[]>([]);
   const [kind, setKind] = useState("");
   const [query, setQuery] = useState("");
   const [currentOnly, setCurrentOnly] = useState(initialCurrentOnly);
@@ -204,6 +211,7 @@ export function TaskCenter({
   const client = useQueryClient();
   const filters = {
     group,
+    view,
     kind,
     query,
     offset,
@@ -214,6 +222,7 @@ export function TaskCenter({
     queryFn: ({ signal }) => {
       const params = new URLSearchParams({
         group,
+        view,
         query,
         offset: String(offset),
         limit: "30",
@@ -291,11 +300,42 @@ export function TaskCenter({
       setBusy(false);
     }
   }
+  async function changeVisibility(action: "archive" | "trash" | "restore", items: Task[]) {
+    if (busy || !items.length) return;
+    setBusy(true);
+    setFailure("");
+    setNotice("");
+    try {
+      const result = await request<{
+        succeeded: { kind: string; id: string }[];
+        failed: { kind: string; id: string; message: string }[];
+      }>("/tasks/visibility", {
+        action,
+        items: items.map((item) => ({ kind: item.kind, id: item.id, revision: item.visibility_revision })),
+      });
+      setChecked([]);
+      setNotice(`已处理 ${result.succeeded.length} 项${result.failed.length ? `；${result.failed.length} 项未处理` : ""}。`);
+      if (result.failed.length) setFailure(result.failed.map((item) => `${item.kind} ${item.id.slice(0, 8)}：${item.message}`).join("；"));
+      if (result.succeeded.some((item) => item.kind === selected?.kind && item.id === selected?.id))
+        setSelected(null);
+    } catch (error) {
+      setFailure((error as Error).message);
+    } finally {
+      await Promise.all([
+        client.invalidateQueries({ queryKey: ["tasks"] }),
+        client.invalidateQueries({ queryKey: ["task-detail"] }),
+      ]);
+      setBusy(false);
+    }
+  }
   const task = detail.data;
   function scope(update: () => void) {
     setOffset(0);
+    setChecked([]);
+    setSelected(null);
     update();
   }
+  const marked = listing.data?.tasks.filter((item) => checked.includes(item.kind + item.id)) ?? [];
   return (
     <dialog
       ref={root}
@@ -327,7 +367,7 @@ export function TaskCenter({
         <div>
           <span className="milestone">M3 · 本机任务</span>
           <h2 id="task-center-heading">任务中心</h2>
-          <p>AI 有没有做完、哪里需要你确认、失败后怎么继续，都在这里查看。</p>
+          <p>AI 有没有做完、哪里需要你确认、失败后怎么继续，都在这里查看；核对后可归档或移入回收站。</p>
           <p className="task-purpose">
             写文章不必一直打开。发送 AI
             请求后会自动留下记录；“待确认”是等你审阅建议，“需处理”是失败、中断或结果待核对。这里不会自动采用或发布文章。
@@ -338,6 +378,12 @@ export function TaskCenter({
         </button>
       </header>
       <div className="task-center-filters">
+        <div className="task-groups" aria-label="任务收纳位置">
+          {([ ["active", "当前任务"], ["archived", "归档"], ["trash", "回收站"] ] as const).map(([value, label]) => (
+            <button key={value} aria-pressed={view === value}
+              onClick={() => scope(() => setView(value))}>{label}</button>
+          ))}
+        </div>
         <div className="task-groups" aria-label="按任务状态筛选">
           {Object.entries(groups).map(([value, label]) => (
             <button
@@ -402,6 +448,19 @@ export function TaskCenter({
             最近读取 {when(listing.data.checked_at)}
           </small>
         )}
+        <div className="task-batch-actions">
+          <label><input type="checkbox" checked={!!listing.data?.tasks.length && marked.length === listing.data.tasks.length}
+            onChange={(event) => setChecked(event.target.checked ? (listing.data?.tasks.map((item) => item.kind + item.id) ?? []) : [])} />
+            选择本页（{marked.length} 项）</label>
+          {view === "active" ? <>
+            <button disabled={busy || !marked.length} onClick={() => void changeVisibility("archive", marked)}>批量归档</button>
+            <button disabled={busy || !marked.length} onClick={() => void changeVisibility("trash", marked)}>批量移入回收站</button>
+          </> : <>
+            <button disabled={busy || !marked.length} onClick={() => void changeVisibility("restore", marked)}>批量恢复</button>
+            {view === "archived" && <button disabled={busy || !marked.length} onClick={() => void changeVisibility("trash", marked)}>批量移入回收站</button>}
+          </>}
+          <small>仅收纳列表记录；文章、图片、输入快照及任务日志仍保留。</small>
+        </div>
         {Object.entries(listing.data?.workers ?? {}).map(([name, worker]) =>
           worker.error ? (
             <p key={name} role="alert">
@@ -430,8 +489,13 @@ export function TaskCenter({
             </p>
           ) : (
             listing.data.tasks.map((item) => (
+              <div className="task-select-row" key={item.kind + item.id}>
+              <input type="checkbox" aria-label={`选择${item.kind_label}：${item.title}`}
+                checked={checked.includes(item.kind + item.id)}
+                onChange={(event) => setChecked((current) => event.target.checked
+                  ? [...current, item.kind + item.id]
+                  : current.filter((key) => key !== item.kind + item.id))} />
               <button
-                key={item.kind + item.id}
                 className={
                   selected?.kind === item.kind && selected.id === item.id
                     ? "task-row selected"
@@ -445,6 +509,7 @@ export function TaskCenter({
               >
                 <span className="task-row-meta">
                   {item.kind_label}
+                  {item.overdue && <span className="task-state attention">超时待核对</span>}
                   <span className={"task-state " + item.group}>
                     {item.status_label}
                   </span>
@@ -455,6 +520,7 @@ export function TaskCenter({
                 </span>
                 <small>{when(item.updated_at)}</small>
               </button>
+              </div>
             ))
           )}
           <div className="task-pagination">
@@ -590,7 +656,16 @@ export function TaskCenter({
                         {busy ? "处理中…" : actions[action]}
                       </button>
                     ))}
+                  {task.visibility === "active" ? <>
+                    <button disabled={busy || !task.can_manage} onClick={() => void changeVisibility("archive", [task])}>归档</button>
+                    <button disabled={busy || !task.can_manage} onClick={() => void changeVisibility("trash", [task])}>移入回收站</button>
+                  </> : <>
+                    <button disabled={busy} onClick={() => void changeVisibility("restore", [task])}>恢复到当前任务</button>
+                    {task.visibility === "archived" && <button disabled={busy} onClick={() => void changeVisibility("trash", [task])}>移入回收站</button>}
+                  </>}
                 </div>
+                {!task.can_manage && task.visibility === "active" &&
+                  <p className="task-action-hint">执行中或送稿结果待核对的任务需先处理原状态，不能归档或移入回收站。</p>}
                 {task.kind === "workflow" &&
                   task.actions.includes("cancel") && (
                     <p className="task-action-hint">

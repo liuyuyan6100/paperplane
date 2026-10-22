@@ -43,7 +43,7 @@ export function OnboardingGuide({
         <div>
           <span className="milestone">纸飞机 · 从想法到图文</span>
           <h2>跟着流程，完成第一篇文章</h2>
-          <p>点击流程节点查看入口和完成标志。每一步由你决定是否执行。</p>
+          <p>彩色节点是流程阶段，不是编辑器按钮；选中步骤后可跳转到对应入口。</p>
         </div>
         <button onClick={() => setOpen(false)}>返回编辑器</button>
       </header>
@@ -83,14 +83,14 @@ export function OnboardingGuide({
               <span>完成标志</span><strong>{step.done}</strong>
             </div>
             {step.needsArticle && !hasArticle &&
-              <p role="status">先创建并保存文章，之后再进入这一步。</p>}
+              <p role="status">当前没有已保存文章。先点“新建文章”并保存，再从引导进入这一步。</p>}
             <button className="primary" onClick={go}
               disabled={!!step.needsArticle && !hasArticle}>
               前往这一步 →
             </button>
           </section>
         </div>
-        <p className="onboarding-note">生成可能产生模型费用；提纲、正文和图片都先审阅再采用。任务中心只显示状态，不会自动发布文章。</p>
+        <p className="onboarding-note">生成可能产生模型费用；提纲、正文和图片都先审阅再采用。任务中心可查看和收纳记录，不会自动重试或发布文章。</p>
       </div>
     </dialog>, document.body)}
   </>;

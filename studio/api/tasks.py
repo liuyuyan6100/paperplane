@@ -5,7 +5,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from studio.api.articles import ArticleId
 from studio.application.tasks import TaskService
-from studio.domain.tasks import TaskAction, TaskGroup, TaskKind
+from studio.domain.tasks import TaskAction, TaskGroup, TaskKind, TaskVisibility
+from typing import Literal
 
 
 class Command(BaseModel):
@@ -26,6 +27,7 @@ class TaskRecord(BaseModel):
     status: str
     status_label: str
     group: TaskGroup
+    overdue: bool
     stage: str
     stage_label: str
     description: str
@@ -35,6 +37,9 @@ class TaskRecord(BaseModel):
     updated_at: str
     attempts: int | None
     revision: str
+    visibility: TaskVisibility
+    visibility_revision: str
+    can_manage: bool
     actions: list[TaskAction]
     legacy_url: str
     instruction: str
@@ -77,6 +82,19 @@ class TaskPage(BaseModel):
     checked_at: str
 
 
+class VisibilityItem(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    kind: TaskKind
+    id: str = Field(pattern=r"^[a-f0-9]{32}$")
+    revision: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class VisibilityChange(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+    action: Literal["archive", "trash", "restore"]
+    items: list[VisibilityItem] = Field(min_length=1, max_length=100)
+
+
 def task_router(service: TaskService):
     router = APIRouter(prefix="/api/v2/tasks")
 
@@ -88,10 +106,15 @@ def task_router(service: TaskService):
         query: str = Query(default="", max_length=200),
         offset: int = Query(default=0, ge=0, le=1_000_000),
         limit: int = Query(default=50, ge=1, le=100),
+        view: TaskVisibility = "active",
     ):
         return service.listing(
-            group=group, kind=kind, post_id=post_id, query=query, offset=offset, limit=limit
+            group=group, kind=kind, post_id=post_id, query=query, offset=offset, limit=limit, view=view
         )
+
+    @router.post("/visibility")
+    def change_visibility(values: VisibilityChange):
+        return service.change_visibility(values.action, [item.model_dump() for item in values.items])
 
     @router.get("/{kind}/{task_id}", response_model=TaskDetail)
     def detail(kind: TaskKind, task_id: ArticleId):

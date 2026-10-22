@@ -127,6 +127,58 @@ def test_task_projection_filters_pagination_and_secret_allowlist(app):
     assert repo.listing(query="%")["total"] == 0
 
 
+def test_task_visibility_batch_restore_and_protected_delivery(app):
+    repo = LegacyTasks(app)
+    first, post = workflow(app)
+    second, _ = workflow(app)
+    unknown, _ = delivery(app, "uncertain", "existing-draft", "wechat")
+    running, _ = workflow(app, "running")
+    before = app.post(post["id"])
+    items = [
+        {"kind": "workflow", "id": task_id,
+         "revision": repo.detail("workflow", task_id)["visibility_revision"]}
+        for task_id in (first, second, running)
+    ]
+    items.append({"kind": "delivery", "id": unknown,
+                  "revision": repo.detail("delivery", unknown)["visibility_revision"]})
+    result = repo.change_visibility("archive", items)
+    assert len(result["succeeded"]) == 2 and len(result["failed"]) == 2
+    assert repo.listing(view="archived")["total"] == 2
+    assert repo.listing(view="active")["total"] == 2
+    assert app.post(post["id"]) == before
+    stale = repo.change_visibility("trash", [items[0]])
+    assert stale["failed"] and "变化" in stale["failed"][0]["message"]
+    archived = repo.detail("workflow", first)
+    assert repo.change_visibility("trash", [{"kind": "workflow", "id": first,
+        "revision": archived["visibility_revision"]}])["succeeded"]
+    assert repo.listing(view="trash")["total"] == 1
+    repo = LegacyTasks(app)  # visibility survives another repository instance
+    trashed = repo.detail("workflow", first)
+    assert repo.change_visibility("restore", [{"kind": "workflow", "id": first,
+        "revision": trashed["visibility_revision"]}])["succeeded"]
+    assert repo.detail("workflow", first)["visibility"] == "active"
+    assert repo.listing(view="trash")["total"] == 0
+    with app.db.connect(immediate=True) as db:
+        db.execute("UPDATE workflows SET status='queued',updated_at=? WHERE id=?", (now(), second))
+    assert repo.detail("workflow", second)["visibility"] == "active"
+    assert repo.listing(view="archived")["total"] == 0
+
+
+def test_overdue_is_a_view_only_and_does_not_hide_uncertain_delivery(app):
+    repo = LegacyTasks(app)
+    old, _ = workflow(app)
+    unknown, _ = delivery(app, "uncertain", "existing-draft", "wechat")
+    with app.db.connect(immediate=True) as db:
+        db.execute("UPDATE workflows SET updated_at='2020-01-01T00:00:00+00:00' WHERE id=?", (old,))
+        db.execute("UPDATE jobs SET updated_at='2020-01-01T00:00:00+00:00' WHERE id=?", (unknown,))
+    page = repo.listing(group="overdue")
+    assert page["total"] == 1 and page["tasks"][0]["id"] == old
+    assert page["tasks"][0]["overdue"]
+    assert repo.detail("workflow", old)["status"] == "failed"
+    assert repo.detail("delivery", unknown)["status"] == "uncertain"
+    assert repo.listing(group="attention")["total"] == 2
+
+
 def test_every_existing_source_projects_without_rebuilding_its_table(app):
     from studio import profiles
 
@@ -453,6 +505,16 @@ def test_task_http_contract_security_and_unknown_state(app):
         assert client.get("/api/v2/tasks").status_code == 200
         detail = client.get("/api/v2/tasks/workflow/" + task_id).json()
         assert detail["stage_label"] and "snapshot" not in detail
+        visibility = {"action": "archive", "items": [{"kind": "workflow", "id": task_id,
+            "revision": detail["visibility_revision"]}]}
+        assert client.post("/api/v2/tasks/visibility", json=visibility).status_code == 403
+        assert client.post("/api/v2/tasks/visibility", json=visibility,
+            headers={"X-Studio-Token": "synthetic-token"}).json()["succeeded"]
+        assert client.get("/api/v2/tasks?view=archived").json()["total"] == 1
+        restore = {"action": "restore", "items": [{"kind": "workflow", "id": task_id,
+            "revision": client.get("/api/v2/tasks/workflow/" + task_id).json()["visibility_revision"]}]}
+        assert client.post("/api/v2/tasks/visibility", json=restore,
+            headers={"X-Studio-Token": "synthetic-token"}).json()["succeeded"]
         payload = {"request_id": uid(), "revision": detail["revision"], "action": "retry"}
         route = "/api/v2/tasks/workflow/" + task_id + "/commands"
         assert client.post(route, json=payload).status_code == 403

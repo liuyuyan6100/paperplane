@@ -54,7 +54,7 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   const center=page.getByRole('dialog',{name:'任务中心',exact:true});await center.waitFor();
   assert(await center.getByLabel('仅当前文章',{exact:true}).isChecked());
   await center.getByRole('button',{name:/^待确认/}).waitFor();
-  await center.getByText('AI 有没有做完、哪里需要你确认、失败后怎么继续，都在这里查看。',{exact:true}).waitFor();
+  await center.getByText('AI 有没有做完、哪里需要你确认、失败后怎么继续，都在这里查看；核对后可归档或移入回收站。',{exact:true}).waitFor();
   await center.getByRole('navigation',{name:'任务列表'}).getByRole('button').filter({hasText:'信息补齐测试'}).first().click();
   await center.getByText('文章信息补齐',{exact:true}).first().waitFor();
   await center.getByRole('button',{name:'打开所属文章',exact:true}).click();

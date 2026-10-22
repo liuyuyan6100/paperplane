@@ -52,6 +52,14 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   await detail.getByRole('checkbox',{name:'我已到原平台核实，这篇文章确实未收到'}).check();await missing.click();
   await detail.getByText('执行失败',{exact:true}).first().waitFor();await detail.getByRole('button',{name:'重试原任务',exact:true}).waitFor();
   assert.equal(retryRequests,1,'verification must never resend');
+  await detail.getByRole('button',{name:'归档',exact:true}).click();
+  await center.getByRole('button',{name:'归档',exact:true}).first().click();
+  await list.getByRole('button').filter({hasText:'M3合成送稿'}).click();
+  await page.screenshot({path:path.join(f.output,'task-archive.png'),fullPage:true});
+  await detail.getByRole('button',{name:'恢复到当前任务',exact:true}).click();
+  await center.getByRole('button',{name:'当前任务',exact:true}).click();
+  await list.getByRole('button').filter({hasText:'M3合成送稿'}).waitFor();
+  assert.equal(retryRequests,1,'archiving and restoring must not retry');
   await page.setViewportSize({width:390,height:844});
   const bounds=await center.boundingBox();assert(bounds.x>=0&&bounds.y>=0&&bounds.x+bounds.width<=390&&bounds.y+bounds.height<=844);
   assert(await center.evaluate(el=>el.scrollWidth<=el.clientWidth+1));
@@ -61,6 +69,6 @@ const fs=require('fs'),path=require('path'),assert=require('node:assert/strict')
   await page.setViewportSize({width:1440,height:900});
   assert.equal(await body.inputValue(),'继续输入的未保存正文😀');assert.equal(await input.inputValue(),'还没发送的下一条要求');
   assert.deepEqual(errors,[]);
-  fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['running-to-reply-same-id','close-keeps-unsaved-editor','keeps-unsent-ai-input','current-article-filter','retry-original-workflow-once','outline-confirmation-preserved','legacy-deep-links','unknown-delivery-no-retry','explicit-verified-then-manual-retry','mobile-dialog-bounds','polling-keeps-task-selection']},null,2));
+  fs.writeFileSync(path.join(f.output,'result.json'),JSON.stringify({passed:true,checks:['running-to-reply-same-id','close-keeps-unsaved-editor','keeps-unsent-ai-input','current-article-filter','retry-original-workflow-once','outline-confirmation-preserved','legacy-deep-links','unknown-delivery-no-retry','explicit-verified-then-manual-retry','archive-restore-no-retry','mobile-dialog-bounds','polling-keeps-task-selection']},null,2));
  }finally{fs.writeFileSync(f.release,'release');await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1);});

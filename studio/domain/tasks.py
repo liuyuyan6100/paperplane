@@ -20,8 +20,9 @@ TaskKind = Literal[
     "learning",
     "draft-intent",
 ]
-TaskGroup = Literal["all", "active", "attention", "review", "done"]
+TaskGroup = Literal["all", "active", "attention", "review", "done", "overdue"]
 TaskAction = Literal["retry", "cancel", "recheck", "not_received"]
+TaskVisibility = Literal["active", "archived", "trash"]
 
 LABELS = {
     "queued": "排队中",
@@ -139,3 +140,4 @@ class TaskRepository(Protocol):
     ) -> dict: ...
     def detail(self, kind: str, task_id: str) -> dict: ...
     def command(self, kind: str, task_id: str, values: dict) -> dict: ...
+    def change_visibility(self, action: str, items: list[dict]) -> dict: ...
