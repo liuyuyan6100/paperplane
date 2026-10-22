@@ -7,6 +7,7 @@ import { IllustrationPanel } from "./features/illustrations/IllustrationPanel";
 import { ProfilePanel } from "./features/profiles/ProfilePanel";
 import { TopicPanel } from "./features/topics/TopicPanel";
 import { OnboardingGuide } from "./features/onboarding/OnboardingGuide";
+import { RoadmapPanel } from "./features/roadmap/RoadmapPanel";
 import type { GuideAction } from "./features/onboarding/flow";
 import { TasksButton } from "./features/tasks/TaskCenter";
 import { MetadataAssistant } from "./features/editor/MetadataAssistant";
@@ -110,6 +111,7 @@ export function App() {
   const [topicOpenRequest, setTopicOpenRequest] = useState(0);
   const [creationOpenRequest, setCreationOpenRequest] = useState(0);
   const [taskOpenRequest, setTaskOpenRequest] = useState(0);
+  const [roadmapOpenRequest, setRoadmapOpenRequest] = useState(0);
   const [fields, setFields] = useState(false);
   const [mobileAI, setMobileAI] = useState(false);
   const [mobileLibrary, setMobileLibrary] = useState(false);
@@ -265,6 +267,7 @@ export function App() {
     else if (action === "images") setImageOpenRequest((value) => value + 1);
     else if (action === "preview") setPreview(true);
     else if (action === "tasks") setTaskOpenRequest((value) => value + 1);
+    else if (action === "roadmap") setRoadmapOpenRequest((value) => value + 1);
   };
 
   if (!session.data)
@@ -293,6 +296,7 @@ export function App() {
           ＋ 新建文章
         </button>
         <OnboardingGuide hasArticle={!!state.articleId} onAction={guideAction} />
+        <RoadmapPanel openRequest={roadmapOpenRequest} />
         <ArticleLibrary
           rows={articles.data?.articles ?? []}
           selected={state.articleId}
