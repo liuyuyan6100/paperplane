@@ -32,9 +32,9 @@ const fs = require('fs'), path = require('path'), assert = require('node:assert/
       await page.evaluate(()=>{document.querySelector('.editing-document').scrollTop=5000;document.querySelector('.assistant-history').scrollTop=5000;});
       const bounds = await page.evaluate(()=>{
         const rect = selector=>{const r=document.querySelector(selector).getBoundingClientRect();return {top:r.top,bottom:r.bottom,left:r.left,right:r.right};};
-        return {save:rect('.toolbar .primary'),input:rect('.assistant-composer textarea'),send:rect('.assistant-composer .primary'),pageHeight:document.documentElement.scrollHeight,width:innerWidth,height:innerHeight};
+        return {save:rect('.toolbar-actions > button.primary'),input:rect('.assistant-composer textarea'),send:rect('.assistant-composer .primary'),pageHeight:document.documentElement.scrollHeight,width:innerWidth,height:innerHeight};
       });
-      for (const control of [bounds.save,bounds.input,bounds.send]) assert(control.top>=0&&control.bottom<=bounds.height+1&&control.right<=bounds.width+1,JSON.stringify({viewport,bounds}));
+      for (const control of [bounds.save,bounds.input,bounds.send]) assert(control.bottom>control.top&&control.top>=0&&control.left>=0&&control.bottom<=bounds.height+1&&control.right<=bounds.width+1,JSON.stringify({viewport,bounds}));
       assert(bounds.pageHeight<=bounds.height+1,JSON.stringify(bounds));
     }
     await page.setViewportSize({width:1440,height:900});

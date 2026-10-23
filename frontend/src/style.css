@@ -2534,3 +2534,11 @@ body,
   .roadmap-header h2 { font-size: 20px; }
   .roadmap-grid, .roadmap-summary { grid-template-columns: 1fr; }
 }
+
+/* Keep common actions and the AI composer reachable in short, narrow windows. */
+@media (max-width: 1152px) {
+  .toolbar { padding: 12px 16px; gap: 8px; }
+  .toolbar-actions { gap: 6px; }
+  .toolbar-actions > button { padding: 7px 8px; font-size: 12px; }
+  .toolbar-actions > span { width: auto; margin-right: 0; }
+}
