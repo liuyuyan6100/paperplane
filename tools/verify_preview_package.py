@@ -44,6 +44,12 @@ def verify(package, output):
     archive = CArchiveReader(str(exe))
     pyz = archive.open_embedded_archive(next(k for k in archive.toc if k.endswith(".pyz")))
     modules = [
+        "studio.api.drafts",
+        "studio.application.drafts",
+        "studio.domain.drafts",
+        "studio.infrastructure.legacy_drafts",
+        "studio.article_flow",
+        "studio.draft_preparation",
         "studio.api.illustrations",
         "studio.application.illustrations",
         "studio.domain.illustrations",
@@ -160,7 +166,7 @@ def verify(package, output):
                 assert client.get("/preview-healthz").json()["worker_alive"]
                 assert client.get("/editor/").status_code == 200
                 session = client.get("/api/v2/session").json()
-                assert session["version"] == "0.4.0-m4.3.3-ui" and session["milestone"] == "M4"
+                assert session["version"] == "0.4.0-m4.4-drafts" and session["milestone"] == "M4"
                 tasks = client.get("/api/v2/tasks").json()
                 assert tasks["total"] == 0 and len(tasks["kinds"]) == 14
                 client.headers["X-Studio-Token"] = session["token"]
@@ -170,6 +176,11 @@ def verify(package, output):
                 assert response.status_code == 200
                 article = response.json()
                 assert article["stage"] == "draft"
+                draft = client.get(f"/api/v2/articles/{article['id']}/draft")
+                assert draft.status_code == 200, draft.text
+                assert draft.json()["intent"] is None and draft.json()["job"] is None
+                assert not draft.json()["report"]["ok"]
+                assert client.get(f"/api/v2/articles/{article['id']}").json()["version"] == article["version"]
                 profile_fields = {"name": "成品合成画像", "direction": "教程", "audience": "入门读者", "goal": "清晰表达"}
                 profile_response = client.post("/api/v2/profiles", json=profile_fields)
                 assert profile_response.status_code == 200, profile_response.text
@@ -322,7 +333,7 @@ def verify(package, output):
             stop()
     report = {
         "status": "passed",
-        "version": "0.4.0-m4.3.3-ui",
+        "version": "0.4.0-m4.4-drafts",
         "modules_match": modules,
         "entrypoint_matches": True,
         "resources_match": resources,

@@ -70,6 +70,17 @@ const assert = require('node:assert/strict');
     assert.equal(await guide.getByRole('button', { name: '前往这一步' }).isDisabled(), false);
     await guide.getByRole('button', { name: '前往这一步' }).click();
     await page.getByRole('dialog', { name: '本篇创作' }).waitFor();
+    await page.getByRole('dialog', { name: '本篇创作' }).getByRole('button', { name: '返回文章' }).click();
+    await page.getByRole('button', { name: '新手入门' }).click();
+    await guide.getByRole('button', { name: /04 成稿/ }).click();
+    await guide.getByRole('button', { name: /检查并衔接公众号草稿/ }).click();
+    await guide.getByRole('button', { name: '前往这一步' }).click();
+    const drafts = page.getByRole('dialog', { name: '检查与公众号草稿', exact: true });
+    await drafts.getByRole('heading', { name: '尚未启动送稿', exact: true }).waitFor();
+    await drafts.getByRole('button', { name: '返回文章', exact: true }).click();
+    await page.getByRole('button', { name: '预览', exact: true }).click();
+    await page.getByRole('dialog', { name: '图文成品预览' }).getByRole('button', { name: '检查与公众号草稿', exact: true }).click();
+    await drafts.getByRole('heading', { name: '尚未启动送稿', exact: true }).waitFor();
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

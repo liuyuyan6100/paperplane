@@ -90,7 +90,7 @@ export function OnboardingGuide({
             </button>
           </section>
         </div>
-        <p className="onboarding-note">生成可能产生模型费用；提纲、正文和图片都先审阅再采用。任务中心可查看和收纳记录，不会自动重试或发布文章。</p>
+        <p className="onboarding-note">生成可能产生模型费用；提纲、正文和图片都先审阅再采用。送稿需先主动启动；问题补齐保存后自动继续到公众号草稿箱。任务中心可查看、处理和收纳记录。</p>
       </div>
     </dialog>, document.body)}
   </>;

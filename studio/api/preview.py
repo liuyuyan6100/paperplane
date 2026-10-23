@@ -12,6 +12,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from studio.api.articles import article_router
 from studio.api.assistant import assistant_router
 from studio.api.creation import creation_router
+from studio.api.drafts import draft_router
 from studio.api.illustrations import illustration_router
 from studio.api.preferences import preference_router
 from studio.api.profiles import profile_router
@@ -20,6 +21,7 @@ from studio.api.topics import topic_router
 from studio.application.articles import ArticleService
 from studio.application.assistant import AssistantService
 from studio.application.creation import CreationService
+from studio.application.drafts import DraftService
 from studio.application.illustrations import IllustrationService
 from studio.application.profiles import ProfileService
 from studio.application.tasks import TaskService
@@ -27,6 +29,7 @@ from studio.application.topics import TopicService
 from studio.infrastructure.legacy_articles import LegacyArticleRepository
 from studio.infrastructure.legacy_assistant import LegacyAssistant
 from studio.infrastructure.legacy_creation import LegacyCreation
+from studio.infrastructure.legacy_drafts import LegacyDrafts
 from studio.infrastructure.legacy_illustrations import LegacyIllustrations
 from studio.infrastructure.legacy_profiles import LegacyProfiles
 from studio.infrastructure.legacy_tasks import LegacyTasks
@@ -34,7 +37,7 @@ from studio.infrastructure.legacy_topics import LegacyTopics
 from studio.preview_preferences import PreviewPreferences
 from studio.service import Problem
 
-PREVIEW_VERSION = "0.4.0-m4.3.3-ui"
+PREVIEW_VERSION = "0.4.0-m4.4-drafts"
 CSP = (
     "default-src 'self'; script-src 'self'; style-src 'self'; "
     "img-src 'self' https: http: data:; media-src 'self'; connect-src 'self'; "
@@ -119,6 +122,7 @@ def create_app(studio, legacy_url, token, port, frontend=None, *, preferences=No
     async def validation_error(request, exc):
         return JSONResponse({"error": "输入格式或长度不正确，请检查文章字段"}, status_code=422)
 
+    app.include_router(draft_router(DraftService(LegacyDrafts(studio))))
     app.include_router(task_router(TaskService(LegacyTasks(studio))))
     app.include_router(preference_router(preferences or PreviewPreferences(studio.db.data_dir)))
     app.include_router(creation_router(CreationService(LegacyCreation(studio))))

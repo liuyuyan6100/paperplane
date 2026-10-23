@@ -1,6 +1,6 @@
 export type GuideAction =
   | "model" | "profile" | "topic" | "article" | "creation"
-  | "images" | "preview" | "tasks" | "roadmap";
+  | "drafts" | "images" | "preview" | "tasks" | "roadmap";
 
 export type GuideStep = {
   id: string;
@@ -43,10 +43,11 @@ export const GUIDE_PHASES: GuidePhase[] = [
     ],
   },
   {
-    id: "finish", number: "04", title: "成稿", cue: "配图、预览、查任务",
+    id: "finish", number: "04", title: "成稿", cue: "配图、检查、送入草稿箱",
     tone: "green", steps: [
       { id: "images", title: "封面与正文配图", entry: "顶部 → 封面与配图", done: "图片经审阅采用", action: "images", needsArticle: true },
       { id: "preview", title: "查看整篇图文", entry: "顶部 → 预览", done: "核对文字与图片位置", action: "preview", needsArticle: true },
+      { id: "drafts", title: "检查并衔接公众号草稿", entry: "顶部或图文预览 → 检查与公众号草稿", done: "启动检查，补齐并保存；核对草稿回执或处理待核对任务", action: "drafts", needsArticle: true },
       { id: "tasks", title: "查看任务与收纳记录", entry: "顶部 → 任务中心", done: "处理失败项；废弃项归档或移入可恢复回收站", action: "tasks" },
       { id: "roadmap", title: "了解功能进度", entry: "侧边栏 → 功能进度与规划", done: "了解纸飞机已完成、初步验收和待开发功能", action: "roadmap" },
     ],

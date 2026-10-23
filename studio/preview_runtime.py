@@ -138,6 +138,7 @@ class PreviewService:
                 "illustration_candidates",
                 "editorial_reviews",
                 "editor_assistant_turns",
+                "draft_preparations",
             )
         )
 

@@ -47,7 +47,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Upgrade helper compilation failed.' }
     & $iscc.Source "/DSourcePath=$packageSource" "/DOutputPath=$packageOutput" "/DUpgradeHelperPath=$helperLibrary" preview-installer.iss
     if ($LASTEXITCODE -ne 0) { throw 'Preview installer build failed.' }
-    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-Setup-0.4.0.12.exe'
+    $package = Join-Path $packageOutput 'PaperPlaneStudioPreview-Setup-0.4.0.13.exe'
     $hashAlgorithm = [Security.Cryptography.SHA256]::Create()
     $packageStream = [IO.File]::OpenRead($package)
     try {

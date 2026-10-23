@@ -1,3 +1,4 @@
+import { DraftPanel, type DraftView } from "./features/drafts/DraftPanel";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { ArticleLibrary } from "./features/editor/ArticleLibrary";
 import { ArticlePreview } from "./features/editor/ArticlePreview";
@@ -105,6 +106,7 @@ export function App() {
     [],
   );
   const [libraryBusy, setLibraryBusy] = useState(false);
+  const [draftOpenRequest, setDraftOpenRequest] = useState(0);
   const [preview, setPreview] = useState(false);
   const [imageOpenRequest, setImageOpenRequest] = useState(0);
   const [profileOpenRequest, setProfileOpenRequest] = useState(0);
@@ -265,6 +267,7 @@ export function App() {
     else if (action === "article") titleInput.current?.focus();
     else if (action === "creation") setCreationOpenRequest((value) => value + 1);
     else if (action === "images") setImageOpenRequest((value) => value + 1);
+    else if (action === "drafts") setDraftOpenRequest((value) => value + 1);
     else if (action === "preview") setPreview(true);
     else if (action === "tasks") setTaskOpenRequest((value) => value + 1);
     else if (action === "roadmap") setRoadmapOpenRequest((value) => value + 1);
@@ -351,7 +354,7 @@ export function App() {
       <main className="editor-main" inert={libraryBusy}>
         <header className="toolbar">
           <div>
-            <span className="milestone">M4.3 · 图文创作与选题</span>
+            <span className="milestone">M4.4 · 图文检查与草稿</span>
             <h1>{state.articleId ? "编辑文章" : "开始一篇新文章"}</h1>
           </div>
           <div className="toolbar-actions">
@@ -480,6 +483,29 @@ export function App() {
                 }
               }}
             />
+            <DraftPanel key={state.session + ":drafts"} state={state} openRequest={draftOpenRequest}
+              onEdit={() => setFields(true)}
+              onImages={() => setImageOpenRequest((v) => v + 1)}
+              onSettings={compatibility}
+              onTasks={() => setTaskOpenRequest((v) => v + 1)}
+              onReload={() => void navigate(current.current.articleId)}
+              onCommand={async (action, version, preparationId) => {
+                const value = current.current;
+                if (saveBusy.current || value.saving || value.loading || isDirty(value) || value.version !== version)
+                  throw new Error("请先保存并核对当前文章版本，再继续送稿流程。");
+                saveBusy.current = true;
+                const operation: SaveRequest = { id: crypto.randomUUID(), session: value.session, sequence: value.sequence, draft: structuredClone(value.draft) };
+                dispatch({ type: "saving", request: operation });
+                try {
+                  const result = await request<DraftView>(`/articles/${value.articleId}/draft/${action}`, { version, ...(action === "confirm" ? { preparation_id: preparationId } : {}) });
+                  dispatch({ type: "saved", request: operation, article: result.post });
+                  void client.invalidateQueries({ queryKey: ["articles"] });
+                  return result;
+                } catch (err) {
+                  dispatch({ type: "failed", session: value.session, requestId: operation.id, error: (err as Error).message });
+                  throw err;
+                } finally { saveBusy.current = false; }
+              }} />
             <TasksButton
               articleId={state.articleId}
               openRequest={taskOpenRequest}
@@ -747,6 +773,7 @@ export function App() {
           open={preview}
           draft={state.draft}
           onClose={() => setPreview(false)}
+          onDraft={() => { setPreview(false); setDraftOpenRequest((v) => v + 1); }}
           onImages={() => {
             setPreview(false);
             setImageOpenRequest((n) => n + 1);

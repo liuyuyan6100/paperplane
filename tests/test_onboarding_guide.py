@@ -25,5 +25,7 @@ def test_onboarding_guide_navigation(tmp_path):
         )
         assert result.returncode == 0, result.stdout + result.stderr
         assert service.app.db.one("SELECT COUNT(*) n FROM posts")["n"] == 1
+        assert not service.app.db.rows("SELECT * FROM article_draft_intents")
+        assert not service.app.db.rows("SELECT * FROM jobs")
     finally:
         service.stop()

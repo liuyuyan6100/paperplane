@@ -26,6 +26,7 @@ PUBLIC_AUTHOR_LINK = ("作者：**Aiclaw** · [个人博客](https://blog." + "a
                       + ".website/) · [微信公众号：沐沐ai专题](#微信公众号)")
 # Retain the already published contact label for scans of earlier Git revisions.
 PUBLIC_AUTHOR_LINKS = {PUBLIC_AUTHOR_LINK,
+                      PUBLIC_AUTHOR_LINK.replace("**Aiclaw**", "**灵魂工程师**"),
                       PUBLIC_AUTHOR_LINK.replace("[微信公众号：沐沐ai专题]", "[微信公众号]")}
 # Explicit documentation examples, the container account and hosted CI accounts.
 GENERIC_USERS = {"user", "username", "example", "public", "default", "all users",

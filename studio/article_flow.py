@@ -117,6 +117,21 @@ class ArticleFlow:
         with self.app.db.connect(immediate=True) as db:
             db.execute('UPDATE article_draft_intents SET status=?,checked_version=?,report=?,job_id=?,updated_at=? WHERE post_id=?', (status,version,dumps(report),job_id,now(),post_id))
 
+    def check(self, post):
+        """Read-only checks shared by the preview and the delivery gate."""
+        report = self.app.preflight(post,['wechat'])
+        for key, label in (('summary','摘要'),('author','作者')):
+            if not post[key].strip(): report['checks'].append({'label':label,'level':'error','detail':'请在文章信息中补齐' + label + '并保存'})
+        channel = next((c for c in self.app.channels() if c['id']=='wechat'),None)
+        if not channel or channel['kind'] != 'wechat':
+            report['checks'].append({'label':'公众号自动送稿','level':'error','detail':'请在渠道管理中配置公众号 API 送稿'})
+        # Ambiguous content is not silently approved as a formatting warning.
+        for check in report['checks']:
+            if check['level']=='warn' and check['label'] in ('待核实内容','母稿版本'):
+                check['level']='error'
+        report['ok'] = not any(c['level']=='error' for c in report['checks'])
+        return report
+
     def _run(self, post_id):
         from .service import Problem
         post = self.app.post(post_id)
@@ -133,17 +148,7 @@ class ArticleFlow:
                 post = self.app.save_post({'version':post['version'],'stage':'ready'},post_id)
             post = self.app.reviews.format(post_id, {'post_version':post['version']})['post']
             with self.app.db.connect(immediate=True) as db:db.execute("UPDATE draft_preparations SET status='stale' WHERE post_id=? AND source_version!=? AND status IN ('queued','running','review')",(post_id,post['version']))
-            report = self.app.preflight(post,['wechat'])
-            for key, label in (('summary','摘要'),('author','作者')):
-                if not post[key].strip(): report['checks'].append({'label':label,'level':'error','detail':'请在文章信息中补齐' + label + '并保存'})
-            channel = next((c for c in self.app.channels() if c['id']=='wechat'),None)
-            if not channel or channel['kind'] != 'wechat':
-                report['checks'].append({'label':'公众号自动送稿','level':'error','detail':'请在渠道管理中配置公众号 API 送稿'})
-            # Ambiguous content is not silently approved as a formatting warning.
-            for check in report['checks']:
-                if check['level']=='warn' and check['label'] in ('待核实内容','母稿版本'):
-                    check['level']='error'
-            report['ok'] = not any(c['level']=='error' for c in report['checks'])
+            report = self.check(post)
             if not report['ok']:
                 self._store(post_id,'waiting',post['version'],report)
                 if self.app.preparation.needed(post):self.app.preparation.request(post_id,{'version':post['version']})

@@ -21,14 +21,14 @@ export function RoadmapPanel({ openRequest = 0 }: { openRequest?: number }) {
       </header>
       <div className="roadmap-body">
         <div className="roadmap-summary" aria-label="交付概览">
-          <span><strong>创作主线</strong>已打通</span><span><strong>最新反馈</strong>初步验收通过</span><span><strong>下一步</strong>图文检查与草稿衔接</span>
+          <span><strong>创作主线</strong>已打通</span><span><strong>当前交付</strong>图文检查与草稿待验收</span><span><strong>后续计划</strong>单平台改编</span>
         </div>
         <section aria-labelledby="roadmap-completed"><h3 id="roadmap-completed">已经完成</h3>
           <div className="roadmap-grid">{COMPLETED.map((item) => <article key={item.title}>
             <span className={item.status === "已验收" ? "roadmap-status accepted" : "roadmap-status"}>{item.status}</span>
             <h4>{item.title}</h4><p>{item.detail}</p>
           </article>)}</div>
-          <p className="roadmap-note">“初步验收”对应本轮整体反馈，特殊分支以测试记录为准。7天未变化是筛选，当前仍由用户选择归档或回收。</p>
+          <p className="roadmap-note">“待验收”是开发候选；“初步验收”对应已有整体反馈，特殊分支以测试记录为准。7天未变化是筛选，当前仍由用户选择归档或回收。</p>
         </section>
         <section aria-labelledby="roadmap-planned"><h3 id="roadmap-planned">待开发 · 按优先级推进</h3>
           <ol className="roadmap-plan">{PLANNED.map((item) => <li key={item.title}>

@@ -7,11 +7,13 @@ export function ArticlePreview({
   draft,
   onClose,
   onImages,
+  onDraft,
 }: {
   open: boolean;
   draft: Draft;
   onClose: () => void;
   onImages: () => void;
+  onDraft: () => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [mobile, setMobile] = useState(false);
@@ -62,6 +64,7 @@ export function ArticlePreview({
             手机阅读
           </button>
           <button onClick={onImages}>继续配图</button>
+          <button onClick={onDraft}>检查与公众号草稿</button>
           <button className="primary" onClick={onClose}>
             返回编辑
           </button>
